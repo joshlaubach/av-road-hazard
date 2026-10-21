@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 from defects.labels import CODES, NAMES, LabelNamesNotVerified, class_index, name_of
-from defects.mining import rank_hard_examples
 from defects.splits import make_splits, read_splits, write_splits
+from tools.mining import rank_hard_examples
 
 
 def test_codes_only() -> None:
