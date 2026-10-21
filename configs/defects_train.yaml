@@ -1,0 +1,25 @@
+# Dataset layout is supplied through a JSON sample index; grouping is required separately.
+sample_index: null
+splits_file: null
+checkpoint_dir: null  # Must resolve outside the checkout.
+run_id: null          # Set once per experiment; existing fold directories are refused.
+oof_file: null
+verify_hashes: true
+model_name: efficientnet_b4
+pretrained: true
+input_size: 380
+lr: 0.0001
+weight_decay: 0.01
+batch_size: 16
+epochs: 50
+head_dropout: 0.3
+drop_path: 0.2
+threshold: 0.5
+patience: 7
+min_delta: 0.0
+num_workers: 0
+horizontal_flip: 0.5
+color_jitter: 0.1
+test_fraction: 0.15
+n_folds: 5
+val_fraction: 0.10
