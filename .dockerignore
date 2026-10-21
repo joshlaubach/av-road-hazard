@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+.env
+data
+checkpoints
+outputs
+tests
+docs
+web/node_modules
+web/.next

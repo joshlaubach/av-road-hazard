@@ -1,0 +1,12 @@
+# Overlay for NVIDIA hosts (Windows 11 + WSL2 with Docker Desktop, or Linux with the NVIDIA
+# container toolkit). Not usable on macOS. Placeholder: workstream E adds the CUDA 12.8 api image.
+# Usage: docker compose -f docker/docker-compose.yml -f docker/compose.gpu.yml --profile llm up
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

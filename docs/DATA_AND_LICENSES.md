@@ -53,3 +53,7 @@ See [ENVIRONMENT.md](ENVIRONMENT.md): RDD2022 about 13.3 GB download / about 15 
 | Waymo | Unverified; excluded from v1 by default |
 | CARLA | Unverified |
 | Repo license (MIT) | Recommendation, not a decision |
+
+## Manifest entry format (L-08, format only; code arrives with workstream G)
+
+`data/MANIFEST.json` and `checkpoints/MANIFEST.json` are `{"schema_version": 1, "entries": [...]}`. Each entry: `path` (relative to the manifest's directory), `sha256`, `size_bytes`, `source` (dataset name, URL, or training run id), `version` (dataset version or git SHA of the producing code), `license` (or the literal `unverified`), and optional `retrieved` (ISO date). Download scripts write entries and verify hashes. <!-- F:L-08 -->

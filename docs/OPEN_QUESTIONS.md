@@ -13,12 +13,22 @@ Every recommended default is a recommendation, not a decision. Owner is the repo
 | 3 | **[CRITICAL]** RDD2022 license (figshare record names none). UNVERIFIED <!-- F:L-02 --> | Owner | Sprint 5 (publishing), earlier for fixtures | No RDD2022 images published or committed until confirmed |
 | 4 | CARLA defect approach: decals/textures vs skipping CARLA defects in v1 (stock CARLA has no potholes or cracks) <!-- F:L-05 --> | Owner | Sprint 3 | Decide before G; if skipped, the CARLA corpus exercises only the object side |
 | 5 | Which of the owner's coding skills each agent loads (not yet enumerated) <!-- F:U-14 --> | Owner | Before Sprint 0 | Fill into briefs. Placeholders: frontend-design for F, dataviz for charts |
-| 6 | Python version of the new repo <!-- F:E-11 --> | Owner | Sprint 0 | 3.12 (sources use 3.11 and 3.12) |
+| 6 | Python version of the new repo <!-- F:E-11 --> | Owner | Sprint 0 | 3.12 (sources use 3.11 and 3.12). Applied in Sprint 0 as `requires-python >=3.12`; CI runs 3.12 and 3.13; Docker uses 3.12; lockfiles were compiled on 3.13 |
 | 7 | Experiment tracker: MLflow vs W&B <!-- F:R-13 --> | Owner | Sprint 1 | MLflow (self-hostable, free; UNVERIFIED preference) |
 | 8 | License for `LICENSE` | Owner | Before push | MIT (applied as the default; revisit if the owner prefers another) |
 | 9 | Accept core-first gating (ADR 0011)? <!-- F:Q-03 --> | Owner | Before Sprint 2 | Accept: gate D, F, I on A, B, C and the synthetic fusion evaluation producing numbers |
 
 ## Verification needed (UNVERIFIED facts)
+
+Sprint 0 additions (the scaffold author had no Docker daemon, so none of these ran):
+
+| Fact | Where | Blocks | Recommendation |
+|---|---|---|---|
+| `docker build` and `docker compose up` of the API image never ran; only the same install and `uvicorn` start were checked in a clean virtualenv. CI job `docker-and-e2e` is the first real test | Sprint 0 | Merge of the scaffold PR | Watch the first CI run; fix the Dockerfile if it fails |
+| Compose image tags: `qdrant/qdrant:v1.12.0` unverified on a live pull; `ollama/ollama:latest` unpinned | E | Sprint 2 | Pin exact tags after a pull |
+| GitHub rulesets are not enforced on a private repo without a paid plan; `main` protection relies on convention, the pre-commit hook, and CI | Owner | Before more agents start | Go public (after the history scrub) or upgrade |
+| `hazard_score` upper bound and the pinned `box`/`image_size` conventions are the scaffold's reading of SPEC | C | Sprint 1 | Confirm in the scaffold review; record changes in CONTRACT_CHANGELOG.md |
+
 
 | Fact | Where | Blocks | Recommendation |
 |---|---|---|---|

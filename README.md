@@ -2,7 +2,7 @@ Purpose: entry point for av-road-hazard, a planned system that fuses road-object
 
 # av-road-hazard
 
-> **Status: Pre-implementation: documentation only.** No application code exists yet. Nothing in this repo has been executed or tested. This documentation was drafted on 2026-10-21 from the READMEs and part of the code of the source repositories (shallow clones); none of that code was run. <!-- F:P-07 -->
+> **Status: Sprint 0 scaffold.** Contracts, a stub API, tests, CI and a Docker skeleton exist; the models, fusion logic, RAG layer and UI do not. Stub outputs are fixed fake values. This documentation was drafted on 2026-10-21 from the READMEs and part of the code of the source repositories (shallow clones); none of that code was run. <!-- F:P-07 -->
 
 ## What it is
 
@@ -101,7 +101,15 @@ These are known now, before any code exists.
 
 ## Quickstart
 
-Not yet implemented. Commands will be defined in Sprint 0 ([docs/agents/00-scaffold.md](docs/agents/00-scaffold.md)). Do not invent them.
+Stub API only (no real models yet):
+
+```
+pip install -r requirements-dev.lock && pip install --no-deps -e .
+uvicorn api.main:app --port 8000      # then open http://localhost:8000/docs
+python -m pytest
+```
+
+All commands: [AGENTS.md](AGENTS.md) section 4.
 
 ## License
 

@@ -19,14 +19,7 @@ Work is planned for several agents in parallel, but the available plans are one 
 
 ## Sprint table
 
-| Sprint | Days | Claude lane | Codex lane | Owner machine (no tokens) |
-|---|---|---|---|---|
-| 0 | 1 | Scaffold, schema, stubs, CI, ADRs (Phase 0) | Idle or review of scaffold PR | Download RDD2022, nuScenes v1.0-mini |
-| 1 | 2-4 | C Fusion (stub-driven) | A Perception port, then B Defects port and tiling | Train detector, then classifier (background) |
-| 2 | 4-7 | D RAG (Qdrant, embeddings, LLM backends) | E API + Docker (real pipeline wiring, compose, GPU) | Finish training; run metric baselines |
-| 3 | 7-9 | G Eval (retrieval, synthetic fusion) and CARLA frame generator | F Web UI against the API | Generate CARLA frames; index nuScenes locally |
-| 4 | 9-11 | Integration: swap stubs for models, fix coordinate and schema bugs | Tests and fixtures for gaps, UI fixes | Run full evals; record baselines |
-| 5 | 11-14 | Deploy (HF Space, Qdrant Cloud), README, final review | Review pass, polish, walkthrough video support | Record video |
+The full sprint table (lanes per sprint, days, and what the owner's machine does) is in [BUILD_PLAN.md](../BUILD_PLAN.md) section 1; it is the single copy.
 
 The owner's machine runs downloads, training, and evaluation in the background at no token cost; launch them early. If a sprint overruns, cut in this order: React polish, CARLA corpus (use RDD2022 samples only), Claude/LLaMA toggle UI (keep the config switch), v1.0-full evaluation. <!-- F:A-02 --> <!-- F:R-12 -->
 

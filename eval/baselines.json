@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "note": "Placeholder. Workstreams A, B, G record metric baselines here; regression tests fail below baseline minus tolerance.",
+  "baselines": {}
+}
