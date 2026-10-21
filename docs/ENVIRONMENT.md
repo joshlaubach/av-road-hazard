@@ -8,7 +8,7 @@ Items marked UNVERIFIED came from memory or inference, not a checked source.
 
 | Machine | Facts |
 |---|---|
-| macOS MacBook (linked to the assistant that wrote the first-commit prompt) | macOS, arm64 (Apple silicon), device name "joshs-macbook-pro-2-local", Claude desktop app 3.1623.0. Its home directory contains tool folders including `.codex`, `.ollama`, `.kaggle`, `.conda`, `miniconda3`, `.nvm`, `.streamlit` (names observed; contents unverified). <!-- F:E-01 --> |
+| macOS MacBook (the machine the docs were drafted on) | macOS, arm64 (Apple silicon), device name "joshs-macbook-pro-2-local", Claude desktop app 3.1623.0. Its home directory contains tool folders including `.codex`, `.ollama`, `.kaggle`, `.conda`, `miniconda3`, `.nvm`, `.streamlit` (names observed; contents unverified). <!-- F:E-01 --> |
 | Windows 11 + NVIDIA RTX 5080 (per source READMEs) | The drivenet-carla-av and defect-detector READMEs describe development on Windows 11 with an RTX 5080, CUDA 12.8, PyTorch CUDA 12.8 wheels (needed for 50-series), and CARLA run with `-dx12`. **[CRITICAL]** It is UNCONFIRMED whether this is a separate desktop or whether the owner now works on the MacBook. This decides where training runs and whether Docker GPU passthrough is possible. Blocks Sprint 1; tracked in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). <!-- F:E-02 --> |
 
 ## Docker GPU rules
@@ -56,7 +56,7 @@ Measured by the source repo on an RTX 5080 for one 640x640 RDD2022 frame with `-
 | MVTec AD | about 5 GB (dropped from v1) |
 | Source checkpoints | about 80 MB |
 | Full source checkout | once reached about 37 GB due to leftover archives (the downloader now deletes archives unless `--keep-archive`) |
-| nuScenes full | on the order of hundreds of GB (UNVERIFIED; the assistant said "~300GB+") |
+| nuScenes full | on the order of hundreds of GB (UNVERIFIED; estimated at ~300 GB+) |
 
 <!-- F:E-10 -->
 
@@ -68,6 +68,6 @@ drivenet-carla-av uses Python 3.11 and PyTorch 2.3.1; defect-detector uses Pytho
 
 Ollama on `http://localhost:11434` with model `llama3.2-vision`. Qdrant in Docker locally and Qdrant Cloud free tier when hosted. The Kaggle API token at `~/.kaggle/kaggle.json` is only needed for MVTec AD, which is dropped from v1. Paths come from `.env` (see `.env.example`) and `configs/*.yaml`; none are hardcoded. <!-- F:E-12 -->
 
-## GPU and Docker answers (owner's questions)
+## GPU and Docker requirements
 
-The owner asked "does any of this need GPU usage?" and about Docker. The answers are the sections above: GPU needs by stage, practical GPU plan, Docker GPU rules, Docker plan, and timings. <!-- F:U-18 -->
+GPU and Docker requirements are covered by the sections above: GPU needs by stage, practical GPU plan, Docker GPU rules, Docker plan, and timings. <!-- F:U-18 -->

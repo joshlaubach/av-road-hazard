@@ -2,16 +2,16 @@ Purpose: ADR 0006: React/Next.js front end.
 
 # ADR 0006: React/Next.js front end
 
-Status: accepted (owner approved)
+Status: accepted
 
 ## Context
-The assistant recommended Streamlit for speed (defect-detector already has a dashboard to adapt). The owner chose React/Next.js, accepting the tension with the 1-2 week timeline.
+Streamlit is faster to build (defect-detector already has a dashboard to adapt). React/Next.js was chosen anyway; the tension with the 1-2 week timeline is accepted.
 
 ## Decision
 Next.js + TypeScript backed by FastAPI. The TypeScript client is generated from `openapi.json`, which is the single contract. Fallback if the timeline slips: Streamlit on the same API. Rejected for v1: Streamlit and Gradio. <!-- F:R-05 --> <!-- F:U-07 -->
 
 ## Alternatives considered
-- Streamlit: faster, recommended, declined by the owner for v1.
+- Streamlit: faster; rejected for v1 (kept as the fallback).
 - Gradio: same.
 
 ## Consequences

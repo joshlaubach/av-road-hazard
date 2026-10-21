@@ -2,7 +2,7 @@ Purpose: evaluation protocol for av-road-hazard: the three automatic evaluations
 
 # Evaluation
 
-No hand labeling. The owner explicitly does not want to label anything by hand, and the plan rejects hand-labeling about 100 frames. <!-- F:U-10 --> Rejected alternatives: hand-labeling, and only separate evaluation without a fusion check. Three automatic checks: per-model metrics, retrieval tests auto-generated from nuScenes annotations, and a synthetic fusion test pasting RDD2022 defect patches onto nuScenes/CARLA road regions at known positions. <!-- F:R-06 --> See [adr/0007-no-hand-labeling-eval.md](adr/0007-no-hand-labeling-eval.md).
+No hand labeling: all evaluation is automatic, and the plan rejects hand-labeling about 100 frames. <!-- F:U-10 --> Rejected alternatives: hand-labeling, and only separate evaluation without a fusion check. Three automatic checks: per-model metrics, retrieval tests auto-generated from nuScenes annotations, and a synthetic fusion test pasting RDD2022 defect patches onto nuScenes/CARLA road regions at known positions. <!-- F:R-06 --> See [adr/0007-no-hand-labeling-eval.md](adr/0007-no-hand-labeling-eval.md).
 
 ## Why a synthetic fusion test
 

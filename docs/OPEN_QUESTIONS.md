@@ -16,8 +16,7 @@ Every recommended default is a recommendation, not a decision. Owner is the repo
 | 6 | Python version of the new repo <!-- F:E-11 --> | Owner | Sprint 0 | 3.12 (sources use 3.11 and 3.12) |
 | 7 | Experiment tracker: MLflow vs W&B <!-- F:R-13 --> | Owner | Sprint 1 | MLflow (self-hostable, free; UNVERIFIED preference) |
 | 8 | License for `LICENSE` | Owner | Before push | MIT (applied as the default; revisit if the owner prefers another) |
-| 9 | Does the proposed scope cut (ADR 0011) apply, and does "current project" mean the plan or the existing repos? <!-- F:Q-03 --> | Owner | Before Sprint 2 | Accept the scope cut: gate D, F, I on A, B, C and the synthetic fusion evaluation producing numbers |
-| 10 | Does the owner want the assistant's offered honest review of the existing repos? <!-- F:Q-07 --> | Owner | none | Yes, cheap and informative |
+| 9 | Accept core-first gating (ADR 0011)? <!-- F:Q-03 --> | Owner | Before Sprint 2 | Accept: gate D, F, I on A, B, C and the synthetic fusion evaluation producing numbers |
 
 ## Verification needed (UNVERIFIED facts)
 
@@ -72,7 +71,7 @@ Every recommended default is a recommendation, not a decision. Owner is the repo
 | SPEC.md section 2 says "Weights: retrain both locally (RTX 5080)" and BUILD_PLAN says "launch on your machine", while E-02 says the training machine is UNCONFIRMED | Open question 2; the SPEC line is read as the intended plan, not confirmed |
 | ENGINEERING.md section 1 names ADRs `docs/adr/NNN-title.md`; this repo uses four-digit names `NNNN-title.md` (Part 2) | Use four digits; update ENGINEERING.md wording if the owner agrees |
 | SPEC.md section 4 says `data/` holds download scripts only, but `.gitignore` ignores `data/` as required | `.gitignore` ignores `data/*` and unignores `MANIFEST.json`, `*.py`, `*.md` (recommendation); confirm |
-| U-07 says "several AI agents side by side" vs U-08 two plans, at most two concurrent agents | Resolved by sequenced sprints (ADR 0008) |
+| Parallel-agent timeline (1-2 weeks) vs two plans with at most two concurrent agents | Resolved by sequenced sprints (ADR 0008) |
 | SPEC.md section 6 says streams 3-6 can begin immediately against stubs; BUILD_PLAN sprint table sequences them over days 2-9 | The sprint table governs because of the two-agent limit |
 | SPEC.md/BUILD_PLAN "Days 1-2" milestone vs sprint 0 "1 day" | Sprint table governs |
 | BUILD_PLAN.md section 2 asks for `ENGINEERING.md` "committed as-is" in Sprint 0; it is already in the first commit | No action |
@@ -86,4 +85,5 @@ The machine already has a global git identity configured. The prompt says to use
 
 - Whether to run Waymo at all (optional, local, separate approval).
 - Tolerances for metric regression in `eval/baselines.json`.
+- Which source repos are worth keeping: a candid review of the existing repos is a possible follow-up. <!-- F:Q-07 -->
 - Whether branch protection settings include required reviews from the other tool (cannot be enforced by GitHub; process only).

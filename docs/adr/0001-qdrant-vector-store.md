@@ -2,7 +2,7 @@ Purpose: ADR 0001: Qdrant as the vector store.
 
 # ADR 0001: Qdrant as the vector store
 
-Status: accepted (owner approved)
+Status: accepted
 
 ## Context
 The RAG layer needs metadata filtering plus vector search over image and text embeddings, running locally in Docker and hosted on a free tier.

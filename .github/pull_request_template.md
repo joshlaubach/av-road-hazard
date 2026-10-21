@@ -29,4 +29,4 @@
 - What remains:
 - New open questions:
 - Files touched:
-- Owner explainer (what it does, why, what could be wrong):
+- Maintainer explainer (what it does, why, what could be wrong):

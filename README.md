@@ -2,30 +2,30 @@ Purpose: entry point for av-road-hazard, a planned system that fuses road-object
 
 # av-road-hazard
 
-> **Status: Pre-implementation: documentation only.** No application code exists yet. Nothing in this repo has been executed or tested. This documentation was written from a conversation on 2026-10-21 by an assistant that read the READMEs and part of the code of the source repositories (cloned shallowly) but did not run any of it. <!-- F:P-07 -->
+> **Status: Pre-implementation: documentation only.** No application code exists yet. Nothing in this repo has been executed or tested. This documentation was drafted on 2026-10-21 from the READMEs and part of the code of the source repositories (shallow clones); none of that code was run. <!-- F:P-07 -->
 
 ## What it is
 
-av-road-hazard takes a front-camera driving frame and answers two questions: what is in the scene (objects) and is the road damaged (defects). It fuses both answers into one hazard record per frame, indexes records and images for multimodal retrieval (RAG), and will expose everything through an API and a web UI. It combines two of the owner's earlier AV ("EVAV") projects, `nuscenes-stability` (a CV model that identifies common road objects) and `defect-detector` (identifies road defects), into one end-to-end system instead of partially completed demos on Kaggle-style public data. <!-- F:U-02 --> <!-- F:U-03 --> One project answers what is in the scene, the other whether the road is damaged. A pothole in the lane a pedestrian is walking toward is more urgent than the same pothole on an empty shoulder. <!-- F:U-03 -->
+av-road-hazard takes a front-camera driving frame and answers two questions: what is in the scene (objects) and is the road damaged (defects). It fuses both answers into one hazard record per frame, indexes records and images for multimodal retrieval (RAG), and will expose everything through an API and a web UI. It combines two earlier AV ("EVAV") projects, `nuscenes-stability` (a CV model that identifies common road objects) and `defect-detector` (identifies road defects), into one end-to-end system instead of partially completed demos on Kaggle-style public data. <!-- F:U-02 --> <!-- F:U-03 --> One project answers what is in the scene, the other whether the road is damaged. A pothole in the lane a pedestrian is walking toward is more urgent than the same pothole on an empty shoulder. <!-- F:U-03 -->
 
 Spec details: [SPEC.md](SPEC.md). Repo: `joshlaubach/av-road-hazard`, private.
 
 ## Goals and constraints
 
 - Audience is portfolio and recruiters. Interface is a web UI plus an API. The demo is hosted and public. <!-- F:U-06 -->
-- Timeline target is a demoable v1 in 1-2 weeks. The owner said they have several AI agents working side by side, and chose React/Next.js over the recommended Streamlit, accepting the timeline tension. <!-- F:U-07 -->
-- The owner wants a multimodal RAG layer on top of the fused output, queried with mixed visual and text criteria, for example "show me frames with a pothole in the lane near a pedestrian". <!-- F:U-05 -->
+- Timeline target is a demoable v1 in 1-2 weeks, using parallel agents. Front end: React/Next.js (chosen over Streamlit; timeline tradeoff accepted, mitigated by an OpenAPI-generated client). <!-- F:U-07 -->
+- A multimodal RAG layer sits on top of the fused output, queried with mixed visual and text criteria, for example "show me frames with a pothole in the lane near a pedestrian". <!-- F:U-05 -->
 - `drivenet-carla-av` is out of scope for v1, except CARLA as a frame generator for the hosted corpus. Its driving policy is a possible later "drive-aware" extension. <!-- F:U-04 -->
-- No hand labeling. The owner explicitly does not want to label anything by hand. <!-- F:U-10 -->
+- No hand labeling: all evaluation is automatic. <!-- F:U-10 -->
 - Hosted demo budget is up to about $20/month. A Claude API key exists; API usage is billed separately from the Claude subscription. A spend cap with hard cutoff is required. <!-- F:U-09 -->
-- The repo name `av-road-hazard` was accepted by the owner. It is private under `joshlaubach`. No remote exists yet. <!-- F:U-11 -->
-- The owner wants all engineering practices (requirements, design, testing, debugging, CI/CD, operations, security, documentation), all agentic practices, and the full build plan written into files, and wants no commit unless every micro-detail is in at least one file. <!-- F:U-12 -->
-- Documents follow the owner's preference: concise, direct, minimal formatting, no filler. <!-- F:U-15 -->
-- Decisions the owner explicitly approved: drop the DQN gate in v1; Qdrant; road-masked tiling with auto-labeled negatives; the three automatic evaluations; switchable LLM; Hugging Face Spaces plus Qdrant Cloud free tier; hosted corpus of CARLA frames plus RDD2022 samples; React/Next.js; nuScenes v1.0-mini first then full; upload-your-own-image hosted demo model. <!-- F:U-16 -->
+- The repo `av-road-hazard` is private under `joshlaubach`. <!-- F:U-11 -->
+- Engineering practices (requirements, design, testing, debugging, CI/CD, operations, security, documentation), agentic practices, and the full build plan are written into files. The first commit required every planned fact to be present in at least one file (see [docs/TRACEABILITY.md](docs/TRACEABILITY.md)). <!-- F:U-12 -->
+- Documentation style: concise, direct, minimal formatting, no filler. <!-- F:U-15 -->
+- Decisions: drop the DQN gate in v1; Qdrant; road-masked tiling with auto-labeled negatives; the three automatic evaluations; switchable LLM; Hugging Face Spaces plus Qdrant Cloud free tier; hosted corpus of CARLA frames plus RDD2022 samples; React/Next.js; nuScenes v1.0-mini first then full; upload-your-own-image hosted demo model. <!-- F:U-16 -->
 
-## Quality warning
+## Evidence standards
 
-The owner said "I think my current project is ai slop". This is treated as a quality requirement, not a passing remark. <!-- F:U-13 --> The risk is real: the plan is partly stack-driven (RAG, two LLM backends, React, Docker, HF Spaces) attached to two models that do not yet work well on the target data (classifier overfit 0.92 vs 0.73, detector trained on a 10-scene mini set, possible domain gap, no combined ground truth, no real user question beyond demo queries). <!-- F:Q-01 --> See [docs/QUALITY_BAR.md](docs/QUALITY_BAR.md). Every claim in this README must be backed by a number from `eval/results.json` or marked as unmeasured. <!-- F:Q-05 -->
+The supporting stack (RAG, two LLM backends, React, Docker, HF Spaces) sits on two models that do not yet work well on the target data: the classifier overfits (train F1 0.92 vs validation 0.73), the detector is trained on a 10-scene mini set, there is a possible domain gap, and there is no combined ground truth. Results therefore come first. See [docs/QUALITY_BAR.md](docs/QUALITY_BAR.md). Every claim in this README must be backed by a number from `eval/results.json` or marked as unmeasured. <!-- F:Q-05 --> <!-- F:Q-01 --> <!-- F:U-13 -->
 
 ## Architecture
 
@@ -75,7 +75,7 @@ Per the proposed core-first gate, items 4, 6 and 8 stay at stub level until item
 | [docs/SOURCE_REPOS.md](docs/SOURCE_REPOS.md) | Pinned source repos, what to port and drop, known bugs |
 | [docs/DATA_AND_LICENSES.md](docs/DATA_AND_LICENSES.md) | Datasets, license status, what may ship where |
 | [docs/EVALUATION.md](docs/EVALUATION.md) | The three evaluations, metrics, confounds, reporting |
-| [docs/QUALITY_BAR.md](docs/QUALITY_BAR.md) | Anti-slop criteria and the core-first gate |
+| [docs/QUALITY_BAR.md](docs/QUALITY_BAR.md) | Quality bar, evidence standards, and the core-first gate |
 | [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md) | Lanes, sprints, handoffs, review, token rules |
 | [docs/GLOSSARY.md](docs/GLOSSARY.md) | Terms |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Known failures and causes |
