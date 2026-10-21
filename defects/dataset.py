@@ -14,8 +14,9 @@ from typing import Any
 
 from PIL import Image
 
-from defects.label_check import iter_annotations, parse_annotation
+from defects.label_check import iter_annotations
 from defects.labels import CODES, class_index
+from defects.validation import image_issues, read_annotation
 
 Manifest = dict[str, dict[str, Any]]
 # Keep provenance/split commands usable without the optional ML extra.
@@ -34,11 +35,36 @@ class Sample:
 
 
 class AnnotationReport(Counter[str]):
-    """Unexpected box-code counts, plus ids excluded for having only those codes."""
+    """Unexpected codes and whole-image exclusions, exportable as a JSON report."""
 
     def __init__(self) -> None:
         super().__init__()
         self.excluded_ids: list[str] = []
+        self.exclusion_reasons: dict[str, list[str]] = {}
+        self.included_images = 0
+
+    def exclude(self, sample_id: str, reasons: list[str]) -> None:
+        self.excluded_ids.append(sample_id)
+        self.exclusion_reasons[sample_id] = sorted(set(reasons))
+
+    def write_json(self, path: Path) -> None:
+        """Save counts and the exclusion manifest; paths/ids are dataset-relative."""
+        path.write_text(
+            json.dumps(
+                {
+                    "included_images": self.included_images,
+                    "excluded_images": len(self.excluded_ids),
+                    "unexpected_codes": dict(sorted(self.items())),
+                    "exclusions": [
+                        {"sample_id": sid, "reasons": self.exclusion_reasons[sid]}
+                        for sid in sorted(self.excluded_ids)
+                    ],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        )
 
 
 def build_samples(
@@ -46,25 +72,39 @@ def build_samples(
 ) -> tuple[list[Sample], AnnotationReport]:
     """Return usable samples and unexpected-code counts with excluded ids.
 
-    Out-of-scope-only annotations are excluded before image resolution. Empty
-    annotations remain clean negatives; mixed annotations keep in-scope labels.
-    The dataset layout is supplied explicitly through image_fn.
+    Any structurally invalid annotation excludes the entire image, since this
+    loader cannot mask uncertain regions. Out-of-scope-only annotations are
+    excluded before image resolution. Valid empty annotations remain negatives;
+    valid mixed-code annotations retain the existing in-scope-label policy.
     """
     samples: list[Sample] = []
     unexpected = AnnotationReport()
     for xml in iter_annotations(root):
         labels = [0] * len(CODES)
-        boxes = parse_annotation(xml)[1]
+        boxes, size, issues = read_annotation(xml)
+        sample_id = xml.relative_to(root).with_suffix("").as_posix()
         for code, *_ in boxes:
             if code in CODES:
                 labels[class_index(code)] = 1
             else:
                 unexpected[code] += 1
-        sample_id = xml.relative_to(root).with_suffix("").as_posix()
-        if boxes and not any(labels):
-            unexpected.excluded_ids.append(sample_id)
+        if issues:
+            unexpected.exclude(sample_id, issues)
             continue
-        samples.append(Sample(sample_id, image_fn(xml), tuple(labels)))
+        if boxes and not any(labels):
+            unexpected.exclude(sample_id, ["out_of_scope_only"])
+            continue
+        try:
+            image_path = image_fn(xml)
+        except OSError:
+            unexpected.exclude(sample_id, ["unreadable_image"])
+            continue
+        issues = image_issues(image_path, size, boxes)
+        if issues:
+            unexpected.exclude(sample_id, issues)
+            continue
+        samples.append(Sample(sample_id, image_path, tuple(labels)))
+        unexpected.included_images += 1
     return samples, unexpected
 
 
