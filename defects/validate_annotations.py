@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from defects.dataset import build_samples
-from defects.label_check import find_image
+from defects.voc import find_image
 
 
 def _image_for(xml: Path) -> Path:

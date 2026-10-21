@@ -4,14 +4,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from defects.label_check import (
-    ALL,
-    format_table,
-    main,
-    parse_annotation,
-    sample_overlays,
-    summarize,
-)
+from defects.voc import ALL, parse_annotation
+from tools.label_check import format_table, main, sample_overlays, summarize
 
 
 def _xml(width: int, height: int, objects: list[tuple[str, int, int, int, int]]) -> str:

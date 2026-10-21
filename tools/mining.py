@@ -9,6 +9,8 @@ from defects.labels import CODES
 
 @dataclass(frozen=True)
 class HardExample:
+    """One label-level error: which sample, which class code, and how confident the model was."""
+
     sample_id: str
     code: str
     kind: str
@@ -24,6 +26,7 @@ def rank_hard_examples(
     allowed_ids: Set[str],
     test_ids: Set[str],
 ) -> list[HardExample]:
+    """Rank label errors from out-of-fold predictions only; final-test ids are refused."""
     if not test_ids:
         raise ValueError("Final test ids must be nonempty")
     if set(ids) & test_ids:
