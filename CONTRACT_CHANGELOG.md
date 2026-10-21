@@ -23,5 +23,16 @@ Contracts are frozen after Phase 0. Any change needs a PR labeled `contract-chan
 
 ## Entries
 
+### v0.1.0: 2026-10-21 (Sprint 0)
+- `fusion/schema.py` implements SPEC section 5. Conventions pinned, which SPEC left implicit:
+  - `image_size` is `(width, height)`.
+  - Boxes are named `box` everywhere (SPEC's interface text said `box_xyxy`); pixel `(x1, y1, x2, y2)` with `x1<=x2`, `y1<=y2`.
+  - Two defect shapes: `Defect` (raw detector output: `cls`, `name`, `confidence`, `box`, `patch_row`, `patch_col`) and `DefectRecord` (inside a `HazardRecord`: `name`, `confidence`, `box`, `severity`, `in_road`, `near_objects`).
+  - Scores, confidences, IoU are in [0, 1]; `hazard_score >= 0` (upper bound left to workstream C's formula); `cls >= 1`.
+  - All models reject unknown fields.
+- `openapi.json` v0.1.0: routes `/analyze`, `/index`, `/query`, `/records/{record_id}`, `/health`. `POST /query` takes `{text?, image_b64?, filters?, top_k, llm}`; `POST /index` takes multipart `files`.
+- Compatibility: additive over v0.0.0 (no prior code).
+- PR: Sprint 0 scaffold.
+
 ### v0.0.0
 contracts defined in SPEC.md section 5, no code yet
