@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import json
 import random
-import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,15 +24,31 @@ from defects.dataset import (
     Sample,
     build_dataset_manifest,
     file_sha256,
-    manifest_identity,
 )
 from defects.labels import CODES
 from defects.model import build_model
+from defects.provenance import _git_dirty, _git_sha, _run_directory, _verify, manifest_path
 from defects.splits import make_splits, read_splits, write_splits
 from eval.models import macro_f1, per_class_prf
 
+# manifest_path and _git_dirty live in defects.provenance but are used through this module:
+# tests import and patch them here, and strict mypy needs the explicit export.
+__all__ = [
+    "FitResult",
+    "_git_dirty",
+    "fit",
+    "load_checkpoint",
+    "main",
+    "manifest_path",
+    "out_of_fold",
+    "predict",
+    "select_device",
+    "setup_determinism",
+]
+
 
 def setup_determinism(seed: int) -> None:
+    """Seed python, numpy and torch and force deterministic kernels so a run can be repeated."""
     import torch
 
     random.seed(seed)
@@ -45,6 +60,7 @@ def setup_determinism(seed: int) -> None:
 
 
 def select_device() -> str:
+    """Best available device: cuda, then mps, then cpu."""
     import torch
 
     if torch.cuda.is_available():
@@ -54,26 +70,8 @@ def select_device() -> str:
     return "cpu"
 
 
-def manifest_path(split_file: Path) -> Path:
-    return split_file.with_suffix(".manifest.json")
-
-
-def _verify(samples: Sequence[Sample], split_file: Path, cfg: dict[str, Any]) -> str:
-    """Hash once per run, compare the persisted manifest, and reuse its identity."""
-    manifest = build_dataset_manifest(samples)
-    if cfg["verify_hashes"]:
-        expected = json.loads(manifest_path(split_file).read_text())
-        mismatches = sorted(
-            key
-            for key in manifest.keys() | expected.keys()
-            if manifest.get(key) != expected.get(key)
-        )
-        if mismatches:
-            raise ValueError(f"Dataset manifest mismatch: {mismatches}")
-    return manifest_identity(manifest)
-
-
 def _loader(samples: Sequence[Sample], cfg: dict[str, Any], *, training: bool) -> Any:
+    """DataLoader over the samples; training shuffles and drops a short last batch."""
     from torch.utils.data import DataLoader
 
     return DataLoader(
@@ -88,6 +86,7 @@ def _loader(samples: Sequence[Sample], cfg: dict[str, Any], *, training: bool) -
 def predict(
     model: Any, samples: Sequence[Sample], cfg: dict[str, Any], *, device: str | None = None
 ) -> list[list[float]]:
+    """Sigmoid probabilities per sample, one column per class code."""
     import torch
 
     target = device or select_device()
@@ -101,49 +100,11 @@ def predict(
 
 @dataclass(frozen=True)
 class FitResult:
+    """Where the best checkpoint was written, the per-epoch metrics and the best epoch."""
+
     checkpoint: Path
     history: list[dict[str, float]]
     best_epoch: int
-
-
-def _git_sha() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"],
-            cwd=Path(__file__).resolve().parent,
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return "unknown"
-
-
-def _git_dirty() -> bool | None:
-    """Include untracked files; None explicitly marks unavailable git metadata."""
-    try:
-        return bool(
-            subprocess.check_output(
-                ["git", "status", "--porcelain", "--untracked-files=normal"],
-                cwd=Path(__file__).resolve().parent,
-                stderr=subprocess.DEVNULL,
-                text=True,
-            ).strip()
-        )
-    except (OSError, subprocess.CalledProcessError):
-        return None
-
-
-def _run_directory(cfg: dict[str, Any], run_id: str, fold: int) -> Path:
-    if not run_id or run_id in (".", "..") or Path(run_id).name != run_id:
-        raise ValueError("run_id must be a single nonempty path component")
-    if not cfg["checkpoint_dir"]:
-        raise ValueError("Set checkpoint_dir outside git")
-    root = Path(cfg["checkpoint_dir"]).expanduser().resolve()
-    if any((parent / ".git").exists() for parent in (root, *root.parents)):
-        raise ValueError("checkpoint_dir must be outside git")
-    directory = root / run_id / f"fold{fold}"
-    directory.mkdir(parents=True, exist_ok=False)
-    return directory
 
 
 def fit(
@@ -300,12 +261,14 @@ def out_of_fold(
 
 
 def _required_path(cfg: dict[str, Any], key: str, base: Path) -> Path:
+    """Resolve a path from the config relative to the config file; error if the key is unset."""
     if not cfg.get(key):
         raise ValueError(f"Set {key} in the training config")
     return (base / Path(str(cfg[key])).expanduser()).resolve()
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command-line entry for the splits, fit and oof modes; returns the process exit code."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=["splits", "fit", "oof"])
     parser.add_argument("--config", type=Path, required=True)
