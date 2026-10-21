@@ -1,6 +1,12 @@
+import numpy as np
+import pytest
 from fastapi.testclient import TestClient
 
 from api.main import app
+from api.pipeline import Pipeline, decode_image, frame_id_for
+from defects.infer import find_defects
+from fusion.fuse import fuse
+from perception.infer import detect
 
 client = TestClient(app)
 
@@ -72,3 +78,45 @@ def test_request_id_header_is_sanitized_and_logged() -> None:
     assert "/" not in evil.headers["x-request-id"]
     logged = [json.loads(line) for line in lines]
     assert next(r["request_id"] for r in logged if r["route"] == "/health") == "abc-123"
+
+
+def _expected_score(frame_bytes: bytes, road_mask: np.ndarray | None) -> float:
+    """What fusion alone says for the stub detections of this frame."""
+    frame = decode_image(frame_bytes)
+    h, w = frame.shape[:2]
+    return fuse(
+        frame_id=frame_id_for(frame_bytes),
+        source="upload",
+        image_size=(w, h),
+        objects=detect(frame),
+        defects=find_defects(frame),
+        road_mask=road_mask,
+    ).hazard_score
+
+
+def test_analyze_without_road_mask_reports_unknown_and_real_score(frame_bytes: bytes) -> None:
+    """No mask: in_road is null (present, not dropped or false) and hazard_score is fusion's."""
+    rec = client.post("/analyze", files={"file": ("f.png", frame_bytes, "image/png")}).json()
+    assert rec["defects"]
+    for d in rec["defects"]:
+        assert "in_road" in d and d["in_road"] is None
+    expected = _expected_score(frame_bytes, None)
+    assert expected > 0  # guards against the old hardcoded 0.0 passing by accident
+    assert rec["hazard_score"] == pytest.approx(expected)
+    # The stored copy keeps null too (serialization round trip).
+    assert client.get(f"/records/{rec['frame_id']}").json()["defects"][0]["in_road"] is None
+
+
+@pytest.mark.parametrize("road_value", [True, False])
+def test_analyze_uses_the_road_mask_when_one_exists(
+    frame_bytes: bytes, monkeypatch: pytest.MonkeyPatch, road_value: bool
+) -> None:
+    """A real mask decides in_road. All-False is "no road detected", not a failure: it gives
+    False (score 0), not unknown."""
+    h, w = decode_image(frame_bytes).shape[:2]
+    mask = np.full((h, w), road_value, dtype=bool)
+    monkeypatch.setattr(Pipeline, "road_mask", lambda self, frame: mask)
+    rec = client.post("/analyze", files={"file": ("f.png", frame_bytes, "image/png")}).json()
+    assert all(d["in_road"] is road_value for d in rec["defects"])
+    assert rec["hazard_score"] == pytest.approx(_expected_score(frame_bytes, mask))
+    assert (rec["hazard_score"] > 0) is road_value
