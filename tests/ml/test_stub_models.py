@@ -12,10 +12,12 @@ pytestmark = pytest.mark.ml
 
 
 def _frame(frame_bytes: bytes) -> np.ndarray:
+    """Decode PNG bytes into the RGB array the detectors expect."""
     return np.asarray(Image.open(io.BytesIO(frame_bytes)).convert("RGB"))
 
 
 def test_stub_outputs_fit_inside_frame(frame_bytes: bytes) -> None:
+    """Stub boxes stay inside the image, so downstream code never sees out-of-range coordinates."""
     frame = _frame(frame_bytes)
     h, w = frame.shape[:2]
     items: list[Object | Defect] = [*detect(frame), *find_defects(frame)]
@@ -25,6 +27,7 @@ def test_stub_outputs_fit_inside_frame(frame_bytes: bytes) -> None:
 
 
 def test_real_models_not_yet_available(monkeypatch, frame_bytes: bytes) -> None:  # type: ignore[no-untyped-def]
+    """With stubs off, the detector raises instead of returning fake results."""
     from common import config
 
     monkeypatch.setenv("USE_STUBS", "0")
