@@ -51,16 +51,26 @@ One workstream per session. Start a fresh session instead of continuing a long o
 
 ## 4. Commands
 
-Defined in Sprint 0. Do not invent commands before then.
+Defined in Sprint 0. Run from the repo root with Python 3.12 or newer. Setup: `pip install -r requirements-dev.lock && pip install --no-deps -e .`
 
-| Task | Command |
-|---|---|
-| Lint | defined in Sprint 0 |
-| Type-check | defined in Sprint 0 |
-| Test | defined in Sprint 0 |
-| Run API | defined in Sprint 0 |
-| Train | defined in Sprint 0 |
-| Eval | defined in Sprint 0 |
+| Task | Command | Make target |
+|---|---|---|
+| Lint | `ruff check . && ruff format --check .` | `make lint` |
+| Auto-fix and format | `ruff check . --fix && ruff format .` | `make format` |
+| Type-check | `python -m mypy` | `make typecheck` |
+| Test (default layers, excludes e2e) | `python -m pytest` | `make test` |
+| Test one layer | `python -m pytest tests/unit` (also `contract`, `integration`, `ml`, `data`) | |
+| Data-validation checks only | `python -m pytest -m data` | |
+| End-to-end (needs compose stack) | `docker compose -f docker/docker-compose.yml up -d --build api`, then `E2E_BASE_URL=http://localhost:8000 python -m pytest -m e2e -o addopts=-q` | `make e2e` |
+| Run API locally (stubs) | `uvicorn api.main:app --reload --port 8000` | `make api` |
+| Export OpenAPI | `python -m tools.export_openapi` (check only: add `--check`) | `make openapi` |
+| Draw a record on its image | `python -m tools.overlay IMAGE RECORD.json OUT.png` | |
+| Refresh lockfiles | `pip-compile --strip-extras -o requirements.lock pyproject.toml` and the same with `--extra dev` for `requirements-dev.lock` | `make lock` |
+| Install git hooks | `pre-commit install` (hooks include a block on committing to `main`) | |
+| Train | defined by workstreams A (detector) and B (defects); not implemented yet | |
+| Eval | defined by workstream G; not implemented yet | |
+
+Environment: `USE_STUBS=1` is the default; real models raise `NotImplementedError` until workstreams A and B land. `DEBUG_DUMP_DIR=/some/dir` writes per-request intermediates under `<dir>/<request_id>/`.
 
 ## 5. How to work
 

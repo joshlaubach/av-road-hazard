@@ -56,7 +56,10 @@ av-road-hazard/
   data/           # download scripts only; no data committed
   docker/         # Dockerfiles, docker-compose.yml, compose.gpu.yml
   configs/        # YAML configs; one source of truth for paths and thresholds
-  tests/
+  common/         # config loader, JSON logging, debug dumps, manifest format (shared by all packages)
+  tools/          # export_openapi.py, overlay.py (debug overlay)
+  tests/          # unit, contract, integration, ml, data, e2e, fixtures
+  openapi.json    # exported API contract (CI fails on drift)
   SPEC.md  README.md  .env.example
 ```
 
