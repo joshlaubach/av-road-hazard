@@ -14,9 +14,9 @@ from typing import Any
 
 from PIL import Image
 
-from defects.label_check import iter_annotations
 from defects.labels import CODES, class_index
 from defects.validation import image_issues, read_annotation
+from defects.voc import iter_annotations
 
 Manifest = dict[str, dict[str, Any]]
 # Keep provenance/split commands usable without the optional ML extra.

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
 
-from defects.label_check import Box
+from defects.voc import Box
 
 
 def _integer(text: str | None) -> int:

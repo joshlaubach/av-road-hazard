@@ -13,7 +13,7 @@ Do not reuse existing splits or a dataset identity after changing sample members
 
 The command reads annotations and verifies image files; it does not download data,
 train a model, or change source annotations. Keep outputs local, outside git.
-Image resolution follows the same layout search as `defects.label_check.find_image`.
+Image resolution follows the same layout search as `defects.voc.find_image`.
 
 Malformed XML, missing boxes/class codes, missing/nonfinite/noninteger coordinates,
 nonpositive boxes, out-of-image boxes, unreadable images, and conflicting image
