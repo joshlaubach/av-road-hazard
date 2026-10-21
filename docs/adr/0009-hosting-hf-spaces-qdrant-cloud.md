@@ -2,7 +2,7 @@ Purpose: ADR 0009: Hosting on Hugging Face Spaces and Qdrant Cloud.
 
 # ADR 0009: Hosting on Hugging Face Spaces and Qdrant Cloud
 
-Status: accepted (owner approved)
+Status: accepted
 
 ## Context
 Budget is up to about $20/month. Hosted compute is CPU only. EfficientNet-B4 over 64 patches plus Faster R-CNN on CPU is slow.

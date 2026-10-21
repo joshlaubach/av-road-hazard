@@ -6,7 +6,7 @@ Sources: [BUILD_PLAN.md](../BUILD_PLAN.md) sections 0, 1, 6; [ENGINEERING.md](..
 
 ## Constraint behind the plan
 
-The owner said they have several AI agents working side by side. The owner also has one Claude plan and one Codex plan, each $20/month, so at most two agents run concurrently (one per tool) and usage limits, not coordination, are the bottleneck. Both statements are recorded; the plan resolves them with sequenced sprints. <!-- F:U-08 --> See [adr/0008-two-agent-sequenced-sprints.md](adr/0008-two-agent-sequenced-sprints.md).
+Work is planned for several agents in parallel, but the available plans are one Claude plan and one Codex plan, each $20/month, so at most two agents run concurrently (one per tool) and usage limits, not coordination, are the bottleneck. Sequenced sprints resolve this. <!-- F:U-08 --> See [adr/0008-two-agent-sequenced-sprints.md](adr/0008-two-agent-sequenced-sprints.md).
 
 ## Lanes
 
@@ -46,7 +46,7 @@ One workstream per session; fresh sessions instead of long ones; each agent gets
 
 ## Brief assembly
 
-Each brief in `docs/agents/` is self-contained and has the same 16 headings (lane, sprint and dependencies, goal, owned paths, inputs, outputs, contract references, ordered task list, tests, done criteria, pitfalls, debugging hints, token-saving notes, skills to load, PR checklist, reviewer lane). Inputs name exact source files and pinned SHAs from [SOURCE_REPOS.md](SOURCE_REPOS.md). Suggested skills per brief are placeholders; the owner's skills are not enumerated. The assistant suggested a frontend-design skill (non-templated UI styling) and a dataviz skill (charts) for workstream F; the docs/pptx/xlsx/pdf skills are irrelevant to this repo. The owner has coding skills available to their agents but has not listed them; briefs carry "Skills to load: owner to fill in". The assistant that wrote the prompt could see only document, browser, and design skills, and suggested a frontend-design skill for the UI and a dataviz skill for charts as placeholders. <!-- F:A-13 --> <!-- F:U-14 -->
+Each brief in `docs/agents/` is self-contained and has the same 16 headings (lane, sprint and dependencies, goal, owned paths, inputs, outputs, contract references, ordered task list, tests, done criteria, pitfalls, debugging hints, token-saving notes, skills to load, PR checklist, reviewer lane). Inputs name exact source files and pinned SHAs from [SOURCE_REPOS.md](SOURCE_REPOS.md). Suggested skills per brief are placeholders; the maintainer's coding skills are not enumerated yet, and briefs carry "Skills to load: owner to fill in". Placeholder suggestions: a frontend-design skill (non-templated UI styling) and a dataviz skill (charts) for workstream F. The docs/pptx/xlsx/pdf skills are irrelevant to this repo. <!-- F:A-13 --> <!-- F:U-14 -->
 
 ## Branches, PRs, protection
 

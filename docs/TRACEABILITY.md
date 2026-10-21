@@ -7,7 +7,7 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | ID | One-line summary | File(s) | Section heading |
 |---|---|---|---|
 | A-01 | Two lanes. Claude lane: contracts and scaffold, fusion, RAG design, integration, hard debugging, deploy, review of Codex PRs.... | AGENTS.md, CLAUDE.md, docs/AGENT_WORKFLOW.md, docs/adr/0008-two-agent-sequenced-sprints.md | 6. Lanes and cross-review; Claude-lane responsibilities; Decision; Lanes |
-| A-02 | Sprint table (Appendix B section 1) with days; the owner's machine runs downloads, training, and evaluation in the background... | AGENTS.md, docs/AGENT_WORKFLOW.md | 7. Token and usage discipline; Sprint table |
+| A-02 | Sprint table with days; downloads, training and evaluation run on the dev machine at no token cost. | AGENTS.md, docs/AGENT_WORKFLOW.md | 7. Token and usage discipline; Sprint table |
 | A-03 | Cross-review: every PR is reviewed by the other tool, using the checklist in Appendix C section 2, in one short pass. | AGENTS.md, CONTRIBUTING.md, docs/AGENT_WORKFLOW.md, docs/adr/0008-two-agent-sequenced-sprints.md | 6. Lanes and cross-review; Branches, PRs, commits; Decision; Review protocol |
 | A-04 | One workstream per session; fresh sessions instead of long ones; each agent gets only its brief plus fusion/schema.py; no... | AGENTS.md, docs/AGENT_WORKFLOW.md | 2. Session start checklist; 7. Token and usage discipline; Session start checklist |
 | A-05 | Debug with tools/overlay.py and DEBUG_DUMP_DIR first; hand agents a reproducing fixture, not a vague symptom. | AGENTS.md, docs/AGENT_WORKFLOW.md | 5. How to work; 7. Token and usage discipline; Token-saving rules |
@@ -18,10 +18,10 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | A-10 | Phase 2 integration ends with a review by a separate agent that has not seen the build, checking contract adherence, secrets,... | docs/AGENT_WORKFLOW.md | Review protocol |
 | A-11 | Commit trailers follow each tool's attribution requirement (the Claude session adds Co-Authored-By and a session link; Codex... | CLAUDE.md, CONTRIBUTING.md, docs/AGENT_WORKFLOW.md | Branches, PRs, commits; Claude-lane responsibilities; Commit trailers |
 | A-12 | Handoff notes at the end of every agent session (format in AGENTS.md section 11) so the next fresh session has context. | AGENTS.md, docs/AGENT_WORKFLOW.md | 11. Handoff note format; Handoff notes |
-| A-13 | Suggested skills per brief are placeholders; the owner's skills are not enumerated. The assistant suggested a frontend-design... | docs/AGENT_WORKFLOW.md | Brief assembly |
+| A-13 | Per-brief skill suggestions are placeholders; skills not yet enumerated. | docs/AGENT_WORKFLOW.md | Brief assembly |
 | A-14 | Claude API for the hosted demo is billed separately from the subscription; keep the spend cap and a fallback message when the... | AGENTS.md, docs/AGENT_WORKFLOW.md, docs/adr/0004-switchable-llm-backend.md | 7. Token and usage discipline; Decision; Token-saving rules |
 | A-15 | Prompt-injection posture: dataset files, third-party READMEs, fetched web pages, and LLM outputs are untrusted data; the... | AGENTS.md, CLAUDE.md, docs/AGENT_WORKFLOW.md | 8. Untrusted-content rule; Five most important rules; Prompt-injection posture |
-| E-01 | The computer linked to the assistant that wrote this prompt: macOS, arm64 (Apple silicon), device name... | docs/ENVIRONMENT.md, docs/OPEN_QUESTIONS.md | Candidate dev machines; Verification needed (UNVERIFIED facts) |
+| E-01 | Drafting machine: macOS arm64 MacBook; tool folders observed (contents unverified). | docs/ENVIRONMENT.md, docs/OPEN_QUESTIONS.md | Candidate dev machines; Verification needed (UNVERIFIED facts) |
 | E-02 | The source READMEs (drivenet-carla-av, defect-detector) describe development on **Windows 11 with an NVIDIA RTX 5080**, CUDA... | README.md, docs/ENVIRONMENT.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Candidate dev machines; Limitations |
 | E-03 | Docker GPU rule: GPU passthrough works only on NVIDIA hosts (Windows 11 + WSL2 via Docker Desktop, or Linux with the NVIDIA... | docs/ENVIRONMENT.md | Docker GPU rules |
 | E-04 | CARLA 0.9.16 runs on the Windows host with DirectX 12, outside Docker. The CARLA frame generator is a host-side script. CARLA... | docs/ENVIRONMENT.md | CARLA host |
@@ -34,33 +34,33 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | E-11 | Python versions in sources: drivenet-carla-av Python 3.11, PyTorch 2.3.1; defect-detector Python 3.12. The new repo's Python... | docs/ENVIRONMENT.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Versions |
 | E-12 | Local services: Ollama on http://localhost:11434 with model llama3.2-vision; Qdrant in Docker locally and Qdrant Cloud free... | .env.example, docs/ENVIRONMENT.md | F:E-12 local services: Ollama on http://localhost:11434 with llama3.2-vision; Qdrant in Docker locally, Qdrant Cloud free tier when hosted.; Local services and paths |
 | L-01 | nuScenes: license is non-commercial and restricts redistribution of images (UNVERIFIED: a web search did not surface the... | docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md, docs/adr/0005-nuscenes-local-only.md | Decision; Per-dataset facts and policy; Verification needed (UNVERIFIED facts) |
-| L-02 | RDD2022: the figshare record (CRDDC 2022) page the assistant fetched named no license. UNVERIFIED. Policy: do not publish any... | README.md, docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Limitations; Per-dataset facts and policy |
+| L-02 | RDD2022 license not named on the figshare record (UNVERIFIED); no RDD2022 images published until confirmed [CRITICAL]. | README.md, docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Limitations; Per-dataset facts and policy |
 | L-03 | Waymo Open Dataset: non-commercial and requires separate application/approval (UNVERIFIED terms); optional, local-only,... | docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Per-dataset facts and policy; Verification needed (UNVERIFIED facts) |
 | L-04 | MVTec AD: dropped from v1; was the only reason for Kaggle in defect-detector (about 5 GB). | docs/DATA_AND_LICENSES.md | Per-dataset facts and policy |
 | L-05 | CARLA frames the owner generates are the owner's own data (no third-party dataset license; CARLA's own license terms apply,... | docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Per-dataset facts and policy; Verification needed (UNVERIFIED facts) |
-| L-06 | The owner asked about finding a new dataset for the hosted corpus. The assistant searched and could not verify the license of... | docs/DATA_AND_LICENSES.md | Hosted corpus |
+| L-06 | Hosted corpus: CARLA frames plus RDD2022 samples; no alternative dataset had a verifiable license. | docs/DATA_AND_LICENSES.md | Hosted corpus |
 | L-07 | Hosted demo model: upload-your-own-image analysis; the hosted RAG searches the CARLA + RDD2022-sample corpus and session... | docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Hosted demo data model; Verification needed (UNVERIFIED facts) |
 | L-08 | Data and checkpoint manifests: data/MANIFEST.json and checkpoints/MANIFEST.json record dataset versions, checkpoint hashes... | .gitignore, docs/DATA_AND_LICENSES.md | F:L-08 data/MANIFEST.json and checkpoints/MANIFEST.json stay tracked (versions and SHA-256 hashes); the files they describe do not.; Manifests |
 | L-09 | Uploaded images in the hosted demo: validate type and size, decode safely, strip EXIF GPS, rate limit. | docs/DATA_AND_LICENSES.md | Uploaded images (hosted demo) |
-| P-01 | First commit contents (as the assistant told the owner): README, SPEC, BUILD_PLAN, ENGINEERING, LICENSE (deliberate choice),... | docs/AGENT_WORKFLOW.md | Scope of the first commit |
+| P-01 | First-commit contents and the extra docs added to it. | docs/AGENT_WORKFLOW.md | Scope of the first commit |
 | P-02 | Left for the Sprint 0 scaffold commit/PR (not in the first commit): code, pyproject.toml, schema, stubs, CI workflows, Docker... | docs/AGENT_WORKFLOW.md | Scope of the first commit |
 | P-03 | Kept out of the first commit: any data, weights, secrets, code copied from the original repos. Copying code in happens later... | docs/AGENT_WORKFLOW.md | Scope of the first commit |
 | P-04 | After the first commit: create the remote, push main, enable branch protection, then start Sprint 0. | docs/AGENT_WORKFLOW.md | Scope of the first commit |
 | P-05 | Merge order: Scaffold, then C and G data scripts, then A and B once checkpoints exist, then D, E, F, then the integration PR,... | docs/AGENT_WORKFLOW.md | Sprint table |
 | P-06 | Open items before agents start: push access to create the remote; RDD2022 license check; CARLA defect approach; which of the... | docs/AGENT_WORKFLOW.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Sprint table |
-| P-07 | Status of this prompt's source: it was written from a conversation on 2026-10-21 by an assistant that read the READMEs and... | README.md, docs/PROMPT_HISTORY.md | Prompt history; av-road-hazard |
-| Q-01 | [CRITICAL] The owner worried the project is "ai slop". The assistant agreed the risk is real: the plan is partly stack-driven... | README.md, docs/QUALITY_BAR.md | Quality warning; The concern |
-| Q-02 | Criteria for a credible project: a real question with a measured answer (example: can a classifier trained on close-up road... | docs/QUALITY_BAR.md | Criteria for a credible project |
-| Q-03 | Recommended scope cut (a recommendation, not an owner decision; ADR 0011 status "proposed"): keep detection, road-masked... | docs/OPEN_QUESTIONS.md, docs/QUALITY_BAR.md, docs/adr/0011-core-first-gate.md | Blockers before agents start; Decision; Recommended scope cut (a recommendation, not an owner decision) |
+| P-07 | Status: docs drafted from source READMEs and partial code reading; nothing executed or tested. | README.md, docs/PROMPT_HISTORY.md | Prompt history; av-road-hazard |
+| Q-01 | Supporting stack sits on models that do not yet work well on target data; results come first [CRITICAL]. | README.md, docs/QUALITY_BAR.md | Evidence standards; Why these standards exist |
+| Q-02 | Criteria for a credible project: a real question with a measured answer (example: can a classifier trained on close-up road... | docs/QUALITY_BAR.md | Criteria for a credible result |
+| Q-03 | Core scope: detection, tiling, fusion, synthetic eval; RAG only if core results justify it (ADR 0011, proposed). | docs/OPEN_QUESTIONS.md, docs/QUALITY_BAR.md, docs/adr/0011-core-first-gate.md | Blockers before agents start; Core scope (proposed, see ADR 0011); Decision |
 | Q-04 | Core-first gate (proposed): do not start D (RAG), F (React UI), or I (deploy) beyond stubs until A, B, C and the synthetic... | README.md, docs/QUALITY_BAR.md, docs/adr/0011-core-first-gate.md | Core-first gate (proposed); Decision; Planned features |
-| Q-05 | Every README claim must be backed by a number from eval/results.json or marked as unmeasured; state effective detection range;... | README.md, docs/QUALITY_BAR.md | Anti-slop rules for claims; Limitations; Quality warning |
-| Q-06 | The owner must be able to explain each core component. Each agent brief ends with a "Owner explainer" paragraph the agent... | AGENTS.md, docs/QUALITY_BAR.md | 11. Handoff note format; Interview-explainability rule |
-| Q-07 | Offer: the assistant also offered to review the existing repos honestly and say which are worth keeping; pending the owner's... | docs/OPEN_QUESTIONS.md, docs/QUALITY_BAR.md | Blockers before agents start; Pending offer |
+| Q-05 | Every README claim must be backed by a number from eval/results.json or marked as unmeasured; state effective detection range;... | README.md, docs/QUALITY_BAR.md | Evidence rules for claims; Evidence standards; Limitations |
+| Q-06 | Each brief ends with a Maintainer explainer paragraph written in the PR (what, why, what could be wrong). | AGENTS.md, docs/QUALITY_BAR.md | 11. Handoff note format; Maintainer explainer |
+| Q-07 | Possible follow-up: candid review of which source repos are worth keeping. | docs/OPEN_QUESTIONS.md, docs/QUALITY_BAR.md | Existing repos; Quality/process items |
 | R-01 | Vector store: Qdrant chosen (filters + multi-vector support, runs in Docker, free cloud tier). Rejected: Chroma (simplest,... | docs/adr/0001-qdrant-vector-store.md | Decision |
 | R-02 | LLM: switchable between LLaMA 3.2 Vision via Ollama (local, free, already used in defect-detector) and the Claude API (hosted,... | docs/adr/0004-switchable-llm-backend.md | Decision |
 | R-03 | DQN gate dropped in v1 (scan all tiles) because it has no usable checkpoint, adds RL training cost, and its reward signal is... | docs/adr/0003-drop-dqn-gate-v1.md | Decision |
 | R-04 | Hosting: Hugging Face Spaces (CPU) plus Qdrant Cloud free tier. Rejected: Fly.io/Render (more control but uses most of the... | docs/adr/0009-hosting-hf-spaces-qdrant-cloud.md | Decision |
-| R-05 | Front end: owner chose React/Next.js. Rejected for v1: Streamlit (recommended for speed; defect-detector already has a... | docs/adr/0006-react-nextjs-frontend.md | Decision |
+| R-05 | Front end: React/Next.js; Streamlit and Gradio rejected for v1; OpenAPI client; Streamlit fallback. | docs/adr/0006-react-nextjs-frontend.md | Decision |
 | R-06 | Evaluation: three automatic checks (per-model metrics, retrieval tests auto-generated from nuScenes annotations, synthetic... | docs/EVALUATION.md, docs/adr/0007-no-hand-labeling-eval.md | Decision; Evaluation |
 | R-07 | Fusion has no ground truth because nuScenes has no road-defect labels and RDD2022 has no object labels. The synthetic paste... | README.md, docs/EVALUATION.md, docs/adr/0007-no-hand-labeling-eval.md | Consequences; Limitations; Why a synthetic fusion test |
 | R-08 | Fused output design: one JSON HazardRecord per frame with objects, defects with severity, in_road, and near_objects;... | README.md, docs/ARCHITECTURE.md | Field semantics; Planned features |
@@ -84,24 +84,24 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | S-13 | drivenet-carla-av (reference only): trains a simulated car in CARLA 0.9.16 under California traffic rules: expert data... | docs/SOURCE_REPOS.md | drivenet-carla-av (reference only) |
 | S-14 | Naming collisions to avoid when porting: both source repos use a top-level src/ package, and nuscenes-stability has... | docs/SOURCE_REPOS.md, docs/adr/0010-source-ports-not-forks.md | Decision; Naming collisions to avoid |
 | S-15 | Port plan per source: nuscenes-stability has no inference module (detector is built inside notebook 02), so workstream A... | docs/SOURCE_REPOS.md | Port plan |
-| U-01 | Owner: Joshua Laubach, GitHub joshlaubach, email (see docs/PROMPT_HISTORY.md) (use only to identify the owner and for git... | docs/PROMPT_HISTORY.md | Prompt history |
-| U-02 | Goal: combine the owner's AV (the owner wrote "EVAV") projects and implement them end to end, instead of partially completed... | README.md, docs/GLOSSARY.md | Glossary; What it is |
-| U-03 | Chosen combination: nuscenes-stability (a CV model that identifies common road objects) + defect-detector (identifies road... | README.md | What it is |
+| U-01 | Project maintainer identity and git author config; email only in docs/PROMPT_HISTORY.md. | docs/PROMPT_HISTORY.md | Prompt history |
+| U-02 | Goal: combine the two earlier AV (EVAV) projects end to end instead of partial demos on Kaggle-style data. | README.md, docs/GLOSSARY.md | Glossary; What it is |
+| U-03 | Combination: nuscenes-stability (objects) + defect-detector (road defects); pothole-near-pedestrian example. | README.md | What it is |
 | U-04 | drivenet-carla-av is out of scope for v1, except CARLA as a frame generator for the hosted corpus. Its driving policy is a... | README.md, docs/OPEN_QUESTIONS.md | From SPEC.md section 10 (Appendix A); Goals and constraints |
-| U-05 | The owner wants a multimodal RAG layer on top of the fused output, queried with mixed visual and text criteria (example: "show... | README.md | Goals and constraints |
+| U-05 | Multimodal RAG over fused output with mixed visual and text queries. | README.md | Goals and constraints |
 | U-06 | Audience: portfolio and recruiters. Interface: Web UI plus API. Demo: hosted and public. | README.md | Goals and constraints |
-| U-07 | Timeline target: demoable v1 in 1-2 weeks. The owner said they have several AI agents working side by side, and chose... | README.md, docs/adr/0006-react-nextjs-frontend.md | Decision; Goals and constraints |
-| U-08 | Agent plans: one Claude plan and one Codex plan, each $20/month. Therefore at most two agents run concurrently (one per tool);... | AGENTS.md, docs/AGENT_WORKFLOW.md, docs/adr/0008-two-agent-sequenced-sprints.md | 7. Token and usage discipline; Constraint behind the plan; Context |
+| U-07 | Demoable v1 in 1-2 weeks with parallel agents; React/Next.js tradeoff accepted and mitigated. | README.md, docs/adr/0006-react-nextjs-frontend.md | Decision; Goals and constraints |
+| U-08 | Two plans (Claude, Codex), at most two concurrent agents; usage limits are the bottleneck. | AGENTS.md, docs/AGENT_WORKFLOW.md, docs/adr/0008-two-agent-sequenced-sprints.md | 7. Token and usage discipline; Constraint behind the plan; Context |
 | U-09 | Hosted demo budget: up to about $20/month. A Claude API key exists. API usage is billed separately from the Claude... | README.md | Goals and constraints |
-| U-10 | No hand labeling. The owner explicitly does not want to label anything by hand. | README.md, docs/EVALUATION.md | Evaluation; Goals and constraints |
-| U-11 | Repo: name av-road-hazard (owner accepted this name), private, under joshlaubach. The owner has created an empty local folder.... | README.md, docs/PROMPT_HISTORY.md | Goals and constraints; Prompt history |
-| U-12 | The owner wants all engineering practices (full lifecycle: requirements, design, testing, debugging, CI/CD, operations,... | README.md | Goals and constraints |
-| U-13 | [CRITICAL] The owner said "I think my current project is ai slop". Treat this as a quality requirement: see group Q. | README.md, docs/QUALITY_BAR.md | Quality warning; The concern |
-| U-14 | The owner has coding skills available to their agents but has not listed them. Briefs carry a "Skills to load: owner to fill... | docs/AGENT_WORKFLOW.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Brief assembly |
-| U-15 | Owner's communication preference: concise, direct, minimal formatting, no filler. Documents should follow that. | README.md | Goals and constraints |
-| U-16 | Decisions the owner explicitly approved: drop the DQN gate in v1; Qdrant; road-masked tiling with auto-labeled negatives; the... | README.md | Goals and constraints |
-| U-17 | The owner asked whether RDD2022 close-ups could be used "as filters for the CNN". Answer recorded: RDD2022 is the *training... | docs/SOURCE_REPOS.md, docs/adr/0002-road-masked-tiling.md | Context; Domain-gap problems when tiling nuScenes/Waymo frames |
-| U-18 | The owner asked "does any of this need GPU usage?" and about Docker; the answers are in E-05 to E-09. | docs/ENVIRONMENT.md | GPU and Docker answers (owner's questions) |
+| U-10 | No hand labeling; evaluation is automatic. | README.md, docs/EVALUATION.md | Evaluation; Goals and constraints |
+| U-11 | Repo av-road-hazard, private under joshlaubach; started from an empty folder. | README.md, docs/PROMPT_HISTORY.md | Goals and constraints; Prompt history |
+| U-12 | Full engineering/agentic practices and build plan written into files; every fact present in a file. | README.md | Goals and constraints |
+| U-13 | Quality is a requirement: quality bar and evidence standards (see group Q) [CRITICAL]. | README.md, docs/QUALITY_BAR.md | Evidence standards; Why these standards exist |
+| U-14 | Skills for agents not yet enumerated; briefs carry a placeholder field. | docs/AGENT_WORKFLOW.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Brief assembly |
+| U-15 | Documentation style: concise, direct, minimal formatting. | README.md | Goals and constraints |
+| U-16 | Approved decisions: no DQN, Qdrant, road-masked tiling, 3 evals, switchable LLM, HF Spaces + Qdrant Cloud, CARLA+RDD2022 corpus, React/Next.js, mini then full, upload demo. | README.md | Goals and constraints |
+| U-17 | RDD2022 is classifier training data, not a filter; frame chunking is the tiling approach. | docs/SOURCE_REPOS.md, docs/adr/0002-road-masked-tiling.md | Context; Domain-gap problems when tiling nuScenes/Waymo frames |
+| U-18 | GPU and Docker requirements are covered by the E-group sections. | docs/ENVIRONMENT.md | GPU and Docker requirements |
 | APP-A | Appendix A committed in full as SPEC.md | SPEC.md | (top) |
 | APP-B | Appendix B committed in full as BUILD_PLAN.md | BUILD_PLAN.md | (top) |
 | APP-C | Appendix C committed in full as ENGINEERING.md | ENGINEERING.md | (top) |

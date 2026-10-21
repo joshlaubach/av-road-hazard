@@ -116,7 +116,7 @@ Write at the end of each session into the PR description, so the next fresh sess
 4. New open questions.
 5. Files touched.
 
-Also include the "Owner explainer" paragraph: what the component does, why, and what could be wrong. <!-- F:Q-06 -->
+Also include the "Maintainer explainer" paragraph: what the component does, why, and what could be wrong. <!-- F:Q-06 -->
 
 ## 12. When to stop and ask the owner
 

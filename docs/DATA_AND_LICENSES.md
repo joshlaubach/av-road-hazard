@@ -19,14 +19,14 @@ Third-party datasets (nuScenes, RDD2022, MVTec AD, Waymo Open Dataset, CARLA ass
 ## Per-dataset facts and policy
 
 - **nuScenes.** License is non-commercial and restricts redistribution of images (UNVERIFIED; the owner must verify). Policy: nuScenes images stay local; never in the repo, Docker images, hosted bundle, hosted corpus, screenshots published in docs, or demo video frames. <!-- F:L-01 -->
-- **RDD2022.** **[CRITICAL]** The figshare record (CRDDC 2022) page the assistant fetched named no license. UNVERIFIED. Policy: do not publish any RDD2022 images (hosted corpus samples, README images, fixtures committed to the repo) until the license is confirmed. <!-- F:L-02 -->
+- **RDD2022.** **[CRITICAL]** The figshare record (CRDDC 2022) page named no license when checked. UNVERIFIED. Policy: do not publish any RDD2022 images (hosted corpus samples, README images, fixtures committed to the repo) until the license is confirmed. <!-- F:L-02 -->
 - **Waymo Open Dataset.** Non-commercial and requires separate application/approval (UNVERIFIED terms); optional, local-only, excluded from v1 by default. <!-- F:L-03 -->
 - **MVTec AD.** Dropped from v1. It was the only reason for Kaggle in defect-detector (about 5 GB). <!-- F:L-04 -->
 - **CARLA.** Frames the owner generates are the owner's own data (no third-party dataset license; CARLA's own license terms apply, UNVERIFIED). Stock CARLA has no potholes or cracks; defects require decal/texture overlays, otherwise the CARLA corpus exercises only the object side. Decision pending (open question). <!-- F:L-05 -->
 
 ## Hosted corpus
 
-The owner asked about finding a new dataset for the hosted corpus. The assistant searched and could not verify the license of any alternative (it named none as confirmed). Options left: CARLA frames plus the owner's own photos (no license risk), plus RDD2022 samples only after verification. The owner chose "CARLA frames + RDD2022 samples". <!-- F:L-06 -->
+Alternative datasets for the hosted corpus were searched and none had a verifiable license. Options left: CARLA frames plus the maintainer's own photos (no license risk), plus RDD2022 samples only after verification. Decision: CARLA frames + RDD2022 samples. <!-- F:L-06 -->
 
 ## Hosted demo data model
 
