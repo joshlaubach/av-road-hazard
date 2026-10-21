@@ -37,15 +37,18 @@ jobs:
       - run: python -m tools.export_openapi --check
 
   web:
-    # Runs once workstream F adds web/.
-    if: ${{ hashFiles('web/package.json') != '' }}
+    # hashFiles is not allowed in job-level conditions, so the check is a step. No-op until workstream F adds web/.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - id: has_web
+        run: test -f web/package.json && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
+      - if: steps.has_web.outputs.present == 'true'
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: cd web && npm ci && npm run lint && npm run typecheck && npm run build
+      - if: steps.has_web.outputs.present == 'true'
+        run: cd web && npm ci && npm run lint && npm run typecheck && npm run build
 
   docker-and-e2e:
     runs-on: ubuntu-latest
