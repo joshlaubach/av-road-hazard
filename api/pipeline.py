@@ -16,10 +16,18 @@ from perception.infer import detect
 
 
 class InvalidImage(ValueError):
-    pass
+    """The uploaded bytes are not a usable image (corrupt, unsupported, or too large).
+
+    A ValueError subclass so callers can catch it specifically; the API maps it to HTTP 422.
+    """
 
 
 def decode_image(data: bytes) -> np.ndarray:
+    """Decode uploaded bytes into an RGB uint8 array of shape (height, width, 3).
+
+    The pixel cap is checked from the file header before decoding, so a tiny file that expands to
+    a huge image (a "decompression bomb") is rejected without allocating the memory first.
+    """
     max_pixels = get_config()["api"]["max_image_pixels"]
     try:
         with Image.open(io.BytesIO(data)) as img:
@@ -32,6 +40,8 @@ def decode_image(data: bytes) -> np.ndarray:
 
 
 def frame_id_for(data: bytes) -> str:
+    """Deterministic id from the image bytes, so uploading the same image twice gives the same
+    record id (the second upload overwrites the first in the store). 16 hex chars is plenty here."""
     return "up-" + hashlib.sha256(data).hexdigest()[:16]
 
 
@@ -39,8 +49,13 @@ class Pipeline:
     """Loads models once (none yet) and analyzes frames."""
 
     def analyze(self, data: bytes, source: str = "upload") -> HazardRecord:
+        """Run one image through detection and defect finding and return a HazardRecord.
+
+        Currently: decode, call the two (stub) detectors, dump intermediates for debugging when
+        DEBUG_DUMP_DIR is set, and wrap the defects in placeholder fusion fields.
+        """
         frame = decode_image(data)
-        h, w = frame.shape[:2]
+        h, w = frame.shape[:2]  # numpy arrays are (height, width, channels)
         objects = detect(frame)
         defects = find_defects(frame)
         dump("objects", [o.model_dump(mode="json") for o in objects])
