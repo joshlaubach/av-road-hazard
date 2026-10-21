@@ -10,9 +10,10 @@ from fusion.schema import Defect
 
 def find_defects(frame: np.ndarray) -> list[Defect]:
     """Find road defects in an RGB uint8 frame (H, W, 3). Boxes are pixel (x1, y1, x2, y2)."""
+    # Fail loudly rather than return fake results when stubs are off but no real model exists.
     if not get_config()["pipeline"]["use_stubs"]:
         raise NotImplementedError("Real defect finder arrives with workstream B (defects).")
-    h, w = frame.shape[:2]
+    h, w = frame.shape[:2]  # shape is (height, width, channels)
     # Stub only: class names/ids are placeholders. The real label map must be verified first
     # (docs/SOURCE_REPOS.md, S-11).
     return [
