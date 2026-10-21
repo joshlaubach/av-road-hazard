@@ -1,4 +1,4 @@
-"""Service object that turns an image into a HazardRecord. Stub fusion until workstream C."""
+"""Service object that turns an image into a HazardRecord (detectors are stubs; fusion is real)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,8 @@ from PIL import Image, UnidentifiedImageError
 from common.config import get_config
 from common.debug import dump
 from defects.infer import find_defects
-from fusion.schema import DefectRecord, HazardRecord
+from fusion.fuse import RoadMask, fuse
+from fusion.schema import HazardRecord, Source
 from perception.infer import detect
 
 
@@ -48,11 +49,22 @@ def frame_id_for(data: bytes) -> str:
 class Pipeline:
     """Loads models once (none yet) and analyzes frames."""
 
-    def analyze(self, data: bytes, source: str = "upload") -> HazardRecord:
-        """Run one image through detection and defect finding and return a HazardRecord.
+    def road_mask(self, frame: np.ndarray) -> RoadMask | None:
+        """Boolean (height, width) road mask for the frame, or None when none is available.
 
-        Currently: decode, call the two (stub) detectors, dump intermediates for debugging when
-        DEBUG_DUMP_DIR is set, and wrap the defects in placeholder fusion fields.
+        None means "unavailable or untrustworthy" (no road model yet, or it failed): fusion then
+        reports in_road as unknown (null) and still scores the defect. An all-False mask is a
+        different, legitimate answer ("no road detected") and makes every defect in_road=False.
+        Do not turn a failure into an empty mask. Stub: no road model exists yet, so always None.
+        """
+        return None
+
+    def analyze(self, data: bytes, source: Source = "upload") -> HazardRecord:
+        """Run one image through detection, defect finding and fusion; return a HazardRecord.
+
+        Decode, call the two (stub) detectors, dump intermediates for debugging when
+        DEBUG_DUMP_DIR is set, then fuse them with the road mask (if any) into the record.
+        Severity stays "unknown" inside fuse() until the RDD2022 label mapping is verified.
         """
         frame = decode_image(data)
         h, w = frame.shape[:2]  # numpy arrays are (height, width, channels)
@@ -60,24 +72,13 @@ class Pipeline:
         defects = find_defects(frame)
         dump("objects", [o.model_dump(mode="json") for o in objects])
         dump("defects_raw", [d.model_dump(mode="json") for d in defects])
-        # Stub fusion: workstream C replaces this with real road-mask and proximity logic.
-        record = HazardRecord(
+        record = fuse(
             frame_id=frame_id_for(data),
             source=source,
             image_size=(w, h),
             objects=objects,
-            defects=[
-                DefectRecord(
-                    name=d.name,
-                    confidence=d.confidence,
-                    box=d.box,
-                    severity="unknown",
-                    in_road=True,
-                    near_objects=[],
-                )
-                for d in defects
-            ],
-            hazard_score=0.0,
+            defects=defects,
+            road_mask=self.road_mask(frame),
         )
         dump("record", record)
         return record
