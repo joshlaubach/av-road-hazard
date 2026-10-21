@@ -29,3 +29,42 @@ def test_rejects_non_image_and_bad_content_type(frame_bytes: bytes) -> None:
     )
     assert client.get("/records/missing").status_code == 404
     assert client.post("/query", json={"top_k": 2}).status_code == 422
+
+
+def test_rejects_decoded_image_over_pixel_cap() -> None:
+    import io
+
+    from PIL import Image
+
+    buf = io.BytesIO()
+    Image.new("1", (6000, 6000)).save(buf, "PNG")  # tiny file, 36M pixels once decoded
+    assert len(buf.getvalue()) < 100_000
+    r = client.post("/analyze", files={"file": ("big.png", buf.getvalue(), "image/png")})
+    assert r.status_code == 422
+    assert "too large" in r.json()["detail"]
+
+
+def test_request_id_header_is_sanitized_and_logged() -> None:
+    import json
+    import logging
+
+    from common.logging import JsonFormatter
+
+    lines: list[str] = []
+
+    class Capture(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            lines.append(JsonFormatter().format(record))
+
+    handler = Capture()
+    logging.getLogger("api").addHandler(handler)
+    try:
+        ok = client.get("/health", headers={"x-request-id": "abc-123"})
+        evil = client.get("/health", headers={"x-request-id": "../../etc/x"})
+    finally:
+        logging.getLogger("api").removeHandler(handler)
+    assert ok.headers["x-request-id"] == "abc-123"
+    assert evil.headers["x-request-id"] not in ("../../etc/x", "")
+    assert "/" not in evil.headers["x-request-id"]
+    logged = [json.loads(line) for line in lines]
+    assert next(r["request_id"] for r in logged if r["route"] == "/health") == "abc-123"

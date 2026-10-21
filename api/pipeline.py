@@ -8,6 +8,7 @@ import io
 import numpy as np
 from PIL import Image, UnidentifiedImageError
 
+from common.config import get_config
 from common.debug import dump
 from defects.infer import find_defects
 from fusion.schema import DefectRecord, HazardRecord
@@ -19,11 +20,14 @@ class InvalidImage(ValueError):
 
 
 def decode_image(data: bytes) -> np.ndarray:
+    max_pixels = get_config()["api"]["max_image_pixels"]
     try:
         with Image.open(io.BytesIO(data)) as img:
+            if img.width * img.height > max_pixels:  # header only; pixels not decoded yet
+                raise InvalidImage("image dimensions too large")
             img.load()
             return np.asarray(img.convert("RGB"))
-    except (UnidentifiedImageError, OSError) as exc:
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
         raise InvalidImage("could not decode image") from exc
 
 

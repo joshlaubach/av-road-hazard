@@ -67,9 +67,9 @@ Rules: separate packages (the two source repos both have a `src/`); no hardcoded
 
 ## 5. Interfaces (contract for parallel work)
 
-**Object detector:** `detect(frame: np.ndarray[RGB uint8]) -> list[Object]`, `Object = {label, score, box_xyxy}`.
+**Object detector:** `detect(frame: np.ndarray[RGB uint8]) -> list[Object]`, `Object = {label, score, box}`, where `box` is pixel `(x1, y1, x2, y2)` (top-left origin, `x1<=x2`, `y1<=y2`); `image_size` is `(width, height)`.
 
-**Defect classifier:** `find_defects(frame) -> list[Defect]`, `Defect = {cls, name, confidence, box_xyxy, patch_row, patch_col}`. Multi-label sigmoid over 4 RDD2022 classes (D00, D10, D20, D40), threshold from config.
+**Defect classifier:** `find_defects(frame) -> list[Defect]`, `Defect = {cls, name, confidence, box, patch_row, patch_col}`. Multi-label sigmoid over 4 RDD2022 classes (D00, D10, D20, D40), threshold from config.
 
 **HazardRecord** (one per frame):
 
