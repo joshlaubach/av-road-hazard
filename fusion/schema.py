@@ -78,7 +78,10 @@ class DefectRecord(StrictModel):
     confidence: Prob
     box: Box
     severity: Severity
-    in_road: bool
+    # True: on the road. False: confirmed off the road. None: unknown (no usable road mask).
+    # Fusion scores unknown like True so uncertainty never hides a hazard. Readers must not test
+    # truthiness: None is falsy.
+    in_road: bool | None
     near_objects: list[NearObject] = []
 
 

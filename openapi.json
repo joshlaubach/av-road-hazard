@@ -63,8 +63,15 @@
             "type": "number"
           },
           "in_road": {
-            "title": "In Road",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Road"
           },
           "name": {
             "title": "Name",
