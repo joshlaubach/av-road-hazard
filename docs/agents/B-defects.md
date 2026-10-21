@@ -35,7 +35,7 @@ No other exploration of the source repos is allowed.
 
 ## Contract references
 - `SPEC.md` section 5 (interfaces), section 4 (repo layout)
-- `find_defects(frame) -> list[Defect]`, `Defect = {cls, name, confidence, box_xyxy, patch_row, patch_col}`; multi-label sigmoid over 4 RDD2022 classes (D00, D10, D20, D40), threshold from config
+- `find_defects(frame) -> list[Defect]`, `Defect = {cls, name, confidence, box, patch_row, patch_col}`; multi-label sigmoid over 4 RDD2022 classes (D00, D10, D20, D40), threshold from config
 
 ## Ordered task list
 1. FIRST verify the RDD2022 label names against official documentation and annotation XML names (S-11); add a test that pins the label mapping; fix `CLASS_NAMES` accordingly.

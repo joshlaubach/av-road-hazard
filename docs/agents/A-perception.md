@@ -33,7 +33,7 @@ No other exploration of the source repos is allowed.
 
 ## Contract references
 - `SPEC.md` section 5 (interfaces), section 4 (repo layout)
-- `detect(frame: np.ndarray[RGB uint8]) -> list[Object]`, `Object = {label, score, box_xyxy}`
+- `detect(frame: np.ndarray[RGB uint8]) -> list[Object]`, `Object = {label, score, box}`
 
 ## Ordered task list
 1. Port the model (Faster R-CNN ResNet50 FPN v2, torchvision, torchmetrics AP) from notebook 02 into `train.py` and `infer.py`. The detector is built inside the notebook; there is no inference module to copy.

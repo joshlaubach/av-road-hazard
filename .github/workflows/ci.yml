@@ -1,0 +1,55 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.lock && pip install --no-deps -e .
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: python -m mypy
+      - run: python -m pytest   # includes the openapi.json contract test
+
+  docker-and-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f docker/docker-compose.yml up -d --build api
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install httpx pytest
+      - run: |
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/health && break; sleep 2; done
+          E2E_BASE_URL=http://localhost:8000 python -m pytest tests/e2e -m e2e -o addopts=-q
+      - if: failure()
+        run: docker compose -f docker/docker-compose.yml logs
+
+  secrets-and-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read   # gitleaks-action lists the PR's commits
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pip-audit && pip-audit -r requirements.lock

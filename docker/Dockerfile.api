@@ -1,0 +1,28 @@
+# CPU image for the API. GPU/CUDA 12.8 variant arrives with workstream E.
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+
+COPY requirements.lock ./
+RUN pip install --no-cache-dir -r requirements.lock
+
+COPY pyproject.toml README.md LICENSE ./
+COPY common ./common
+COPY perception ./perception
+COPY defects ./defects
+COPY fusion ./fusion
+COPY rag ./rag
+COPY api ./api
+COPY eval ./eval
+COPY tools ./tools
+COPY configs ./configs
+# Editable install keeps source in /app so configs/ resolves relative to the package root.
+RUN pip install --no-cache-dir --no-deps -e .
+
+# Data, weights, and datasets are mounted as volumes, never baked in.
+USER nobody
+EXPOSE 8000
+HEALTHCHECK --interval=15s --timeout=3s --retries=5 \
+  CMD python -c "import urllib.request as u; u.urlopen('http://localhost:8000/health', timeout=2)"
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
