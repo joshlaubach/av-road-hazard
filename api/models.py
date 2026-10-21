@@ -4,20 +4,16 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
-from fusion.schema import HazardRecord
-
-
-class _Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+from fusion.schema import HazardRecord, StrictModel
 
 
-class IndexResponse(_Strict):
+class IndexResponse(StrictModel):
     indexed: list[str]
 
 
-class QueryRequest(_Strict):
+class QueryRequest(StrictModel):
     text: str | None = None
     image_b64: str | None = Field(default=None, description="Base64-encoded image query")
     filters: dict[str, Any] | None = None
@@ -25,13 +21,13 @@ class QueryRequest(_Strict):
     llm: Literal["llama", "claude"] = "llama"
 
 
-class QueryResponse(_Strict):
+class QueryResponse(StrictModel):
     answer: str
     llm: Literal["llama", "claude"]
     records: list[HazardRecord]
 
 
-class HealthResponse(_Strict):
+class HealthResponse(StrictModel):
     status: Literal["ok", "degraded"]
     stubs: bool
     models: dict[str, str]

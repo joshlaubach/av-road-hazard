@@ -42,7 +42,7 @@ Rules: a bug fix starts with a failing test; tests are deterministic (seeded); n
 6. ML-specific checks: suspect data before model (label ranges, class balance, leakage), then thresholds, then training config; compare against the last good run in experiment tracking.
 
 ## 5. CI/CD
-**On every PR** (GitHub Actions, CPU): ruff lint + format check, mypy, unit/contract/integration/ML-smoke tests, OpenAPI drift check (regenerate and diff), TypeScript typecheck + lint + build for `web/`, Docker build (api, cpu variant), secrets scan (gitleaks), dependency audit (pip-audit, npm audit).
+**On every PR** (GitHub Actions, CPU): ruff lint + format check, mypy, unit/contract/integration/ML-smoke tests, OpenAPI drift check (a contract test regenerates `openapi.json` and diffs it), TypeScript typecheck + lint + build for `web/`, Docker build (api, cpu variant), secrets scan (gitleaks), dependency audit (pip-audit, npm audit).
 **Nightly**: data validation, live LLM check (capped), metric regression if checkpoints are available.
 **On tag**: build and push images, deploy to Hugging Face Space, smoke test the deployed `/health`. Keep the previous image tag for rollback.
 Local GPU jobs (training, full eval) run on your machine; CI never needs a GPU.

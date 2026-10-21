@@ -1,1 +1,1 @@
-"""Shared utilities: config loading, JSON logging, debug dumps, manifests."""
+"""Shared utilities: config loading, JSON logging, debug dumps."""

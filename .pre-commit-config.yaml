@@ -27,12 +27,6 @@ repos:
         language: system
         pass_filenames: false
         types: [python]
-      - id: openapi-current
-        name: openapi.json is current
-        entry: python -m tools.export_openapi --check
-        language: system
-        pass_filenames: false
-        files: ^(api|fusion)/
       - id: no-push-to-main
         name: block direct commits to main
         entry: bash -c 'test "$(git rev-parse --abbrev-ref HEAD)" != main || { echo "Do not commit on main; use agent/<workstream> branches."; exit 1; }'

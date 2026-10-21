@@ -13,23 +13,16 @@ from common.config import get_config
 from common.logging import request_id_var
 
 
-def dump_dir() -> Path | None:
-    raw = get_config()["paths"]["debug_dump_dir"]
-    if not raw:
-        return None
-    path = Path(raw) / (request_id_var.get() or "no-request")
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
 def dump(name: str, obj: Any) -> Path | None:
     """Write obj under DEBUG_DUMP_DIR/<request_id>/. Arrays become PNG, everything else JSON.
 
     Returns the written path, or None when dumping is disabled.
     """
-    target = dump_dir()
-    if target is None:
+    raw = get_config()["paths"]["debug_dump_dir"]
+    if not raw:
         return None
+    target = Path(raw) / (request_id_var.get() or "no-request")
+    target.mkdir(parents=True, exist_ok=True)
     if isinstance(obj, np.ndarray):
         out = target / f"{name}.png"
         Image.fromarray(obj).save(out)

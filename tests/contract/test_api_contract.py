@@ -1,19 +1,14 @@
-import subprocess
-import sys
-
 from fastapi.testclient import TestClient
 
 from api.main import app
 from fusion.schema import HazardRecord
+from tools.export_openapi import TARGET, render
 
 client = TestClient(app)
 
 
 def test_openapi_json_is_current() -> None:
-    result = subprocess.run(
-        [sys.executable, "-m", "tools.export_openapi", "--check"], capture_output=True, text=True
-    )
-    assert result.returncode == 0, result.stdout
+    assert TARGET.read_text() == render(), "run `python -m tools.export_openapi`"
 
 
 def test_expected_routes_present() -> None:
