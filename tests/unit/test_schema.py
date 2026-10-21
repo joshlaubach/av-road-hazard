@@ -25,6 +25,15 @@ def _record() -> HazardRecord:
     )
 
 
+def test_in_road_may_be_unknown() -> None:
+    """in_road accepts True, False and None (unknown); other types are rejected."""
+    base = {"name": "p", "confidence": 0.5, "box": (0, 0, 1, 1), "severity": "low"}
+    for value in (True, False, None):
+        assert DefectRecord(**base, in_road=value).in_road is value
+    with pytest.raises(ValidationError):
+        DefectRecord(**base, in_road=[1])
+
+
 def test_round_trip() -> None:
     """A record serializes to JSON and back without changing."""
     rec = _record()

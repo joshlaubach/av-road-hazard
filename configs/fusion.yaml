@@ -1,0 +1,30 @@
+# Starting values for fusion/fuse.py. Uncalibrated: chosen to be sensible, not measured.
+# Every weight is in [0, 1] so hazard_score stays in [0, 1]. See fusion/README.md.
+
+# Multiplier for a defect's severity. "unknown" is used for every defect until the RDD2022
+# class mapping is verified (docs/SOURCE_REPOS.md, S-11).
+severity_weights:
+  low: 0.3
+  medium: 0.6
+  high: 1.0
+  unknown: 0.6
+
+# How much an object type raises urgency when it is near a defect. Keys must match the labels the
+# detector emits (not fixed until workstream A lands); unlisted labels use default_vulnerability.
+vulnerability_weights:
+  pedestrian: 1.0
+  cyclist: 1.0
+  motorcycle: 0.8
+  car: 0.3
+  truck: 0.3
+  bus: 0.3
+default_vulnerability: 0.3
+
+# Distance is measured in object heights: (object bottom-center to nearest point of the defect box)
+# divided by max(object box height, min_object_height_px).
+distance_scale: 1.0          # larger = nearby objects matter over a wider range
+min_object_height_px: 16     # floor for the divisor; stops tiny or flat boxes inflating distances
+near_radius: 3.0             # objects within this many object heights are listed in near_objects
+
+# A defect counts as on the road when at least this fraction of its box lies on road pixels.
+road_overlap_threshold: 0.5

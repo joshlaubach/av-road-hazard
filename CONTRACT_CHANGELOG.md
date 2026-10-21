@@ -23,6 +23,12 @@ Contracts are frozen after Phase 0. Any change needs a PR labeled `contract-chan
 
 ## Entries
 
+### v0.2.0: 2026-10-21 (workstream C, fusion)
+- `fusion/schema.py`: `DefectRecord.in_road` changes from `bool` to `bool | None`. `True` means on the road, `False` means confirmed off the road, and `null` means unknown (for example no usable road mask). `openapi.json` regenerated; that field is the only schema difference.
+- Why: missing road information must not silently become `False`, because fusion would then score the defect 0 and hide a possibly urgent hazard. Fusion scores unknown like on-road and keeps the uncertainty visible.
+- Compatibility: this is a behavior change for readers, not merely additive. Writers that always emit `true` (the current stub pipeline) remain valid. Any reader that tests truthiness (`if defect.in_road`) treats `null` as false and silently drops unknown-road hazards. Consumers must review: use `in_road is not False` to keep unknown hazards, and `in_road is True` only to filter for confirmed on-road defects. No consumer exists in the repo yet (`web/` is not built); `tools/overlay.py` and `api/` do not read `in_road`. `SPEC.md` is a verbatim appendix and is not edited; its example (`"in_road": true`) stays valid.
+- PR: workstream C (fusion), labeled `contract-change`; cross-lane review by Codex.
+
 ### v0.1.0: 2026-10-21 (Sprint 0)
 - `fusion/schema.py` implements SPEC section 5. Conventions pinned, which SPEC left implicit:
   - `image_size` is `(width, height)`.
