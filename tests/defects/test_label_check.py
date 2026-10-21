@@ -15,6 +15,7 @@ from defects.label_check import (
 
 
 def _xml(width: int, height: int, objects: list[tuple[str, int, int, int, int]]) -> str:
+    """Build a minimal Pascal VOC annotation string: an image size and a list of named boxes."""
     items = "".join(
         f"<object><name>{n}</name><bndbox><xmin>{a}</xmin><ymin>{b}</ymin>"
         f"<xmax>{c}</xmax><ymax>{d}</ymax></bndbox></object>"
@@ -28,6 +29,7 @@ def _xml(width: int, height: int, objects: list[tuple[str, int, int, int, int]])
 
 def _make_dataset(root: Path, with_images: bool = True) -> None:
     # Layout guess: <country>/train/{images,annotations/xmls}. The script must not depend on it.
+    """Write a tiny fake dataset (two countries, XML plus gray images) under root."""
     cases = {
         "Japan": [
             ("a", [("D00", 0, 0, 10, 40), ("D40", 5, 5, 25, 25)]),
@@ -47,6 +49,7 @@ def _make_dataset(root: Path, with_images: bool = True) -> None:
 
 
 def test_parse_annotation_returns_size_and_every_object(tmp_path: Path) -> None:
+    """Parsing returns the image size and every object, including names outside the four codes."""
     path = tmp_path / "x.xml"
     path.write_text(_xml(640, 480, [("D40", 1, 2, 3, 4), ("other", 5, 6, 7, 8)]))
     size, boxes = parse_annotation(path)
@@ -55,6 +58,7 @@ def test_parse_annotation_returns_size_and_every_object(tmp_path: Path) -> None:
 
 
 def test_summarize_counts_shapes_per_country_and_code(tmp_path: Path) -> None:
+    """Counts, aspect ratios and area shares are right per country and code; ALL adds up."""
     _make_dataset(tmp_path)
     summary = summarize(tmp_path)
     d00 = summary.stats[("Japan", "D00")]
@@ -69,6 +73,7 @@ def test_summarize_counts_shapes_per_country_and_code(tmp_path: Path) -> None:
 
 
 def test_unexpected_codes_and_invalid_boxes_are_reported_not_dropped(tmp_path: Path) -> None:
+    """Codes outside the four, and zero-size boxes, are counted and shown instead of vanishing."""
     _make_dataset(tmp_path)
     summary = summarize(tmp_path)
     assert summary.unexpected["D44"] == 1
@@ -78,6 +83,7 @@ def test_unexpected_codes_and_invalid_boxes_are_reported_not_dropped(tmp_path: P
 
 
 def test_sample_overlays_is_seeded_and_limited(tmp_path: Path) -> None:
+    """Sampling respects the per-code limit and gives identical files for the same seed."""
     data = tmp_path / "data"
     _make_dataset(data)
     first = sample_overlays(data, tmp_path / "o1", per_code=1, seed=7)
@@ -91,6 +97,7 @@ def test_sample_overlays_is_seeded_and_limited(tmp_path: Path) -> None:
 
 
 def test_sample_overlays_skips_boxes_without_an_image(tmp_path: Path) -> None:
+    """Boxes whose image is missing are skipped, not crashed on."""
     data = tmp_path / "data"
     _make_dataset(data, with_images=False)
     assert sample_overlays(data, tmp_path / "o", per_code=5, seed=1) == dict.fromkeys(
@@ -99,11 +106,13 @@ def test_sample_overlays_skips_boxes_without_an_image(tmp_path: Path) -> None:
 
 
 def test_main_needs_a_root(tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """Running without a folder (and without RDD2022_ROOT) is a usage error, exit code 2."""
     monkeypatch.delenv("RDD2022_ROOT", raising=False)
     assert main(["--out", str(tmp_path / "out")]) == 2
 
 
 def test_main_writes_csv_and_samples(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    """A full run exits 0, writes the CSV, and prints the unexpected-code line."""
     data = tmp_path / "data"
     _make_dataset(data)
     assert main([str(data), "--out", str(tmp_path / "out"), "--samples", "1"]) == 0
