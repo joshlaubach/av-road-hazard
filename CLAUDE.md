@@ -17,3 +17,18 @@ Read [AGENTS.md](AGENTS.md) first. It is the operating manual. Then read your br
 Contracts and scaffold, fusion, RAG design, integration, hard debugging, deploy, and review of Codex PRs. Claude PRs are reviewed by Codex. <!-- F:A-01 -->
 
 The Claude session adds a `Co-Authored-By` trailer and a session link to commits; use conventional commits. <!-- F:A-11 -->
+
+## Compaction instructions
+
+When summarizing this conversation, keep, in this order:
+1. Current workstream, branch, PR number, and CI status of the last push.
+2. Decisions made this session and the reason for each.
+3. Uncommitted changes (file paths) and the exact next command to run.
+4. Any failing test names with the exact error text.
+5. Open questions and anything marked UNVERIFIED, verbatim. Never turn an unverified claim into a fact.
+6. Contract conventions: `image_size` is (width, height); boxes are `box = (x1, y1, x2, y2)`.
+7. License boundaries: no nuScenes or Waymo images outside the local machine; no RDD2022 images until its license is verified.
+8. The status of the RDD2022 label mapping (S-11) and of ADR 0011.
+
+Drop: raw tool output, file listings, exploratory reads, and debugging that is already resolved.
+Before compacting, write a handoff note to the PR description and update HANDOFF.md if the project state changed.
