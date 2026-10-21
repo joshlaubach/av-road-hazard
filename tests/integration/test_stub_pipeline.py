@@ -6,6 +6,7 @@ client = TestClient(app)
 
 
 def test_analyze_index_query_records_flow(frame_bytes: bytes) -> None:
+    """The happy path across routes: analyze, fetch the record, index the same image, query it."""
     rec = client.post("/analyze", files={"file": ("f.png", frame_bytes, "image/png")}).json()
     assert rec["objects"] and rec["defects"]
 
@@ -21,6 +22,7 @@ def test_analyze_index_query_records_flow(frame_bytes: bytes) -> None:
 
 
 def test_rejects_non_image_and_bad_content_type(frame_bytes: bytes) -> None:
+    """Wrong content type gives 415, unreadable bytes 422, unknown record 404, empty query 422."""
     assert (
         client.post("/analyze", files={"file": ("f.txt", b"hi", "text/plain")}).status_code == 415
     )
@@ -32,6 +34,7 @@ def test_rejects_non_image_and_bad_content_type(frame_bytes: bytes) -> None:
 
 
 def test_rejects_decoded_image_over_pixel_cap() -> None:
+    """A small file that decodes to a huge image is refused before it is decoded."""
     import io
 
     from PIL import Image
@@ -45,6 +48,7 @@ def test_rejects_decoded_image_over_pixel_cap() -> None:
 
 
 def test_request_id_header_is_sanitized_and_logged() -> None:
+    """A safe x-request-id is kept and logged; an unsafe one (path characters) is replaced."""
     import json
     import logging
 

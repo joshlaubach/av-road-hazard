@@ -19,15 +19,17 @@ def dump(name: str, obj: Any) -> Path | None:
     Returns the written path, or None when dumping is disabled.
     """
     raw = get_config()["paths"]["debug_dump_dir"]
-    if not raw:
+    if not raw:  # unset (null/empty) means dumping is switched off
         return None
+    # One folder per request, so the dumps for one bad request stay together.
     target = Path(raw) / (request_id_var.get() or "no-request")
     target.mkdir(parents=True, exist_ok=True)
     if isinstance(obj, np.ndarray):
-        out = target / f"{name}.png"
+        out = target / f"{name}.png"  # arrays are images (masks, tiles): PNG is lossless
         Image.fromarray(obj).save(out)
     else:
         out = target / f"{name}.json"
+        # Pydantic models serialize via model_dump; plain lists/dicts are written as they are.
         data = obj.model_dump(mode="json") if hasattr(obj, "model_dump") else obj
         out.write_text(json.dumps(data, indent=2, default=str))
     return out

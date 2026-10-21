@@ -13,6 +13,7 @@ BASE = os.environ.get("E2E_BASE_URL", "http://localhost:8000")
 
 
 def test_health_and_analyze(frame_bytes: bytes) -> None:
+    """Against a live stack, /health is ok and /analyze returns a record of the right size."""
     assert httpx.get(f"{BASE}/health", timeout=10).json()["status"] == "ok"
     r = httpx.post(
         f"{BASE}/analyze", files={"file": ("f.png", frame_bytes, "image/png")}, timeout=30

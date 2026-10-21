@@ -16,6 +16,8 @@ _TRUE = {"1", "true", "yes", "on"}
 
 
 def _env_bool(name: str) -> bool | None:
+    """Read an environment variable as a boolean: 1/true/yes/on (any case) is True, anything else
+    False. Returns None when the variable is unset or empty, meaning "leave the YAML value"."""
     raw = os.environ.get(name)
     if raw is None or raw == "":
         return None
@@ -24,12 +26,16 @@ def _env_bool(name: str) -> bool | None:
 
 def load_config(path: Path | None = None) -> dict[str, Any]:
     """Read the YAML config, then apply environment overrides. Not cached; see get_config."""
+    # safe_load only builds plain data (dicts, lists, strings, numbers); it never runs code.
     with (path or DEFAULT_CONFIG).open() as f:
         cfg: dict[str, Any] = yaml.safe_load(f)
 
+    # Environment variables win over the YAML file, so a deploy or a .env can change a setting
+    # without editing the repo. USE_STUBS is a boolean, so it gets its own parsing.
     stubs = _env_bool("USE_STUBS")
     if stubs is not None:
         cfg["pipeline"]["use_stubs"] = stubs
+    # env var name -> (config section, key). Only non-empty values override the YAML default.
     for env, (section, key) in {
         "DATA_DIR": ("paths", "data_dir"),
         "CHECKPOINT_DIR": ("paths", "checkpoint_dir"),
@@ -48,4 +54,8 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def get_config() -> dict[str, Any]:
+    """The shared config, loaded once per process (lru_cache). Use this in application code.
+
+    Tests that change environment variables need `get_config.cache_clear()` or load_config().
+    """
     return load_config()
