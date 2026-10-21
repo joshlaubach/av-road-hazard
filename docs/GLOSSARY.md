@@ -4,7 +4,7 @@ Purpose: definitions of terms used across av-road-hazard docs.
 
 | Term | Meaning |
 |---|---|
-| EVAV / AV | The owner wrote "EVAV" for their autonomous-vehicle (AV) projects. In this repo: front-camera perception for autonomous vehicles. <!-- F:U-02 --> |
+| EVAV / AV | "EVAV" is the maintainer's shorthand for their autonomous-vehicle (AV) projects. In this repo: front-camera perception for autonomous vehicles. <!-- F:U-02 --> |
 | RDD2022 | Road Damage Detection dataset 2022 (CRDDC 2022 on figshare). Close-up road photos with damage annotations. Training data for the defect classifier. License unverified |
 | RDD class codes | D00, D10, D20, D40. **Label-name caveat:** the source repo maps D00 pothole, D10 longitudinal, D20 transverse, D40 alligator; the commonly documented convention is D00 longitudinal crack, D10 transverse crack, D20 alligator crack, D40 pothole. UNVERIFIED; workstream B verifies against official docs and annotation XML before porting |
 | nuScenes | Autonomous driving dataset with 3D annotations. Non-commercial; images stay local |

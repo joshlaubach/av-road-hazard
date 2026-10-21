@@ -50,7 +50,7 @@ Layers from ENGINEERING.md section 3:
 - No nuScenes images bundled
 
 ## Known pitfalls
-- React/Next.js was chosen by the owner against the Streamlit recommendation; timeline tension is accepted.
+- React/Next.js was chosen over Streamlit; the timeline tradeoff is accepted and mitigated by the OpenAPI-generated client.
 - OpenAPI is the single contract; do not hand-write API types.
 - No nuScenes images; RDD2022 images only after license verification.
 - Charts and styling: avoid templated defaults.
@@ -75,10 +75,10 @@ Owner to fill in; none enumerated yet. Placeholders suggested earlier: a fronten
 - [ ] No secrets, data, or weights committed; license boundaries respected
 - [ ] Docs and changelog updated if behavior or contract changed (`contract-change` label if so)
 - [ ] "How I verified this" note and handoff note in the PR description
-- [ ] Owner explainer paragraph written
+- [ ] Maintainer explainer paragraph written
 
 ## Reviewer lane
 Claude (the other tool), using the ENGINEERING.md section 2 checklist in one short pass.
 
-## Owner explainer
-Write this paragraph in your PR: what the component does, why, and what could be wrong. The owner must be able to explain it in an interview.
+## Maintainer explainer
+Write this paragraph in your PR: what the component does, why, and what could be wrong. Maintainers must be able to explain it in an interview.

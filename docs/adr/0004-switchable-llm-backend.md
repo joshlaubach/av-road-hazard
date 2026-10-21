@@ -2,7 +2,7 @@ Purpose: ADR 0004: Switchable LLM backend.
 
 # ADR 0004: Switchable LLM backend
 
-Status: accepted (owner approved)
+Status: accepted
 
 ## Context
 Answers and reports need a vision-language model. LLaMA 3.2 Vision via Ollama is local, free and already used in defect-detector. The Claude API is hosted, gives better answers, and costs money; usage is billed separately from the Claude subscription. The hosted demo has a budget of about $20/month and no GPU.

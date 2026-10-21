@@ -2,15 +2,15 @@ Purpose: provenance of the first commit of av-road-hazard: the prompt it was pro
 
 # Prompt history
 
-This commit was produced on 2026-10-21 from the "FIRST-COMMIT GENERATION PROMPT: av-road-hazard" (file `PROMPT.md`, not committed), SHA-256 `b71ad5924d81c66ee821edb46c562e359899158c0e81205ab7b806ede30c4326`. It was written from a conversation on 2026-10-21 by an assistant that read the READMEs and part of the code of the source repositories (cloned shallowly) but did not run any of it. Nothing in this repo has been executed or tested. <!-- F:P-07 -->
+This commit was produced on 2026-10-21 from the "FIRST-COMMIT GENERATION PROMPT: av-road-hazard" (file `PROMPT.md`, not committed), SHA-256 `b71ad5924d81c66ee821edb46c562e359899158c0e81205ab7b806ede30c4326`. The source notes were drafted from the READMEs and part of the code of the source repositories (shallow clones); none of that code was run. Nothing in this repo has been executed or tested. <!-- F:P-07 -->
 
 Owner: Joshua Laubach, GitHub `joshlaubach`, email joshuaglaubach@gmail.com. The email is used only to identify the owner and for git author configuration; it is not placed in the README or other published docs. <!-- F:U-01 -->
 
-The repo `av-road-hazard` is private under `joshlaubach`. The owner created an empty local folder. No remote exists yet; the assistant that wrote the prompt had no push access. <!-- F:U-11 -->
+The repo `av-road-hazard` is private under `joshlaubach`. It started from an empty local folder; no remote existed at the time of the first commit. <!-- F:U-11 -->
 
 ## Pre-flight answers used
 
-The owner did not answer the pre-flight questions; the defaults were used.
+The pre-flight questions were not answered; the defaults were used.
 
 | Question | Answer used |
 |---|---|
