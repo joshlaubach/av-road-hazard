@@ -30,6 +30,22 @@ Validation split: the official RDD2022 test split has no annotations, so metrics
 
 Baselines live in `eval/baselines.json` (placeholder in Sprint 0). A metric regression fails if it falls below baseline minus tolerance. Reproduction is exact only on the same hardware and library versions (`ROIAlign` is non-deterministic).
 
+### Metric definitions (confirmed)
+
+Implemented in `eval/models.py` as pure functions; synthetic-case tests in `tests/eval/`.
+
+| What | Definition |
+|---|---|
+| Detector, "found" | Same label and IoU >= 0.5, matched greedily by descending score (same rule as the source repo, so the F1 0.534 and AP@0.50 0.312 baselines stay comparable). |
+| Detector, numbers | Precision, recall, F1 at a score threshold (micro-averaged), AP@0.50 per class then averaged, and recall by ground-truth object-size bin. Bin cutoffs are arguments, set from the data. |
+| AP method | COCO-style 101-point interpolation, reimplemented. It can differ slightly from `torchmetrics`, so check both on the same predictions before comparing with the 0.312 baseline. |
+| Defect classifier | Scored per tile. Per-class precision, recall, F1, macro-F1, macro-AUROC, and the headline: recall at a fixed false-positive rate on non-road tiles (the cap is set after the baseline run). |
+| Domain gap | On synthetic frames, detection rate against distance and tile size, which gives the effective detection range. |
+| Video | Share of known pasted defects seen in at least one processed frame, looks per defect, processing time per clip. Not yet implemented. |
+| Fusion | Box overlap with the pasted defect, `in_road` accuracy, `near_objects` correctness, and an ordering test: a pothole next to a pedestrian must score above the same pothole on an empty shoulder. Not yet implemented. |
+
+Priorities: recall first for defect detection with the false-positive guardrail above; equal weight on precision and recall for perception.
+
 ## Evaluation 2: retrieval
 
 Queries are auto-generated from nuScenes ground-truth annotations, for example "frames with a pedestrian at night". Answers are derived from the same annotations (category, scene conditions such as night, location). Score recall@k against the annotation-derived answers. Query templates and k values are defined in the G brief. nuScenes v1.0-mini is enough to build and test but too small to show retrieval quality; scale to v1.0-full (700 scenes) once the pipeline works. <!-- F:R-10 -->
