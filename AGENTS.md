@@ -61,7 +61,7 @@ Defined in Sprint 0. Run from the repo root with Python 3.12 or newer. Setup: `p
 | Test (default layers, excludes e2e) | `python -m pytest` | `make test` |
 | Test one layer | `python -m pytest tests/unit` (also `contract`, `integration`, `ml`, `data`) | |
 | Data-validation checks only | `python -m pytest -m data` | |
-| End-to-end (needs compose stack) | `docker compose -f docker/docker-compose.yml up -d --build api`, then `E2E_BASE_URL=http://localhost:8000 python -m pytest -m e2e -o addopts=-q` | `make e2e` |
+| End-to-end (needs compose stack) | `docker compose -f docker/docker-compose.yml up -d --build api`, then `E2E_BASE_URL=http://localhost:8000 python -m pytest tests/e2e -m e2e -o addopts=-q` | `make e2e` |
 | Run API locally (stubs) | `uvicorn api.main:app --reload --port 8000` | `make api` |
 | Export OpenAPI | `python -m tools.export_openapi` (check only: add `--check`) | `make openapi` |
 | Draw a record on its image | `python -m tools.overlay IMAGE RECORD.json OUT.png` | |

@@ -9,7 +9,7 @@ typecheck:
 test:
 	python -m pytest
 e2e:
-	E2E_BASE_URL=http://localhost:8000 python -m pytest -m e2e -o addopts=-q
+	E2E_BASE_URL=http://localhost:8000 python -m pytest tests/e2e -m e2e -o addopts=-q
 api:
 	uvicorn api.main:app --reload --port 8000
 openapi:
