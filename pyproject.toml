@@ -56,6 +56,14 @@ strict = true
 plugins = ["pydantic.mypy"]
 files = ["common", "perception", "defects", "fusion", "rag", "api", "eval", "tools", "tests"]
 
+[[tool.mypy.overrides]]
+module = ["torch.*", "torchvision.*", "timm.*", "tensorflow.*", "qdrant_client.*", "open_clip.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "defects.dataset"
+disallow_subclassing_any = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q -m 'not e2e'"
