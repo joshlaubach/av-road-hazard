@@ -28,7 +28,17 @@ dev = [
   "types-PyYAML",
   "pre-commit>=3.7",
 ]
-# ml, rag extras are added by workstreams A, B (torch, torchvision, timm, torchmetrics) and D (qdrant-client, open_clip).
+ml = [
+  "torch>=2.3",
+  "torchvision>=0.18",
+  "torchmetrics>=1.4",
+  "timm>=1.0",
+  "tensorflow>=2.16",
+]
+rag = [
+  "qdrant-client>=1.9",
+  "open_clip_torch>=2.24",
+]
 
 [tool.setuptools.packages.find]
 include = ["common*", "perception*", "defects*", "fusion*", "rag*", "api*", "eval*", "tools*"]
