@@ -28,15 +28,19 @@ from PIL import Image, ImageDraw
 
 from common.config import get_config
 
+# The four defect codes the project uses. Deliberately only codes, no names: which code means which
+# defect is exactly what this script helps verify (docs/SOURCE_REPOS.md, S-11).
 EXPECTED_CODES = ("D00", "D10", "D20", "D40")
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png")
-ALL = "ALL"
+ALL = "ALL"  # pseudo-country used for the totals across all countries
 
 Box = tuple[str, int, int, int, int]  # (code, xmin, ymin, xmax, ymax)
 
 
 @dataclass
 class CodeStats:
+    """Running totals for one (country, code): counts plus the per-box shape measurements."""
+
     boxes: int = 0
     images: int = 0
     aspect_ratios: list[float] = field(default_factory=list)  # box width / box height
@@ -45,6 +49,8 @@ class CodeStats:
 
 @dataclass
 class Summary:
+    """Everything summarize() learned: the stats table plus what it could not use."""
+
     stats: dict[tuple[str, str], CodeStats]  # (country, code); country ALL aggregates
     unexpected: Counter[str]  # object names outside EXPECTED_CODES
     invalid_boxes: int  # zero or negative width/height
@@ -52,16 +58,23 @@ class Summary:
 
 
 def iter_annotations(root: Path) -> Iterator[Path]:
+    """Every annotation file under root, in a stable order so runs are repeatable.
+
+    rglob keeps this independent of the exact folder layout, which is not confirmed yet.
+    """
     yield from sorted(root.rglob("*.xml"))
 
 
 def country_of(xml_path: Path, root: Path) -> str:
+    """The first folder below root (the country in the RDD2022 layout), or ALL for flat folders."""
     parts = xml_path.relative_to(root).parts
     return parts[0] if len(parts) > 1 else ALL
 
 
 def parse_annotation(xml_path: Path) -> tuple[tuple[int, int] | None, list[Box]]:
     """Return ((width, height) or None, boxes). Every <object> is returned, whatever its name."""
+    # These are the dataset's own files, but the XML is still parsed defensively: missing tags give
+    # 0 or None instead of an exception, and the caller counts such boxes as invalid.
     root = ET.parse(xml_path).getroot()
     size: tuple[int, int] | None = None
     size_node = root.find("size")
@@ -88,10 +101,18 @@ def parse_annotation(xml_path: Path) -> tuple[tuple[int, int] | None, list[Box]]
 
 
 def _num(text: str | None) -> int:
+    """Parse an XML number (it may be written as 12 or 12.0) to an int; missing or empty is 0."""
     return round(float(text)) if text else 0
 
 
 def summarize(root: Path) -> Summary:
+    """Walk all annotations and collect, per (country, code), how many boxes and images there are
+    and the shape of each box: aspect ratio (width / height) and share of the image area.
+
+    Each box is added twice, once under its own country and once under ALL. Codes outside
+    EXPECTED_CODES are counted in `unexpected` and zero-size boxes in `invalid_boxes`; neither is
+    silently dropped, which was a problem in the source loader.
+    """
     stats: dict[tuple[str, str], CodeStats] = {}
     unexpected: Counter[str] = Counter()
     invalid = 0
@@ -109,20 +130,22 @@ def summarize(root: Path) -> Summary:
             if w <= 0 or h <= 0:
                 invalid += 1
                 continue
-            for key in ((country, code), (ALL, code)):
+            for key in ((country, code), (ALL, code)):  # own country, and the overall total
                 s = stats.setdefault(key, CodeStats())
                 s.boxes += 1
                 s.aspect_ratios.append(w / h)
-                if size:
+                if size:  # area share needs the image size; skip it when the XML has none
                     s.area_shares.append(w * h / (size[0] * size[1]))
             seen.add(code)
-        for code in seen:
+        for code in seen:  # `images` counts each image once per code, however many boxes it has
             for key in ((country, code), (ALL, code)):
                 stats[key].images += 1
     return Summary(stats, unexpected, invalid, files)
 
 
 def _quartiles(values: list[float]) -> tuple[float, float, float]:
+    """(25th percentile, median, 75th percentile). NaN for no data; the value itself for one point,
+    since statistics.quantiles needs at least two."""
     if not values:
         return (float("nan"),) * 3
     if len(values) == 1:
@@ -138,6 +161,7 @@ HEADER = (
 
 
 def table_rows(summary: Summary) -> list[tuple[str, ...]]:
+    """One row per (country, code) with the numbers already formatted as text for printing/CSV."""
     rows: list[tuple[str, ...]] = []
     for (country, code), s in sorted(summary.stats.items()):
         a25, a50, a75 = _quartiles(s.aspect_ratios)
@@ -152,6 +176,7 @@ def table_rows(summary: Summary) -> list[tuple[str, ...]]:
 
 
 def format_table(summary: Summary) -> str:
+    """The table as aligned plain text, then file count, invalid boxes and unexpected codes."""
     rows = [HEADER, *table_rows(summary)]
     widths = [max(len(r[i]) for r in rows) for i in range(len(HEADER))]
     lines = ["  ".join(c.ljust(w) for c, w in zip(r, widths, strict=True)) for r in rows]
@@ -167,6 +192,7 @@ def format_table(summary: Summary) -> str:
 
 
 def write_csv(summary: Summary, path: Path) -> None:
+    """Save the same table as CSV so runs can be compared or loaded into a notebook."""
     with path.open("w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(HEADER)
@@ -175,6 +201,8 @@ def write_csv(summary: Summary, path: Path) -> None:
 
 def find_image(xml_path: Path) -> Path | None:
     """Look next to the XML, then in a sibling images/ folder (layout is confirmed on real data)."""
+    # Candidate folders: next to the XML, then an `images` folder beside each of its three nearest
+    # parents (annotations/xmls/x.xml -> train/images/x.jpg).
     for folder in (xml_path.parent, *(p / "images" for p in xml_path.parents[:3])):
         for suffix in IMAGE_SUFFIXES:
             candidate = folder / (xml_path.stem + suffix)
@@ -191,7 +219,10 @@ def sample_overlays(
     Returns the number of files written per code. Boxes whose image cannot be found are skipped, so
     a count below per_code means missing images or too few boxes.
     """
+    # A local Random instance, seeded: the same samples every run, and no change to global state.
     rng = random.Random(get_config()["seed"] if seed is None else seed)
+    # Collect every valid box per code first, then shuffle and take the first per_code that have an
+    # image on disk. Skipped boxes just mean fewer samples, reported by main().
     pool: dict[str, list[tuple[Path, Box]]] = {code: [] for code in EXPECTED_CODES}
     for xml_path in iter_annotations(root):
         for box in parse_annotation(xml_path)[1]:
@@ -218,6 +249,11 @@ def sample_overlays(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command-line entry: print the table, write the CSV, save sample overlays.
+
+    Returns 0 on success and 2 for a usage error (no folder given or not a folder). `argv` can be
+    passed in by tests; None means use the real command line.
+    """
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0] if __doc__ else None)
     parser.add_argument("root", nargs="?", help="RDD2022 folder (default: env RDD2022_ROOT)")
     parser.add_argument("--out", type=Path, required=True, help="folder for CSV and sample images")
