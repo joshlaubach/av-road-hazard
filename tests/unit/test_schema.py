@@ -1,0 +1,55 @@
+import pytest
+from pydantic import ValidationError
+
+from fusion.schema import Defect, DefectRecord, HazardRecord, Object
+
+
+def _record() -> HazardRecord:
+    return HazardRecord(
+        frame_id="f1",
+        source="upload",
+        image_size=(1600, 900),
+        objects=[Object(label="pedestrian", score=0.9, box=(10, 20, 30, 40))],
+        defects=[
+            DefectRecord(
+                name="pothole",
+                confidence=0.8,
+                box=(1, 2, 3, 4),
+                severity="high",
+                in_road=True,
+                near_objects=[{"label": "pedestrian", "iou": 0.0, "dist_px": 42}],
+            )
+        ],
+        hazard_score=0.0,
+    )
+
+
+def test_round_trip() -> None:
+    rec = _record()
+    assert HazardRecord.model_validate_json(rec.model_dump_json()) == rec
+
+
+def test_image_size_is_width_then_height() -> None:
+    assert _record().image_size == (1600, 900)
+    with pytest.raises(ValidationError):
+        HazardRecord(frame_id="f", source="upload", image_size=(0, 900), hazard_score=0.0)
+
+
+def test_box_ordering_enforced() -> None:
+    with pytest.raises(ValidationError):
+        Object(label="car", score=0.5, box=(10, 10, 5, 20))
+
+
+def test_unknown_fields_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Object.model_validate({"label": "car", "score": 0.5, "box": [0, 0, 1, 1], "extra": 1})
+
+
+def test_enums_rejected() -> None:
+    with pytest.raises(ValidationError):
+        HazardRecord(frame_id="f", source="webcam", image_size=(1, 1), hazard_score=0.0)
+
+
+def test_defect_requires_one_indexed_class() -> None:
+    with pytest.raises(ValidationError):
+        Defect(cls=0, name="x", confidence=0.5, box=(0, 0, 1, 1), patch_row=0, patch_col=0)
