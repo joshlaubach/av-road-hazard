@@ -9,6 +9,7 @@ from collections.abc import Awaitable, Callable
 from importlib import metadata
 
 from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
+from fastapi.responses import JSONResponse
 
 from api.models import HealthResponse, IndexResponse, QueryRequest, QueryResponse
 from api.pipeline import InvalidImage, Pipeline
@@ -64,15 +65,13 @@ def create_app() -> FastAPI:
             raise HTTPException(413, "file too large")
         return data
 
-    def _analyze(data: bytes) -> HazardRecord:
-        try:
-            return pipeline.analyze(data)
-        except InvalidImage as exc:
-            raise HTTPException(422, str(exc)) from exc
+    @app.exception_handler(InvalidImage)
+    async def invalid_image(_: Request, exc: InvalidImage) -> JSONResponse:
+        return JSONResponse({"detail": str(exc)}, status_code=422)
 
     @app.post("/analyze", response_model=HazardRecord)
     async def analyze(file: UploadFile = File(...)) -> HazardRecord:  # noqa: B008
-        record = _analyze(await _read_image(file))
+        record = pipeline.analyze(await _read_image(file))
         store[record.frame_id] = record
         return record
 
@@ -82,7 +81,7 @@ def create_app() -> FastAPI:
             raise HTTPException(413, "too many files")
         ids: list[str] = []
         for f in files:
-            record = _analyze(await _read_image(f))
+            record = pipeline.analyze(await _read_image(f))
             store[record.frame_id] = record
             ids.append(record.frame_id)
         return IndexResponse(indexed=ids)

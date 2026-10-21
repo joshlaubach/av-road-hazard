@@ -9,7 +9,6 @@ paths:
 
 pipeline:
   use_stubs: true         # env USE_STUBS (1/0) overrides; real models arrive with workstreams A and B
-  defect_threshold: 0.5   # sigmoid cutoff, same default as the source defect-detector
 
 api:
   max_upload_bytes: 10485760   # 10 MiB

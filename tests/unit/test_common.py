@@ -10,7 +10,7 @@ from common.logging import JsonFormatter, request_id_var
 def test_config_defaults_and_seed() -> None:
     cfg = load_config()
     assert cfg["seed"] == 42
-    assert cfg["pipeline"]["defect_threshold"] == 0.5
+    assert cfg["pipeline"]["use_stubs"] is True
 
 
 def test_env_overrides(monkeypatch) -> None:  # type: ignore[no-untyped-def]
