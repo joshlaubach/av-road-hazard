@@ -1,0 +1,28 @@
+# Single source of truth for paths, thresholds, seeds. Environment variables (.env) override where noted.
+seed: 42
+num_workers: 0            # read by data loaders; Windows needs 0, set higher on Linux/macOS
+
+paths:
+  data_dir: data          # env DATA_DIR overrides
+  checkpoint_dir: checkpoints   # env CHECKPOINT_DIR overrides
+  debug_dump_dir: null    # env DEBUG_DUMP_DIR overrides; null disables dumps
+
+pipeline:
+  use_stubs: true         # env USE_STUBS (1/0) overrides; real models arrive with workstreams A and B
+  defect_threshold: 0.5   # sigmoid cutoff, same default as the source defect-detector
+
+api:
+  max_upload_bytes: 10485760   # 10 MiB
+  allowed_content_types: ["image/jpeg", "image/png"]
+  max_batch_files: 20
+
+llm:
+  backend: ollama         # env LLM_BACKEND: ollama | claude
+  ollama_host: http://localhost:11434
+  ollama_model: llama3.2-vision
+
+qdrant:
+  url: null               # env QDRANT_URL
+
+logging:
+  level: INFO             # env LOG_LEVEL
