@@ -23,8 +23,8 @@ frame ─► perception/ (Faster R-CNN)  ─► objects[]
 
 | Stage | Package | Input | Output | Notes |
 |---|---|---|---|---|
-| 1. Object detection | `perception/` | RGB uint8 frame | `list[Object]` (`label`, `score`, `box_xyxy`) | Faster R-CNN ResNet50 FPN v2, trained on nuScenes CAM_FRONT; batch and device-aware; CPU path for hosting |
-| 2. Defect detection | `defects/` | RGB frame | `list[Defect]` (`cls`, `name`, `confidence`, `box_xyxy`, `patch_row`, `patch_col`) | Road crop, overlapping tiles at native resolution on the near-field road (bottom third), upscaled to 380x380, EfficientNet-B4 multi-label sigmoid over 4 RDD2022 classes (D00, D10, D20, D40), threshold from config. Replaces the source's fixed 8x8 grid. No DQN gate in v1 |
+| 1. Object detection | `perception/` | RGB uint8 frame | `list[Object]` (`label`, `score`, `box`) | Faster R-CNN ResNet50 FPN v2, trained on nuScenes CAM_FRONT; batch and device-aware; CPU path for hosting |
+| 2. Defect detection | `defects/` | RGB frame | `list[Defect]` (`cls`, `name`, `confidence`, `box`, `patch_row`, `patch_col`) | Road crop, overlapping tiles at native resolution on the near-field road (bottom third), upscaled to 380x380, EfficientNet-B4 multi-label sigmoid over 4 RDD2022 classes (D00, D10, D20, D40), threshold from config. Replaces the source's fixed 8x8 grid. No DQN gate in v1 |
 | 3. Fusion | `fusion/` | objects, defects, road mask | `HazardRecord` | Pure functions, no model imports. Maps patch to pixel boxes, intersects with road mask (`in_road`), finds nearest objects (`near_objects`: IoU and pixel distance), computes `hazard_score` |
 | 4. Index | `rag/` | `HazardRecord` + image | Qdrant point | Image embedding (CLIP-style), text embedding of the record and report, metadata payload, one collection |
 | 5. Retrieve and answer | `rag/` | text and/or image query, filters | answer + retrieved records | Metadata filter, then vector search (image and text), then rerank; LLM grounded only in retrieved records, citing frame IDs |
@@ -69,7 +69,7 @@ One record per frame.
 
 The fused output is one JSON `HazardRecord` per frame with objects, defects with severity, `in_road`, and `near_objects`; `hazard_score` is deterministic, not learned. <!-- F:R-08 -->
 
-The per-stage Python interfaces are `detect(frame) -> list[Object]` with `Object = {label, score, box_xyxy}` and `find_defects(frame) -> list[Defect]` with `Defect = {cls, name, confidence, box_xyxy, patch_row, patch_col}`.
+The per-stage Python interfaces are `detect(frame) -> list[Object]` with `Object = {label, score, box}` and `find_defects(frame) -> list[Defect]` with `Defect = {cls, name, confidence, box, patch_row, patch_col}`.
 
 ## API contract
 

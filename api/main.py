@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 import uuid
 from collections.abc import Awaitable, Callable
@@ -18,6 +19,7 @@ from common.logging import configure_logging, request_id_var
 from fusion.schema import HazardRecord
 
 log = logging.getLogger("api")
+_SAFE_REQUEST_ID = re.compile(r"[A-Za-z0-9._-]{1,64}")
 
 
 def _version(pkg: str) -> str:
@@ -39,23 +41,25 @@ def create_app() -> FastAPI:
     async def request_context(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        rid = request.headers.get("x-request-id") or uuid.uuid4().hex
+        incoming = request.headers.get("x-request-id", "")
+        # Never trust the header as-is: it can end up in file paths (debug dumps) and logs.
+        rid = incoming if _SAFE_REQUEST_ID.fullmatch(incoming) else uuid.uuid4().hex
         token = request_id_var.set(rid)
         start = time.perf_counter()
         try:
             response = await call_next(request)
+            response.headers["x-request-id"] = rid
+            log.info(
+                "request",
+                extra={
+                    "route": request.url.path,
+                    "status": response.status_code,
+                    "latency_ms": round((time.perf_counter() - start) * 1000, 1),
+                },
+            )
+            return response
         finally:
             request_id_var.reset(token)
-        response.headers["x-request-id"] = rid
-        log.info(
-            "request",
-            extra={
-                "route": request.url.path,
-                "status": response.status_code,
-                "latency_ms": round((time.perf_counter() - start) * 1000, 1),
-            },
-        )
-        return response
 
     async def _read_image(file: UploadFile) -> bytes:
         if file.content_type not in api_cfg["allowed_content_types"]:

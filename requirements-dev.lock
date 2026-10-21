@@ -14,10 +14,18 @@ certifi==2026.10.19
     # via
     #   httpcore
     #   httpx
+cfgv==3.5.0
+    # via pre-commit
 click==8.5.0
     # via uvicorn
+distlib==0.4.4
+    # via virtualenv
 fastapi==0.158.2
     # via av-road-hazard (pyproject.toml)
+filelock==4.2.4
+    # via
+    #   python-discovery
+    #   virtualenv
 h11==0.16.0
     # via
     #   httpcore
@@ -26,6 +34,8 @@ httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via av-road-hazard (pyproject.toml)
+identify==2.6.20
+    # via pre-commit
 idna==3.20
     # via
     #   anyio
@@ -38,18 +48,26 @@ mypy==2.4.0
     # via av-road-hazard (pyproject.toml)
 mypy-extensions==1.1.0
     # via mypy
+nodeenv==1.11.0
+    # via pre-commit
 numpy==2.5.4
     # via av-road-hazard (pyproject.toml)
 opentelemetry-api==1.45.1
     # via fastapi
 packaging==26.3
-    # via pytest
+    # via
+    #   pytest
+    #   virtualenv
 pathspec==1.1.1
     # via mypy
 pillow==13.0.0
     # via av-road-hazard (pyproject.toml)
+platformdirs==4.13.5
+    # via virtualenv
 pluggy==1.7.0
     # via pytest
+pre-commit==4.7.0
+    # via av-road-hazard (pyproject.toml)
 pydantic==2.14.1
     # via
     #   av-road-hazard (pyproject.toml)
@@ -60,10 +78,14 @@ pygments==2.21.0
     # via pytest
 pytest==9.1.1
     # via av-road-hazard (pyproject.toml)
+python-discovery==1.6.4
+    # via virtualenv
 python-multipart==0.0.32
     # via av-road-hazard (pyproject.toml)
 pyyaml==6.0.3
-    # via av-road-hazard (pyproject.toml)
+    # via
+    #   av-road-hazard (pyproject.toml)
+    #   pre-commit
 ruff==0.17.1
     # via av-road-hazard (pyproject.toml)
 starlette==1.9.0
@@ -86,3 +108,5 @@ typing-inspection==0.4.4
     #   pydantic
 uvicorn==0.54.0
     # via av-road-hazard (pyproject.toml)
+virtualenv==21.14.12
+    # via pre-commit
