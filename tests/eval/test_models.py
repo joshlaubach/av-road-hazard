@@ -26,12 +26,14 @@ BOX = (0.0, 0.0, 10.0, 10.0)
 
 
 def test_iou_partial_overlap_and_disjoint() -> None:
+    """IoU is 1/3 for a half-overlap, 0 for disjoint boxes, 1 for identical boxes."""
     assert iou(BOX, (5.0, 0.0, 15.0, 10.0)) == pytest.approx(1 / 3)
     assert iou(BOX, (20.0, 20.0, 30.0, 30.0)) == 0.0
     assert iou(BOX, BOX) == 1.0
 
 
 def test_match_takes_best_score_first_and_marks_duplicates_false_positive() -> None:
+    """The higher-scoring box claims the object; the duplicate becomes a false positive."""
     gts = [GroundTruth("car", BOX)]
     preds = [Detection("car", 0.6, BOX), Detection("car", 0.9, BOX)]
     m = match_detections(preds, gts)
@@ -41,6 +43,7 @@ def test_match_takes_best_score_first_and_marks_duplicates_false_positive() -> N
 
 
 def test_match_requires_same_label_and_min_iou() -> None:
+    """A wrong label or an overlap below the threshold does not count as a match."""
     gts = [GroundTruth("car", BOX)]
     wrong_label = match_detections([Detection("truck", 0.9, BOX)], gts)
     assert (wrong_label.tp, wrong_label.fp, wrong_label.fn) == ([], [0], [0])
@@ -49,6 +52,7 @@ def test_match_requires_same_label_and_min_iou() -> None:
 
 
 def test_prf_values_and_empty_denominators() -> None:
+    """Precision, recall and F1 from counts, with 0.0 (not an error) when a denominator is empty."""
     s = prf(tp=1, fp=1, fn=0)
     assert (s.precision, s.recall) == (0.5, 1.0)
     assert s.f1 == pytest.approx(2 / 3)
@@ -56,6 +60,7 @@ def test_prf_values_and_empty_denominators() -> None:
 
 
 def test_detection_prf_applies_score_threshold() -> None:
+    """Raising the score threshold drops weak predictions and so raises precision."""
     frames: list[Frame] = [
         (
             [Detection("car", 0.9, BOX), Detection("car", 0.2, (50.0, 50.0, 60.0, 60.0))],
@@ -67,6 +72,7 @@ def test_detection_prf_applies_score_threshold() -> None:
 
 
 def test_average_precision_perfect_and_one_miss() -> None:
+    """AP is 1.0 for a perfect detector and 51/101 when half the objects are never found."""
     perfect: list[Frame] = [([Detection("car", 0.9, BOX)], [GroundTruth("car", BOX)])]
     assert average_precision(perfect) == pytest.approx(1.0)
     other = (30.0, 30.0, 40.0, 40.0)
@@ -81,10 +87,12 @@ def test_average_precision_perfect_and_one_miss() -> None:
 
 
 def test_average_precision_without_ground_truth_is_nan() -> None:
+    """With no ground-truth objects there is nothing to average, so AP is NaN."""
     assert math.isnan(average_precision([([Detection("car", 0.9, BOX)], [])]))
 
 
 def test_recall_by_size_bins_by_ground_truth_area() -> None:
+    """Recall is reported per object-size bin, using each ground-truth box area."""
     small, large = (0.0, 0.0, 10.0, 10.0), (0.0, 0.0, 100.0, 100.0)
     frames: list[Frame] = [
         ([Detection("car", 0.9, large)], [GroundTruth("car", small), GroundTruth("car", large)])
@@ -98,6 +106,7 @@ def test_recall_by_size_bins_by_ground_truth_area() -> None:
 
 
 def test_per_class_prf_and_macro_f1() -> None:
+    """Per-class precision and recall from a small multi-label example, and their macro-F1."""
     y_true = np.array([[1, 0], [1, 1], [0, 1], [0, 0]], dtype=np.float64)
     y_prob = np.array([[0.9, 0.2], [0.8, 0.6], [0.7, 0.1], [0.1, 0.1]])
     scores = per_class_prf(y_true, y_prob, threshold=0.5)
@@ -107,6 +116,7 @@ def test_per_class_prf_and_macro_f1() -> None:
 
 
 def test_auroc_known_value_ties_and_missing_class() -> None:
+    """AUROC matches a hand-worked 0.75, ties score 0.5, and a missing class gives NaN."""
     y = np.array([0, 0, 1, 1], dtype=np.float64)
     assert auroc(y, np.array([0.1, 0.4, 0.35, 0.8])) == pytest.approx(0.75)
     assert auroc(y, np.array([0.5, 0.5, 0.5, 0.5])) == pytest.approx(0.5)
@@ -114,12 +124,14 @@ def test_auroc_known_value_ties_and_missing_class() -> None:
 
 
 def test_macro_auroc_skips_classes_without_both_labels() -> None:
+    """A class with no negatives is skipped instead of poisoning the average."""
     y = np.array([[0, 1], [0, 1], [1, 1], [1, 1]], dtype=np.float64)
     p = np.array([[0.1, 0.5], [0.4, 0.5], [0.35, 0.5], [0.8, 0.5]])
     assert macro_auroc(y, p) == pytest.approx(0.75)  # column 1 has no negatives
 
 
 def test_recall_at_fpr_cap() -> None:
+    """The returned threshold keeps negatives under the cap and reports the recall it buys."""
     neg = np.array([0.1, 0.2, 0.3, 0.4])
     pos = np.array([0.35, 0.5, 0.6])
     recall, threshold = recall_at_fpr(pos, neg, max_fpr=0.25)
@@ -131,11 +143,13 @@ def test_recall_at_fpr_cap() -> None:
 
 
 def test_recall_at_fpr_needs_negatives() -> None:
+    """Asking for a false-positive rate with no negatives is an error."""
     with pytest.raises(ValueError, match="negative"):
         recall_at_fpr(np.array([0.5]), np.array([]), max_fpr=0.1)
 
 
 def test_recall_at_fpr_is_not_fooled_by_float_error() -> None:
+    """0.29 of 100 negatives allows 29, not 28 (guards against float rounding)."""
     neg = np.arange(100, dtype=np.float64)  # 100 distinct negatives
     pos = np.array([1000.0])
     _, threshold = recall_at_fpr(pos, neg, max_fpr=0.29)  # 0.29 * 100 == 28.999999999999996
