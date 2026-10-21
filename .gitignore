@@ -1,0 +1,61 @@
+# Purpose: keep data, weights, secrets, caches and build output out of git for av-road-hazard.
+# F:L-08 data/MANIFEST.json and checkpoints/MANIFEST.json stay tracked (versions and SHA-256 hashes); the files they describe do not.
+
+# Data, weights, outputs
+data/*
+!data/MANIFEST.json
+# Recommendation, not a decision: SPEC section 4 says data/ holds download scripts, so keep them tracked. See docs/OPEN_QUESTIONS.md.
+!data/*.py
+!data/*.md
+checkpoints/*
+!checkpoints/MANIFEST.json
+outputs/
+runs/
+debug_dump/
+qdrant_storage/
+*.pt
+*.pth
+*.ckpt
+
+# Secrets
+.env
+!.env.example
+
+# Experiment tracking
+wandb/
+mlruns/
+lightning_logs/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# Node
+node_modules/
+.next/
+out/
+npm-debug.log*
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
