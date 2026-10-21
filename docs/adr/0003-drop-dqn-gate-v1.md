@@ -2,7 +2,7 @@ Purpose: ADR 0003: Drop the DQN patch gate in v1.
 
 # ADR 0003: Drop the DQN patch gate in v1
 
-Status: accepted (owner approved)
+Status: accepted
 
 ## Context
 The source pipeline has a DQN that selects which patches to classify. It has no usable checkpoint (the committed `dqn.pth` predates the stop action and will not load), RL training adds cost, and its reward oracle is the same EfficientNet classifier it feeds, so it learns where that classifier fires rather than where defects are. Token and time budget are tight (two $20 plans, 1-2 weeks).
