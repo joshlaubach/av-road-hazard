@@ -61,12 +61,15 @@ jobs:
       - run: pip install httpx pytest
       - run: |
           for i in $(seq 1 30); do curl -sf http://localhost:8000/health && break; sleep 2; done
-          E2E_BASE_URL=http://localhost:8000 python -m pytest -m e2e -o addopts=-q
+          E2E_BASE_URL=http://localhost:8000 python -m pytest tests/e2e -m e2e -o addopts=-q
       - if: failure()
         run: docker compose -f docker/docker-compose.yml logs
 
   secrets-and-audit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read   # gitleaks-action lists the PR's commits
     steps:
       - uses: actions/checkout@v4
         with:
