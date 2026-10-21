@@ -1,0 +1,660 @@
+{
+  "components": {
+    "schemas": {
+      "Body_analyze_analyze_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_analyze_analyze_post",
+        "type": "object"
+      },
+      "Body_index_index_post": {
+        "properties": {
+          "files": {
+            "items": {
+              "contentMediaType": "application/octet-stream",
+              "type": "string"
+            },
+            "title": "Files",
+            "type": "array"
+          }
+        },
+        "required": [
+          "files"
+        ],
+        "title": "Body_index_index_post",
+        "type": "object"
+      },
+      "DefectRecord": {
+        "additionalProperties": false,
+        "description": "A defect as it appears in a HazardRecord, after fusion.",
+        "properties": {
+          "box": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Box",
+            "type": "array"
+          },
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "in_road": {
+            "title": "In Road",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "near_objects": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/NearObject"
+            },
+            "title": "Near Objects",
+            "type": "array"
+          },
+          "severity": {
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "unknown"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "confidence",
+          "box",
+          "severity",
+          "in_road"
+        ],
+        "title": "DefectRecord",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HazardRecord": {
+        "additionalProperties": false,
+        "description": "One record per frame: objects, fused defects, hazard score, metadata.",
+        "properties": {
+          "defects": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DefectRecord"
+            },
+            "title": "Defects",
+            "type": "array"
+          },
+          "frame_id": {
+            "minLength": 1,
+            "title": "Frame Id",
+            "type": "string"
+          },
+          "hazard_score": {
+            "description": "Deterministic formula; see fusion/README.md",
+            "minimum": 0.0,
+            "title": "Hazard Score",
+            "type": "number"
+          },
+          "image_size": {
+            "description": "(width, height) in pixels",
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Image Size",
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta",
+            "default": {
+              "time_of_day": "unknown"
+            }
+          },
+          "objects": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Object"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "source": {
+            "enum": [
+              "carla",
+              "rdd2022",
+              "upload",
+              "nuscenes"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "frame_id",
+          "source",
+          "image_size",
+          "hazard_score"
+        ],
+        "title": "HazardRecord",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "llm_backend": {
+            "title": "Llm Backend",
+            "type": "string"
+          },
+          "models": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "object"
+          },
+          "qdrant": {
+            "title": "Qdrant",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "stubs": {
+            "title": "Stubs",
+            "type": "boolean"
+          },
+          "versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Versions",
+            "type": "object"
+          }
+        },
+        "required": [
+          "status",
+          "stubs",
+          "models",
+          "llm_backend",
+          "qdrant",
+          "versions"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "IndexResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "indexed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Indexed",
+            "type": "array"
+          }
+        },
+        "required": [
+          "indexed"
+        ],
+        "title": "IndexResponse",
+        "type": "object"
+      },
+      "Meta": {
+        "additionalProperties": false,
+        "properties": {
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "time_of_day": {
+            "default": "unknown",
+            "enum": [
+              "day",
+              "night",
+              "unknown"
+            ],
+            "title": "Time Of Day",
+            "type": "string"
+          }
+        },
+        "title": "Meta",
+        "type": "object"
+      },
+      "NearObject": {
+        "additionalProperties": false,
+        "properties": {
+          "dist_px": {
+            "minimum": 0.0,
+            "title": "Dist Px",
+            "type": "number"
+          },
+          "iou": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Iou",
+            "type": "number"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "iou",
+          "dist_px"
+        ],
+        "title": "NearObject",
+        "type": "object"
+      },
+      "Object": {
+        "additionalProperties": false,
+        "description": "One detected object (output of perception.infer.detect).",
+        "properties": {
+          "box": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Box",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "label",
+          "score",
+          "box"
+        ],
+        "title": "Object",
+        "type": "object"
+      },
+      "QueryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "filters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filters"
+          },
+          "image_b64": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Base64-encoded image query",
+            "title": "Image B64"
+          },
+          "llm": {
+            "default": "llama",
+            "enum": [
+              "llama",
+              "claude"
+            ],
+            "title": "Llm",
+            "type": "string"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "top_k": {
+            "default": 5,
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "type": "integer"
+          }
+        },
+        "title": "QueryRequest",
+        "type": "object"
+      },
+      "QueryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "llm": {
+            "enum": [
+              "llama",
+              "claude"
+            ],
+            "title": "Llm",
+            "type": "string"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/HazardRecord"
+            },
+            "title": "Records",
+            "type": "array"
+          }
+        },
+        "required": [
+          "answer",
+          "llm",
+          "records"
+        ],
+        "title": "QueryResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "av-road-hazard",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/analyze": {
+      "post": {
+        "operationId": "analyze_analyze_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_analyze_analyze_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HazardRecord"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze"
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/index": {
+      "post": {
+        "operationId": "index_index_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_index_index_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Index"
+      }
+    },
+    "/query": {
+      "post": {
+        "operationId": "query_query_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Query"
+      }
+    },
+    "/records/{record_id}": {
+      "get": {
+        "operationId": "get_record_records__record_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HazardRecord"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Record"
+      }
+    }
+  }
+}
