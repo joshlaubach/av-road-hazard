@@ -61,7 +61,7 @@ One record per frame.
 | `defects[].confidence` | Classifier sigmoid probability |
 | `defects[].box` | Tile-to-frame mapped pixel box |
 | `defects[].severity` | `high`, `medium`, `low`, or `unknown`; a heuristic, or optional LLM text (off by default) |
-| `defects[].in_road` | Whether the defect box intersects the road mask |
+| `defects[].in_road` | `true` when at least a configured fraction of the defect box lies on the road mask, `false` when confirmed off the road, `null` when unknown (no usable road mask). Fusion scores unknown like `true`. Readers must not test truthiness (`null` is falsy): use `is not False` to keep unknown hazards. See CONTRACT_CHANGELOG v0.2.0 |
 | `defects[].near_objects[]` | Nearby objects: `label`, `iou`, `dist_px` (pixel distance) |
 | `hazard_score` | Documented deterministic formula (defect severity x confidence x proximity to vulnerable objects), not learned. The formula is documented in `fusion/README.md` once built |
 | `meta.time_of_day` | `day`, `night`, `unknown` |
