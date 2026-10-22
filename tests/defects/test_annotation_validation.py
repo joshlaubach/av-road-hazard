@@ -7,6 +7,7 @@ import pytest
 from PIL import Image
 
 from defects.dataset import build_samples
+from defects.validation import read_annotation
 
 
 def annotation(box: str, code: str = "D00") -> str:
@@ -23,7 +24,13 @@ GOOD_BOX = "<bndbox><xmin>1</xmin><ymin>1</ymin><xmax>5</xmax><ymax>5</ymax></bn
         (annotation(GOOD_BOX.replace("<xmin>1</xmin>", "")), "invalid_coordinates"),
         (annotation(GOOD_BOX.replace("<xmin>1", "<xmin>nan")), "invalid_coordinates"),
         (annotation(GOOD_BOX.replace("<xmin>1", "<xmin>oops")), "invalid_coordinates"),
+        (annotation(GOOD_BOX.replace("<xmin>1", "<xmin>inf")), "invalid_coordinates"),
         (annotation(GOOD_BOX.replace("<xmin>1", "<xmin>5")), "invalid_box"),
+        # Both edges round to 5, so the box has no width left: still excluded, never kept as-is.
+        (
+            annotation(GOOD_BOX.replace("<xmin>1", "<xmin>5.2").replace("<xmax>5", "<xmax>5.4")),
+            "invalid_box",
+        ),
         (annotation(GOOD_BOX.replace("<xmin>1", "<xmin>-1")), "box_outside_image"),
         (annotation(GOOD_BOX.replace("<xmax>5", "<xmax>20")), "box_outside_image"),
     ],
@@ -77,6 +84,28 @@ def test_valid_labels_and_true_negative_survive(tmp_path: Path) -> None:
         "positive": (0, 0, 0, 1),
     }
     assert report.excluded_ids == []
+
+
+def test_fractional_coordinates_are_rounded_to_pixels(tmp_path: Path) -> None:
+    """Norway annotations use sub-pixel coordinates such as 1138.46; they are valid boxes."""
+    fractional = GOOD_BOX.replace("<xmin>1", "<xmin>1.4").replace("<ymin>1", "<ymin>0.6")
+    fractional = fractional.replace("<xmax>5", "<xmax>5.49").replace("<ymax>5", "<ymax>6.51")
+    xml = tmp_path / "norway.xml"
+    xml.write_text(f"<annotation>{annotation(fractional, 'D20')}</annotation>")
+    Image.new("RGB", (8, 8)).save(xml.with_suffix(".png"))
+    assert read_annotation(xml) == ([("D20", 1, 1, 5, 7)], None, [])
+    samples, report = build_samples(tmp_path, lambda p: p.with_suffix(".png"))
+    assert [(s.sample_id, s.labels) for s in samples] == [("norway", (0, 0, 1, 0))]
+    assert report.excluded_ids == []
+
+
+def test_fractional_image_size_is_still_invalid(tmp_path: Path) -> None:
+    """Only box coordinates are rounded; a fractional width or height is a corrupt size."""
+    xml = tmp_path / "size.xml"
+    xml.write_text("<annotation><size><width>8.5</width><height>8</height></size></annotation>")
+    _, size, issues = read_annotation(xml)
+    assert size is None
+    assert issues == ["invalid_image_size"]
 
 
 def test_cli_exports_only_valid_samples(tmp_path: Path) -> None:
