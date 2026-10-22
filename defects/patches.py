@@ -34,9 +34,17 @@ class Tile:
 
 
 def _starts(low: int, high: int, side: int, stride: int) -> list[int]:
-    """Tile origins along one axis; the last tile is pushed back so it ends exactly on the edge."""
-    last = high - side
-    return [*range(low, last, stride), last]
+    """Tile origins along one axis, evenly spaced from the first edge to the last.
+
+    The count is the smallest that covers the axis with steps of at most `stride`; the last tile
+    ends exactly on the edge. Spreading the slack over every step avoids a final tile that sits
+    only a few pixels from the one before it, as plain stride steps would leave.
+    """
+    span = high - side - low
+    steps = -(-span // stride)  # ceil division: tiles needed after the first
+    if steps == 0:  # the axis is exactly one tile long
+        return [low]
+    return [low + round(i * span / steps) for i in range(steps + 1)]
 
 
 def tile_grid(
@@ -49,8 +57,9 @@ def tile_grid(
     """Square tiles covering `region` (default: the whole image) in reading order.
 
     The side is tile_size, shrunk to the region's shorter side when the region is smaller, so
-    every tile is square, equal in size, and inside the region. overlap is the fraction of a tile
-    shared with its neighbour. Rows and columns count from 0 inside the region.
+    every tile is square, equal in size, and inside the region. overlap is the least fraction of a
+    tile shared with its neighbour (tiles are evenly spaced, so it can be more). Rows and columns
+    count from 0 inside the region.
     """
     width, height = image_size
     if width <= 0 or height <= 0:
