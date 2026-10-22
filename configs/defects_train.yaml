@@ -27,3 +27,10 @@ val_fraction: 0.10
 # <= negative_overlap, and the tile is ignored in between. Overlap = intersection / smaller area.
 positive_overlap: 0.25
 negative_overlap: 0.05
+# Tiles (defects/patches.py, defects/tile_index.py): 384 px native crops, at least 20% overlap. Training
+# keeps every positive tile plus clean tiles: at most clean_per_positive x the image's positives,
+# at least min_clean_per_image, chosen with the global seed. Evaluation keeps every clean tile.
+tile_size: 384
+tile_overlap: 0.2
+clean_per_positive: 1.0
+min_clean_per_image: 1
