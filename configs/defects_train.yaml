@@ -23,3 +23,7 @@ color_jitter: 0.1
 test_fraction: 0.15
 n_folds: 5
 val_fraction: 0.10
+# Tile labels (defects/tile_labels.py): a class is positive at overlap >= positive_overlap, clean at
+# <= negative_overlap, and the tile is ignored in between. Overlap = intersection / smaller area.
+positive_overlap: 0.25
+negative_overlap: 0.05
