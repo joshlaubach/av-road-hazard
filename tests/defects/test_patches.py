@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from itertools import pairwise
+
 import pytest
 from PIL import Image
 
@@ -32,6 +34,27 @@ def test_edge_tile_is_shifted_back_instead_of_running_past_the_image() -> None:
     tiles = tile_grid((600, 600), 512, 0.2)
     assert [t.box for t in tiles if t.row == 0] == [(0, 0, 512, 512), (88, 0, 600, 512)]
     assert all(t.box[0] >= 0 and t.box[2] <= 600 and t.box[3] <= 600 for t in tiles)
+
+
+def test_tiles_are_evenly_spaced_so_the_edge_tile_is_not_a_near_copy() -> None:
+    """720 px with 384 px tiles and 0.2 overlap used to start at 0, 307, 336 (29 px apart)."""
+    tiles = tile_grid((720, 720), 384, 0.2)
+    first_row = sorted(t.box[0] for t in tiles if t.row == 0)
+    assert first_row == [0, 168, 336]
+    gaps = [b - a for a, b in pairwise(first_row)]
+    assert max(gaps) - min(gaps) <= 1
+    assert max(gaps) <= round(384 * 0.8)  # never farther apart than the requested stride
+
+
+@pytest.mark.parametrize(
+    ("image_size", "tile_size", "count"),
+    [((600, 600), 384, 4), ((720, 720), 384, 9), ((640, 640), 384, 4), ((4040, 2035), 384, 91)],
+)
+def test_tile_counts_for_rdd2022_sizes(
+    image_size: tuple[int, int], tile_size: int, count: int
+) -> None:
+    """Even spacing changes where tiles start, not how many there are."""
+    assert len(tile_grid(image_size, tile_size, 0.2)) == count
 
 
 def test_width_and_height_are_not_swapped() -> None:
