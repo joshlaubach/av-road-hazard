@@ -18,13 +18,22 @@ def _integer(text: str | None) -> int:
     return int(value)
 
 
+def _coordinate(text: str | None) -> int:
+    """Round a finite box coordinate to a pixel; Norway's annotations are sub-pixel (1138.46)."""
+    value = float(text) if text is not None else float("nan")
+    if not math.isfinite(value):
+        raise ValueError("expected finite number")
+    return round(value)
+
+
 def read_annotation(
     path: Path,
 ) -> tuple[list[Box], tuple[int, int] | None, list[str]]:
     """Read every object, recording malformed annotations rather than dropping them.
 
     Missing size metadata is allowed: image dimensions are checked from the actual image.
-    Missing boxes or coordinates are not converted into zeros or clean negatives.
+    Missing boxes or coordinates are not converted into zeros or clean negatives. Fractional box
+    coordinates are rounded to whole pixels (same as defects.voc); image sizes must be integers.
     """
     try:
         root = ET.parse(path).getroot()
@@ -54,7 +63,7 @@ def read_annotation(
             continue
         try:
             x1, y1, x2, y2 = (
-                _integer(box.findtext(key)) for key in ("xmin", "ymin", "xmax", "ymax")
+                _coordinate(box.findtext(key)) for key in ("xmin", "ymin", "xmax", "ymax")
             )
         except (ValueError, OverflowError):
             issues.append("invalid_coordinates")
