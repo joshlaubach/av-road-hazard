@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
-from tqdm import tqdm
+if TYPE_CHECKING:
+    from tqdm import tqdm
 
 
 def _stderr_is_terminal() -> bool:
@@ -25,6 +27,12 @@ def make_bar[T](
 
     enabled=None draws only when stderr is a terminal, so redirected logs and pytest runs get no
     bar noise; True or False overrides that. Callers show live numbers with bar.set_postfix(...).
+    tqdm belongs to the ml extra, so it is imported here and not at module level: modules such as
+    defects.train must stay importable in the base install.
     """
+    from tqdm import tqdm as make_tqdm
+
     show = _stderr_is_terminal() if enabled is None else enabled
-    return tqdm(iterable, desc=desc, total=total, disable=not show, leave=leave, dynamic_ncols=True)
+    return make_tqdm(
+        iterable, desc=desc, total=total, disable=not show, leave=leave, dynamic_ncols=True
+    )
