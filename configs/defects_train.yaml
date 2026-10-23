@@ -18,6 +18,15 @@ threshold: 0.5
 patience: 7
 min_delta: 0.0
 num_workers: 0
+# Tile training: set tile_index and tile_cache_dir (built by tools/make_tile_index.py and
+# tools/build_tile_cache.py) to train on cached tiles; leave both null to train on whole images.
+tile_index: null
+tile_cache_dir: null
+# Progress bar: null draws it only on a terminal; true or false forces it.
+progress: null
+# Local MLflow store (a .db file in an existing folder OUTSIDE this repository); null = off.
+tracking_db: null
+tracking_experiment: defects
 horizontal_flip: 0.5
 color_jitter: 0.1
 test_fraction: 0.15

@@ -34,6 +34,9 @@ ml = [
   "torchmetrics>=1.4",
   "timm>=1.0",
   "tensorflow>=2.16",
+  "tqdm>=4.66",
+  "mlflow>=3.0",
+  "nuscenes-devkit>=1.1",
 ]
 rag = [
   "qdrant-client>=1.9",
@@ -57,11 +60,21 @@ plugins = ["pydantic.mypy"]
 files = ["common", "perception", "defects", "fusion", "rag", "api", "eval", "tools", "tests"]
 
 [[tool.mypy.overrides]]
-module = ["torch.*", "torchvision.*", "timm.*", "tensorflow.*", "qdrant_client.*", "open_clip.*"]
+module = [
+  "torch.*",
+  "torchvision.*",
+  "timm.*",
+  "tensorflow.*",
+  "qdrant_client.*",
+  "open_clip.*",
+  "tqdm.*",
+  "mlflow.*",
+  "nuscenes.*",
+]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "defects.dataset"
+module = ["defects.dataset", "defects.tile_dataset", "defects.tile_predict"]
 disallow_subclassing_any = false
 
 [tool.pytest.ini_options]
