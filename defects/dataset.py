@@ -155,32 +155,40 @@ def manifest_identity(manifest: Manifest) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
-class DefectDataset(DatasetBase):
-    """ImageNet normalization; modest training-only horizontal/color augmentation."""
+def image_transform(cfg: dict[str, Any], *, training: bool) -> Any:
+    """Resize, ImageNet normalization, and modest training-only horizontal/color augmentation.
 
-    def __init__(self, samples: Sequence[Sample], cfg: dict[str, Any], *, training: bool) -> None:
-        from torchvision import transforms
+    Shared by whole-image and tile datasets so both feed the model identical inputs.
+    """
+    from torchvision import transforms
 
-        self.samples = list(samples)
-        ops: list[Any] = [transforms.Resize((cfg["input_size"], cfg["input_size"]))]
-        if training:
-            ops.extend(
-                [
-                    transforms.RandomHorizontalFlip(cfg["horizontal_flip"]),
-                    transforms.ColorJitter(
-                        brightness=cfg["color_jitter"],
-                        contrast=cfg["color_jitter"],
-                        saturation=cfg["color_jitter"],
-                    ),
-                ]
-            )
+    ops: list[Any] = [transforms.Resize((cfg["input_size"], cfg["input_size"]))]
+    if training:
         ops.extend(
             [
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                transforms.RandomHorizontalFlip(cfg["horizontal_flip"]),
+                transforms.ColorJitter(
+                    brightness=cfg["color_jitter"],
+                    contrast=cfg["color_jitter"],
+                    saturation=cfg["color_jitter"],
+                ),
             ]
         )
-        self.transform = transforms.Compose(ops)
+    ops.extend(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]
+    )
+    return transforms.Compose(ops)
+
+
+class DefectDataset(DatasetBase):
+    """Whole images through image_transform."""
+
+    def __init__(self, samples: Sequence[Sample], cfg: dict[str, Any], *, training: bool) -> None:
+        self.samples = list(samples)
+        self.transform = image_transform(cfg, training=training)
 
     def __len__(self) -> int:
         return len(self.samples)

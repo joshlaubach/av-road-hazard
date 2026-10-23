@@ -74,7 +74,7 @@ module = [
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "defects.dataset"
+module = ["defects.dataset", "defects.tile_dataset", "defects.tile_predict"]
 disallow_subclassing_any = false
 
 [tool.pytest.ini_options]
