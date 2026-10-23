@@ -47,16 +47,41 @@ __all__ = [
 ]
 
 
-def setup_determinism(seed: int) -> None:
-    """Seed python, numpy and torch and force deterministic kernels so a run can be repeated."""
+def setup_determinism(seed: int, deterministic: bool = True) -> None:
+    """Seed python, numpy and torch; by default force deterministic kernels (repeatable runs).
+
+    deterministic=False keeps the seeds but lets cuDNN pick its fastest kernels (about 10% faster
+    in a measured run) at the price of bitwise repeatability.
+    """
     import torch
 
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.use_deterministic_algorithms(True, warn_only=True)
-    torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
+    torch.use_deterministic_algorithms(deterministic, warn_only=True)
+    torch.backends.cudnn.benchmark = not deterministic
+    torch.backends.cudnn.deterministic = deterministic
+
+
+def _amp_enabled(cfg: dict[str, Any]) -> bool:
+    """Whether to train under bf16 autocast; only "none" and "bf16" are supported."""
+    mode = cfg.get("amp", "none")
+    if mode not in ("none", "bf16"):
+        raise ValueError(f"amp must be 'none' or 'bf16', got {mode!r}")
+    return bool(mode == "bf16")
+
+
+def _forward(model: Any, images: Any, device: str, cfg: dict[str, Any]) -> Any:
+    """fp32 logits, computed under the optional bf16 autocast and channels_last layout."""
+    import torch
+
+    images = images.to(device)
+    if cfg.get("channels_last", False):
+        images = images.contiguous(memory_format=torch.channels_last)
+    with torch.autocast(
+        device_type=torch.device(device).type, dtype=torch.bfloat16, enabled=_amp_enabled(cfg)
+    ):
+        return model(images).float()
 
 
 def select_device() -> str:
@@ -80,6 +105,8 @@ def _loader(samples: Sequence[Sample], cfg: dict[str, Any], *, training: bool) -
         shuffle=training,
         drop_last=training and len(samples) > cfg["batch_size"],
         num_workers=cfg["num_workers"],
+        # Windows respawns workers every epoch otherwise (about 20 s each); needs workers > 0.
+        persistent_workers=bool(cfg.get("persistent_workers", False)) and cfg["num_workers"] > 0,
     )
 
 
@@ -140,16 +167,22 @@ def _fit(
         raise ValueError("Invalid fold index")
     if cfg["epochs"] < 1 or cfg["patience"] < 1 or cfg["min_delta"] < 0:
         raise ValueError("epochs/patience must be positive; min_delta must be nonnegative")
+    _amp_enabled(cfg)  # fail on an unsupported amp value before any work
     seed = int(get_config()["seed"])
-    setup_determinism(seed)
+    setup_determinism(seed, bool(cfg.get("deterministic", True)))
     target = device or select_device()
     by_id = {s.sample_id: s for s in samples}
     train_ids, val_ids, _ = splits.folds[fold]
     training = _loader([by_id[i] for i in train_ids], cfg, training=True)
     validation = _loader([by_id[i] for i in val_ids], cfg, training=False)
     model = build_model(cfg).to(target)
+    if cfg.get("channels_last", False):
+        model = model.to(memory_format=torch.channels_last)
     optimizer = torch.optim.AdamW(
-        model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"]
+        model.parameters(),
+        lr=cfg["lr"],
+        weight_decay=cfg["weight_decay"],
+        fused=bool(cfg.get("fused_optimizer", False)) and target == "cuda",
     )
     criterion = torch.nn.BCEWithLogitsLoss()
     directory = _run_directory(cfg, run_id, fold)
@@ -167,7 +200,7 @@ def _fit(
         seen = 0
         for images, labels in training:
             optimizer.zero_grad()
-            loss = criterion(model(images.to(target)), labels.to(target))
+            loss = criterion(_forward(model, images, target, cfg), labels.to(target))
             loss.backward()
             optimizer.step()
             total += float(loss.detach().cpu()) * len(images)
@@ -178,7 +211,7 @@ def _fit(
         truth: list[list[float]] = []
         with torch.no_grad():
             for images, labels in validation:
-                logits = model(images.to(target))
+                logits = _forward(model, images, target, cfg)
                 val_total += float(criterion(logits, labels.to(target)).cpu()) * len(images)
                 probabilities.extend(logits.sigmoid().cpu().tolist())
                 truth.extend(labels.tolist())
