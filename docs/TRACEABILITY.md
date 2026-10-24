@@ -24,7 +24,7 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | E-01 | Drafting machine: macOS arm64 MacBook; tool folders observed (contents unverified). | docs/ENVIRONMENT.md, docs/OPEN_QUESTIONS.md | Candidate dev machines; Verification needed (UNVERIFIED facts) |
 | E-02 | The source READMEs (drivenet-carla-av, defect-detector) describe development on **Windows 11 with an NVIDIA RTX 5080**, CUDA... | README.md, docs/ENVIRONMENT.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Candidate dev machines; Limitations |
 | E-03 | Docker GPU rule: GPU passthrough works only on NVIDIA hosts (Windows 11 + WSL2 via Docker Desktop, or Linux with the NVIDIA... | docs/ENVIRONMENT.md | Docker GPU rules |
-| E-04 | CARLA 0.9.16 runs on the Windows host with DirectX 12, outside Docker. The CARLA frame generator is a host-side script. CARLA... | docs/ENVIRONMENT.md | CARLA host |
+| E-04 | CARLA 0.9.16 runs on the Windows host with DirectX 12, outside Docker. The CARLA frame generator is a host-side script. CARLA... [Superseded 2026-10-23: CARLA dropped, ADR 0012] | docs/ENVIRONMENT.md | CARLA host |
 | E-05 | GPU needs by stage: Faster R-CNN detection (GPU for practical speed; CPU takes seconds per frame); EfficientNet-B4 defect... | docs/ENVIRONMENT.md, docs/OPEN_QUESTIONS.md | GPU needs by stage; Verification needed (UNVERIFIED facts) |
 | E-06 | Practical GPU plan: run detection, defect classification, and embeddings on GPU during indexing; run the LLM only when needed;... | docs/ENVIRONMENT.md | Practical GPU plan |
 | E-07 | Docker plan: containerize FastAPI service (both detectors), Ollama container for LLaMA, Qdrant, and a one-off indexing job,... | .env.example, docs/ENVIRONMENT.md, docs/OPEN_QUESTIONS.md | Docker plan; F:E-07 datasets are never baked into images; mount volumes and set paths here.; Verification needed (UNVERIFIED facts) |
@@ -37,9 +37,9 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | L-02 | RDD2022 license not named on the figshare record (UNVERIFIED); no RDD2022 images published until confirmed [CRITICAL]. | README.md, docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Limitations; Per-dataset facts and policy |
 | L-03 | Waymo Open Dataset: non-commercial and requires separate application/approval (UNVERIFIED terms); optional, local-only,... | docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Per-dataset facts and policy; Verification needed (UNVERIFIED facts) |
 | L-04 | MVTec AD: dropped from v1; was the only reason for Kaggle in defect-detector (about 5 GB). | docs/DATA_AND_LICENSES.md | Per-dataset facts and policy |
-| L-05 | CARLA frames the owner generates are the owner's own data (no third-party dataset license; CARLA's own license terms apply,... | docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Per-dataset facts and policy; Verification needed (UNVERIFIED facts) |
-| L-06 | Hosted corpus: CARLA frames plus RDD2022 samples; no alternative dataset had a verifiable license. | docs/DATA_AND_LICENSES.md | Hosted corpus |
-| L-07 | Hosted demo model: upload-your-own-image analysis; the hosted RAG searches the CARLA + RDD2022-sample corpus and session... | docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Hosted demo data model; Verification needed (UNVERIFIED facts) |
+| L-05 | CARLA frames the owner generates are the owner's own data (no third-party dataset license; CARLA's own license terms apply,... [Superseded 2026-10-23: CARLA dropped, ADR 0012] | docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Per-dataset facts and policy; Verification needed (UNVERIFIED facts) |
+| L-06 | Hosted corpus: CARLA frames plus RDD2022 samples; no alternative dataset had a verifiable license. [Superseded 2026-10-23: CARLA dropped, ADR 0012] | docs/DATA_AND_LICENSES.md | Hosted corpus |
+| L-07 | Hosted demo model: upload-your-own-image analysis; the hosted RAG searches the CARLA + RDD2022-sample corpus and session... [Superseded 2026-10-23: CARLA dropped, ADR 0012] | docs/DATA_AND_LICENSES.md, docs/OPEN_QUESTIONS.md | Hosted demo data model; Verification needed (UNVERIFIED facts) |
 | L-08 | Data and checkpoint manifests: data/MANIFEST.json and checkpoints/MANIFEST.json record dataset versions, checkpoint hashes... | .gitignore, docs/DATA_AND_LICENSES.md | F:L-08 data/MANIFEST.json and checkpoints/MANIFEST.json stay tracked (versions and SHA-256 hashes); the files they describe do not.; Manifests |
 | L-09 | Uploaded images in the hosted demo: validate type and size, decode safely, strip EXIF GPS, rate limit. | docs/DATA_AND_LICENSES.md | Uploaded images (hosted demo) |
 | P-01 | First-commit contents and the extra docs added to it. | docs/AGENT_WORKFLOW.md | Scope of the first commit |
@@ -47,7 +47,7 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | P-03 | Kept out of the first commit: any data, weights, secrets, code copied from the original repos. Copying code in happens later... | docs/AGENT_WORKFLOW.md | Scope of the first commit |
 | P-04 | After the first commit: create the remote, push main, enable branch protection, then start Sprint 0. | docs/AGENT_WORKFLOW.md | Scope of the first commit |
 | P-05 | Merge order: Scaffold, then C and G data scripts, then A and B once checkpoints exist, then D, E, F, then the integration PR,... | docs/AGENT_WORKFLOW.md | Sprint table |
-| P-06 | Open items before agents start: push access to create the remote; RDD2022 license check; CARLA defect approach; which of the... | docs/AGENT_WORKFLOW.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Sprint table |
+| P-06 | Open items before agents start: push access to create the remote; RDD2022 license check; CARLA defect approach; which of the... [Superseded 2026-10-23: CARLA dropped, ADR 0012] | docs/AGENT_WORKFLOW.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Sprint table |
 | P-07 | Status: docs drafted from source READMEs and partial code reading; nothing executed or tested. | README.md, docs/PROMPT_HISTORY.md | Prompt history; av-road-hazard |
 | Q-01 | Supporting stack sits on models that do not yet work well on target data; results come first [CRITICAL]. | README.md, docs/QUALITY_BAR.md | Evidence standards; Why these standards exist |
 | Q-02 | Criteria for a credible project: a real question with a measured answer (example: can a classifier trained on close-up road... | docs/QUALITY_BAR.md | Criteria for a credible result |
@@ -67,7 +67,7 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | R-09 | RAG design: index per frame an image embedding (CLIP-style), a text embedding of the structured record and report, and... | README.md, docs/ARCHITECTURE.md | Planned features; RAG design |
 | R-10 | nuScenes size: v1.0-mini is enough to build and test but too small to show retrieval quality; scale to v1.0-full (700 scenes)... | docs/EVALUATION.md | Evaluation 2: retrieval |
 | R-11 | Domain-gap handling chosen: crop to drivable-road region (nuScenes map data or a road segmentation model; exact method... | docs/ARCHITECTURE.md, docs/OPEN_QUESTIONS.md, docs/adr/0002-road-masked-tiling.md | Assumptions made while writing the docs; Decision; Domain-gap handling |
-| R-12 | The scope-cut order if sprints overrun is in Appendix B section 1 (React polish, CARLA corpus, LLM toggle UI, v1.0-full... | docs/AGENT_WORKFLOW.md | Sprint table |
+| R-12 | The scope-cut order if sprints overrun is in Appendix B section 1 (React polish, CARLA corpus, LLM toggle UI, v1.0-full... [Superseded 2026-10-23: CARLA dropped, ADR 0012] | docs/AGENT_WORKFLOW.md | Sprint table |
 | R-13 | Experiment tracking tool (MLflow vs W&B) is undecided: open question, recommendation MLflow (self-hostable, free; UNVERIFIED... | docs/OPEN_QUESTIONS.md | Blockers before agents start |
 | S-01 | The owner's GitHub account joshlaubach has these repos (observed at 2026-10-21): aimpg (private), 10_12_hackathon_whybrain,... | docs/OPEN_QUESTIONS.md, docs/SOURCE_REPOS.md | Owner's GitHub account; Verification needed (UNVERIFIED facts) |
 | S-02 | Pinned inputs: joshlaubach/nuscenes-stability at commit 9acd844bf61c7a3a02b7210d3fe0d9a284e212f6 (2026-03-13, single commit... | docs/SOURCE_REPOS.md | Pinned inputs |
@@ -87,7 +87,7 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | U-01 | Project maintainer identity and git author config; email only in docs/PROMPT_HISTORY.md. | docs/PROMPT_HISTORY.md | Prompt history |
 | U-02 | Goal: combine the two earlier AV (EVAV) projects end to end instead of partial demos on Kaggle-style data. | README.md, docs/GLOSSARY.md | Glossary; What it is |
 | U-03 | Combination: nuscenes-stability (objects) + defect-detector (road defects); pothole-near-pedestrian example. | README.md | What it is |
-| U-04 | drivenet-carla-av is out of scope for v1, except CARLA as a frame generator for the hosted corpus. Its driving policy is a... | README.md, docs/OPEN_QUESTIONS.md | From SPEC.md section 10 (Appendix A); Goals and constraints |
+| U-04 | drivenet-carla-av is out of scope for v1, except CARLA as a frame generator for the hosted corpus. Its driving policy is a... [Superseded 2026-10-23: CARLA dropped, ADR 0012] | README.md, docs/OPEN_QUESTIONS.md | From SPEC.md section 10 (Appendix A); Goals and constraints |
 | U-05 | Multimodal RAG over fused output with mixed visual and text queries. | README.md | Goals and constraints |
 | U-06 | Audience: portfolio and recruiters. Interface: Web UI plus API. Demo: hosted and public. | README.md | Goals and constraints |
 | U-07 | Demoable v1 in 1-2 weeks with parallel agents; React/Next.js tradeoff accepted and mitigated. | README.md, docs/adr/0006-react-nextjs-frontend.md | Decision; Goals and constraints |
@@ -99,7 +99,7 @@ A fact tag in a file means the full substance of that fact is stated at that spo
 | U-13 | Quality is a requirement: quality bar and evidence standards (see group Q) [CRITICAL]. | README.md, docs/QUALITY_BAR.md | Evidence standards; Why these standards exist |
 | U-14 | Skills for agents not yet enumerated; briefs carry a placeholder field. | docs/AGENT_WORKFLOW.md, docs/OPEN_QUESTIONS.md | Blockers before agents start; Brief assembly |
 | U-15 | Documentation style: concise, direct, minimal formatting. | README.md | Goals and constraints |
-| U-16 | Approved decisions: no DQN, Qdrant, road-masked tiling, 3 evals, switchable LLM, HF Spaces + Qdrant Cloud, CARLA+RDD2022 corpus, React/Next.js, mini then full, upload demo. | README.md | Goals and constraints |
+| U-16 | Approved decisions: no DQN, Qdrant, road-masked tiling, 3 evals, switchable LLM, HF Spaces + Qdrant Cloud, CARLA+RDD2022 corpus, React/Next.js, mini then full, upload demo. [Superseded 2026-10-23: CARLA dropped, ADR 0012] | README.md | Goals and constraints |
 | U-17 | RDD2022 is classifier training data, not a filter; frame chunking is the tiling approach. | docs/SOURCE_REPOS.md, docs/adr/0002-road-masked-tiling.md | Context; Domain-gap problems when tiling nuScenes/Waymo frames |
 | U-18 | GPU and Docker requirements are covered by the E-group sections. | docs/ENVIRONMENT.md | GPU and Docker requirements |
 | APP-A | Appendix A committed in full as SPEC.md | SPEC.md | (top) |

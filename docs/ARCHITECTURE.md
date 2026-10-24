@@ -49,12 +49,14 @@ One record per frame.
 }
 ```
 
+`carla` is unused: kept in the frozen contract until a contract-change PR removes it (see [ADR 0012](adr/0012-drop-carla.md)).
+
 ### Field semantics
 
 | Field | Meaning |
 |---|---|
 | `frame_id` | Unique id of the frame; cited by RAG answers |
-| `source` | Where the frame came from: `carla`, `rdd2022`, `upload`, `nuscenes` |
+| `source` | Where the frame came from: `carla` (unused, see the note above), `rdd2022`, `upload`, `nuscenes` |
 | `image_size` | Image size in pixels; the example is `[1600, 900]` (nuScenes). Ordering (width, height) must be pinned in `fusion/schema.py`; image size ordering is a likely coordinate bug (BUILD_PLAN section 4) |
 | `objects[]` | Detections: `label`, `score`, `box` as `[x1,y1,x2,y2]` pixels |
 | `defects[].name` | Defect class name. Depends on the RDD2022 label mapping, which must be verified first (see [SOURCE_REPOS.md](SOURCE_REPOS.md), S-11) |
@@ -111,9 +113,8 @@ Details and sizes: [ENVIRONMENT.md](ENVIRONMENT.md). The Mac column is derived f
 | Ollama (LLaMA 3.2 Vision) | Docker container (GPU on NVIDIA hosts) or host | not used by default |
 | Qdrant | Docker container | Qdrant Cloud free tier |
 | Indexing job | one-off Docker job | precomputed offline for the sample set |
-| CARLA + frame generator | Windows host script, outside Docker | n/a |
 | Training and full evaluation | owner's machine, not CI | n/a |
 | Web UI | `web/` dev server or container | hosting location undecided (BUILD_PLAN section 5 names only the HF Space, Qdrant Cloud, and the Claude key as a Space secret) |
-| Datasets and weights | mounted volumes, never in images | corpus = CARLA frames + RDD2022 samples (after license verification) |
+| Datasets and weights | mounted volumes, never in images | corpus is open: RDD2022 samples (after license verification), the owner's own photos, or both ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)) |
 
 Compose files: `docker/docker-compose.yml` (api, qdrant, ollama) and `docker/compose.gpu.yml` for NVIDIA passthrough. CI never needs a GPU.

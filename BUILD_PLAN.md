@@ -29,11 +29,11 @@ Lanes:
 | 0 | 1 | Scaffold, schema, stubs, CI, ADRs (Phase 0 below) | Idle or review of scaffold PR | Download RDD2022, nuScenes v1.0-mini |
 | 1 | 2-4 | C Fusion (stub-driven) | A Perception port, then B Defects port and tiling | Train detector, then classifier (background) |
 | 2 | 4-7 | D RAG (Qdrant, embeddings, LLM backends) | E API + Docker (real pipeline wiring, compose, GPU) | Finish training; run metric baselines |
-| 3 | 7-9 | G Eval (retrieval, synthetic fusion) and CARLA frame generator | F Web UI against the API | Generate CARLA frames; index nuScenes locally |
+| 3 | 7-9 | G Eval (retrieval, synthetic fusion) | F Web UI against the API | Index nuScenes locally |
 | 4 | 9-11 | Integration: swap stubs for models, fix coordinate and schema bugs | Tests and fixtures for gaps, UI fixes | Run full evals; record baselines |
 | 5 | 11-14 | Deploy (HF Space, Qdrant Cloud), README, final review | Review pass, polish, walkthrough video support | Record video |
 
-If a sprint overruns, cut in this order: React polish, CARLA corpus (use RDD2022 samples only), Claude/LLaMA toggle UI (keep config switch), v1.0-full evaluation.
+If a sprint overruns, cut in this order: React polish, Claude/LLaMA toggle UI (keep config switch), v1.0-full evaluation ([ADR 0012](docs/adr/0012-drop-carla.md)).
 
 Token-saving rules:
 - One workstream per session; start fresh sessions instead of long ones.
@@ -75,7 +75,7 @@ Done when: `docker compose up` serves stub `/analyze` and `/health`; CI green; a
 ### B. Defects (`defects/`, `tests/defects/`)
 - Download RDD2022; retrain EfficientNet-B4 multi-label (D00, D10, D20, D40). Address the 0.92 train / 0.73 val gap (augmentation, stronger regularization, early stopping on val).
 - Road-masked tiling (`road_crop.py`, `patches.py`): drivable-road mask (nuScenes map data or a road segmentation model), overlapping tiles on the near-field road at native resolution, upscale to 380x380.
-- Auto-labeled negatives: non-road tiles from nuScenes/CARLA frames added to training as "no defect"; no hand labeling.
+- Auto-labeled negatives: non-road tiles from nuScenes frames added to training as "no defect"; no hand labeling.
 - `find_defects(frame) -> list[Defect]` with tile-to-frame box mapping; severity heuristic or optional LLM text (off by default).
 - DQN, MVTec, Waymo excluded from v1.
 - Done when: macro-F1 on RDD2022 val reported, negatives reduce false positives on non-road tiles (measure rate), tiling tested on fixtures.
@@ -103,8 +103,8 @@ Done when: `docker compose up` serves stub `/analyze` and `/health`; CI green; a
 - Done when: runs against stub API, Lighthouse/a11y basics, responsive at phone width, no nuScenes images bundled.
 
 ### G. Eval + Data (`eval/`, `data/`)
-- Download scripts (RDD2022, nuScenes instructions), nuScenes loader, CARLA frame generator (host-side script; includes defect decals/textures decision).
-- `eval/models.py` (per-model metrics), `eval/retrieval.py` (queries auto-generated from nuScenes GT annotations, recall@k), `eval/fusion_synthetic.py` (paste RDD2022 patches on road regions at known positions, verify box/in_road/near_objects).
+- Download scripts (RDD2022, nuScenes instructions), nuScenes loader.
+- `eval/models.py` (per-model metrics), `eval/retrieval.py` (queries auto-generated from nuScenes GT annotations, recall@k), `eval/fusion_synthetic.py` (paste RDD2022 patches on nuScenes road regions at known positions, verify box/in_road/near_objects).
 - Output a single `eval/results.json` and a markdown table for the README.
 - Done when: all three evals run end-to-end on stubs and real models and write results.
 
@@ -117,7 +117,7 @@ Done when: `docker compose up` serves stub `/analyze` and `/health`; CI green; a
 
 ## 5. Phase 3: Deploy and polish
 
-- HF Space (CPU Docker), Qdrant Cloud free tier, Claude key as a Space secret; hosted corpus = CARLA frames + RDD2022 samples (license verified first); precompute and cache outputs for the sample set so the demo stays fast on CPU.
+- HF Space (CPU Docker), Qdrant Cloud free tier, Claude key as a Space secret; hosted corpus is open (RDD2022 samples after license verification, the owner's own photos, or both; see [OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md)); precompute and cache outputs for the sample set so the demo stays fast on CPU.
 - README: architecture diagram, metrics table, limitations (effective detection range, v1.0-mini confounds), run instructions; 2-3 minute walkthrough video.
 
 ## 6. Merge order
@@ -128,7 +128,6 @@ Scaffold → C and G data scripts → A and B (once checkpoints exist) → D →
 
 - Push access to create the repo.
 - RDD2022 license check.
-- CARLA defect approach (decals vs skip in v1).
 - Which of your coding skills each agent should load (fill into the briefs).
 
 ---

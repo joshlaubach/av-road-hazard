@@ -7,7 +7,7 @@ Private repo: `joshlaubach/av-road-hazard`. Target: demoable v1 in 1-2 weeks usi
 
 ## 1. Goal
 
-One end-to-end system that takes a front-camera driving frame and answers two questions: what is in the scene (objects) and is the road damaged (defects). It fuses both into a per-frame hazard record, indexes records and images for multimodal RAG, and exposes everything through an API and a web UI. It replaces two partial demos (nuscenes-stability and defect-detector, both run on Kaggle-style public datasets) with one deployed product. CARLA (from drivenet-carla-av) is used only as a frame generator for the hosted corpus; the driving policy is out of scope for v1.
+One end-to-end system that takes a front-camera driving frame and answers two questions: what is in the scene (objects) and is the road damaged (defects). It fuses both into a per-frame hazard record, indexes records and images for multimodal RAG, and exposes everything through an API and a web UI. It replaces two partial demos (nuscenes-stability and defect-detector, both run on Kaggle-style public datasets) with one deployed product.
 
 ## 2. Decisions locked in
 
@@ -22,10 +22,10 @@ One end-to-end system that takes a front-camera driving frame and answers two qu
 | LLM | Switchable via config: LLaMA 3.2 Vision (Ollama, local) or Claude API (hosted; key available) |
 | Front end | React/Next.js, backed by FastAPI |
 | Hosting | Hugging Face Spaces (CPU) + Qdrant Cloud free tier; budget up to ~$20/mo |
-| Hosted corpus | CARLA-generated frames + RDD2022 samples (verify RDD2022 license before publishing any images) |
+| Hosted corpus | OPEN: RDD2022 samples (verify RDD2022 license before publishing any images), the owner's own photos, or both ([OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md)). CARLA is not used ([ADR 0012](docs/adr/0012-drop-carla.md)) |
 | nuScenes images | Local only; never shown or redistributed in the hosted demo |
 | Eval | No hand labeling (see section 7) |
-| Local runtime | Docker Compose; GPU passthrough only on an NVIDIA host (Windows 11 + WSL2 or Linux). Training machine UNCONFIRMED: the source READMEs say Windows 11 + RTX 5080, but the linked dev computer is a macOS arm64 MacBook Pro (no NVIDIA GPU in Docker). CARLA stays on its Windows host, outside Docker |
+| Local runtime | Docker Compose; GPU passthrough only on an NVIDIA host (Windows 11 + WSL2 or Linux). Training machine UNCONFIRMED: the source READMEs say Windows 11 + RTX 5080, but the linked dev computer is a macOS arm64 MacBook Pro (no NVIDIA GPU in Docker) |
 
 ## 3. Architecture
 
@@ -87,6 +87,8 @@ Rules: separate packages (the two source repos both have a `src/`); no hardcoded
 }
 ```
 
+`carla` is unused: kept in the frozen contract until a contract-change PR removes it (see [ADR 0012](docs/adr/0012-drop-carla.md)).
+
 `hazard_score` is a documented, deterministic formula (defect severity x confidence x proximity to vulnerable objects), not a learned value.
 
 **API:**
@@ -98,12 +100,12 @@ Rules: separate packages (the two source repos both have a `src/`); no hardcoded
 ## 6. Workstreams (for parallel agents)
 
 1. **Perception:** extract Faster R-CNN from notebook 02 into `perception/`, train on v1.0-mini, save checkpoint, `detect()` + tests.
-2. **Defects:** download RDD2022, retrain EfficientNet-B4 (watch the 0.92 train / 0.73 val overfit gap in the original). Replace the fixed 8x8 grid with road-masked tiling: mask the drivable road (nuScenes map data or a road segmentation model), tile only that region with overlap at native resolution (focus on the bottom third, where defects are large enough), upscale tiles to classifier input size. Add non-road tiles from nuScenes/CARLA frames as automatically labeled negatives (labeled by the road mask, no hand labeling) so the classifier learns sky, vehicles, and buildings are not defects. Then `find_defects()` + tests. Waymo Open Dataset is optional, local-only, and needs separate approval.
+2. **Defects:** download RDD2022, retrain EfficientNet-B4 (watch the 0.92 train / 0.73 val overfit gap in the original). Replace the fixed 8x8 grid with road-masked tiling: mask the drivable road (nuScenes map data or a road segmentation model), tile only that region with overlap at native resolution (focus on the bottom third, where defects are large enough), upscale tiles to classifier input size. Add non-road tiles from nuScenes frames as automatically labeled negatives (labeled by the road mask, no hand labeling) so the classifier learns sky, vehicles, and buildings are not defects. Then `find_defects()` + tests. Waymo Open Dataset is optional, local-only, and needs separate approval.
 3. **Fusion:** schema, patch→box mapping, road mask, proximity logic, hazard score; unit tests with synthetic inputs. Depends only on the interfaces above, so it can start with stubs.
 4. **RAG:** CLIP embeddings, Qdrant collections (image vector + text vector + metadata payload), filtered retrieval, switchable LLM wrapper, Ollama and Claude backends.
 5. **API + Docker:** FastAPI, compose files (api, qdrant, ollama), GPU config, CUDA 12.8 base image for the 5080.
 6. **Web UI:** upload and analyze view with overlays (boxes, severity colors), search/chat view, model toggle.
-7. **Eval + data:** CARLA frame generation (script on the Windows host), nuScenes loader, evaluation scripts.
+7. **Eval + data:** nuScenes loader, evaluation scripts.
 8. **Deploy:** HF Space, Qdrant Cloud, secrets, CPU-only config, README and walkthrough video.
 
 Streams 3-6 can begin immediately against stubs of the interfaces; 1-2 gate end-to-end integration.
@@ -112,7 +114,7 @@ Streams 3-6 can begin immediately against stubs of the interfaces; 1-2 gate end-
 
 1. **Per-model:** detector P/R/F1, COCO AP, condition slices (reuse nuscenes-stability metrics); defect classifier macro-F1 on RDD2022 validation.
 2. **Retrieval:** auto-generate queries from nuScenes ground-truth annotations (for example "frames with a pedestrian at night"), score recall@k against annotation-derived answers.
-3. **Fusion:** synthetic test pasting RDD2022 defect patches onto nuScenes/CARLA road regions at known positions; verify detected defect box, `in_road`, and `near_objects` against known placement.
+3. **Fusion:** synthetic test pasting RDD2022 defect patches onto nuScenes road regions at known positions; verify detected defect box, `in_road`, and `near_objects` against known placement.
 
 Known confounds to report honestly: in v1.0-mini, night and Singapore location are perfectly correlated and there are no rainy frames; evaluation on v1.0-full resolves this.
 
@@ -121,7 +123,7 @@ Known confounds to report honestly: in v1.0-mini, night and Singapore location a
 - **Days 1-2:** repo, schema, interfaces and stubs, Docker skeleton, data downloads started.
 - **Days 3-5:** both models retrained, fusion working on real outputs, indexing pipeline.
 - **Days 6-8:** RAG + switchable LLM, API complete, UI upload and search views.
-- **Days 9-10:** eval scripts and numbers, CARLA corpus, hosted deployment.
+- **Days 9-10:** eval scripts and numbers, hosted deployment.
 - **Days 11-14:** polish, README with metrics and limitations, walkthrough video, buffer.
 
 ## 9. Risks
@@ -131,15 +133,13 @@ Known confounds to report honestly: in v1.0-mini, night and Singapore location a
 - **Label-name mismatch in source (verify before porting):** `defect-detector/src/datasets/rdd2022.py` documents D00=pothole, D10=longitudinal, D20=transverse, D40=alligator, but the official RDD convention is D00=longitudinal crack, D10=transverse crack, D20=alligator crack, D40=pothole. If the source is wrong, its per-class F1 names (Pothole 0.69, Longitudinal 0.65, Transverse 0.84, Alligator 0.73) are mislabeled, and anything keyed on "pothole" (severity, hazard score) would be wrong. Check against the official RDD2022 documentation first.
 - **Over-firing classifier:** the source classifier flagged 31 of 64 patches on a sample frame at threshold 0.5; expect many false positives until negatives, regularization, and threshold tuning are in.
 - **Licensing:** nuScenes stays local; RDD2022 license is unconfirmed (the figshare page names none), so verify before publishing its images.
-- **CARLA defects:** stock CARLA has no potholes or cracks; need decal or texture overlays, otherwise the CARLA corpus only exercises the object side.
 - **HF Spaces CPU latency:** EfficientNet-B4 over 64 patches plus Faster R-CNN on CPU is slow; limit patch count, downscale, cache results, or precompute for sample images.
 - **React plus Python stack** increases integration surface; keep the OpenAPI schema as the single contract and generate the TypeScript client from it.
 
 ## 10. Open items
 
 - Confirm RDD2022 license terms.
-- Decide how to add defects to CARLA (decals/textures vs skipping CARLA defects in v1).
-- Whether drivenet-carla-av's driving policy joins later as a "drive-aware" extension (out of scope for v1).
+- Hosted corpus source: RDD2022 samples (after license verification), the owner's own photos, or both ([OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md), row 10).
 
 ---
 

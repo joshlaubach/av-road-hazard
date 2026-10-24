@@ -17,3 +17,4 @@ Crop to the drivable-road region (nuScenes map data or a road segmentation model
 
 ## Consequences
 Needs a road mask for every frame. Far-field defects will still be missed, so the effective detection range must be stated. Measurement plan: (1) false-positive rate on non-road tiles before and after adding negatives; (2) macro-F1 on RDD2022 validation; (3) synthetic paste test detection rate versus distance; (4) tiling unit tests on fixtures.
+Update 2026-10-23: CARLA was dropped from the project (ADR 0012); read "nuScenes/CARLA" as "nuScenes" and ignore the CARLA corpus.

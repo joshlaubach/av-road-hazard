@@ -22,7 +22,7 @@ Do not touch:
 
 ## Inputs
 - `joshlaubach/defect-detector` @ `9da52cdf7b7c3bedf70f32b3750b2834f3acf433`: `src/pipeline.py`, `src/utils/patches.py` (`patch_index_to_coords()`), `src/datasets/rdd2022.py`, `report.py`, `config.py`
-- RDD2022 locally (`RDD2022_ROOT`); nuScenes/CARLA frames for negatives
+- RDD2022 locally (`RDD2022_ROOT`); nuScenes frames for negatives
 - Official RDD2022 documentation and annotation XML names (for the label check)
 
 No other exploration of the source repos is allowed.
@@ -43,7 +43,7 @@ No other exploration of the source repos is allowed.
 3. Port the EfficientNet-B4 multi-label model and training loop (timm, input 380, sigmoid, threshold from config); use the deterministic 15% hold-out of train for validation because the test split has no annotations.
 4. Address the 0.92 train / 0.73 val gap: augmentation, stronger regularization, early stopping on val.
 5. Implement `road_crop.py`: drivable-road mask (nuScenes map data or a road segmentation model; method undecided) and `patches.py`: overlapping tiles on the near-field road (bottom third) at native resolution, upscaled to 380x380, with tile-to-frame box mapping.
-6. Add non-road tiles from nuScenes/CARLA frames as automatically labeled negatives (labeled by the road mask, no hand labeling).
+6. Add non-road tiles from nuScenes frames as automatically labeled negatives (labeled by the road mask, no hand labeling).
 7. Implement `find_defects(frame)`; severity heuristic or optional LLM text (off by default).
 8. Measure macro-F1 on RDD2022 val and the false-positive rate on non-road tiles before and after negatives; report both.
 9. Commit message for the port includes source repo and SHA.

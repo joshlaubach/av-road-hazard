@@ -16,3 +16,4 @@ nuScenes images stay on the local machine: never in the repo, Docker images, hos
 
 ## Consequences
 Retrieval quality on nuScenes can only be shown through numbers, not images. Hosted RAG searches a different corpus than local RAG. A review step (Phase 2) checks no nuScenes images are in the hosted bundle.
+Update 2026-10-23: CARLA was dropped from the project (ADR 0012); read "nuScenes/CARLA" as "nuScenes" and ignore the CARLA frames and the CARLA options in the hosted corpus.
