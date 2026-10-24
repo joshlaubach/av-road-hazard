@@ -16,9 +16,11 @@ from collections.abc import Sequence
 from defects.patches import Tile
 from fusion.fuse import RoadMask
 
-# A tile needs at least this share of its area on the road to be scored. PROVISIONAL: a round
-# starting point, to be set from measurement on annotated tiles, not a tuned value.
-DEFAULT_MIN_ROAD = 0.5
+# A tile needs at least this share of its area on the road to be scored. PROVISIONAL: set from 148
+# human-annotated tiles using the comma10k model. At 0.4 it drops 87% of non-road tiles and loses 1
+# of 51 crack tiles (at 0.5: 90% and 3 of 51). The sample is small, so revisit it once more tiles
+# are annotated.
+DEFAULT_MIN_ROAD = 0.4
 
 
 def _check_mask(mask: RoadMask) -> None:
