@@ -24,6 +24,10 @@ Cause: an 11B vision model needs roughly 8-12 GB VRAM at 4-bit (UNVERIFIED), com
 
 Cause: Docker on macOS cannot use the Apple GPU or an NVIDIA GPU; containers run CPU-only. Run natively to use PyTorch MPS, or train on the NVIDIA machine. Not a bug.
 
+## Road-mask model weights missing or failing verification
+
+Cause: the comma10k U-Net weights were not fetched into `<checkpoint dir>/road_mask/comma10k_unet`, or a file (`config.json` or `model.safetensors`) has a SHA-256 that differs from the value pinned in `defects/road_crop.py`. Fix: run `python -m tools.fetch_road_model`. Never edit the pinned hashes to make a mismatch pass. Never replace the file by hand. The model loads from safetensors only, never pickle. See [ADR 0013](adr/0013-road-mask-model.md).
+
 ## Other known source-repo behaviors
 
 - Missing EfficientNet checkpoint raises `RuntimeError`.
