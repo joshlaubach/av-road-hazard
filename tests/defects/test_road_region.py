@@ -74,8 +74,8 @@ def test_a_tile_below_min_road_is_dropped() -> None:
     assert drop_offroad_tiles([TILE], mask, min_road=0.5) == []
 
 
-def test_the_default_min_road_is_one_half() -> None:
-    assert DEFAULT_MIN_ROAD == 0.5
+def test_the_default_min_road_is_two_fifths() -> None:
+    assert DEFAULT_MIN_ROAD == 0.4
 
 
 def test_order_is_preserved() -> None:

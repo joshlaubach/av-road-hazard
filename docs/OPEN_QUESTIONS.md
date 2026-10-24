@@ -63,6 +63,32 @@ Sprint 0 additions (the scaffold author had no Docker daemon, so none of these r
 | Simulator defect approach (decals vs skip in v1) | Closed 2026-10-23: CARLA dropped (ADR 0012) |
 | Which of your coding skills each agent should load (fill into the briefs) | Open (5 above) |
 
+## From ADR 0013 (road-mask model)
+
+Status of every item is open. No due date has been set by the owner, so the Due column reads "Not set" rather than a date.
+
+| # | Question | Owner | Due | Status | Recommendation (not a decision) |
+|---|---|---|---|---|---|
+| R1 | Legal review of the road-model licence chain (smp MIT, weights MIT, comma10k MIT; UNVERIFIED: timm licence, third-party image rights in comma10k) | Owner (counsel) | Not set | Open | Review before the road-mask PR is treated as final; no change to the pinned weights until then |
+| R2 | Provenance and licence of the encoder's ImageNet pre-training (the model card does not say) | Owner | Not set | Open | Find the source of the pre-training weights; record the result in DATA_AND_LICENSES.md |
+| R3 | Shoulder-edge crack loss (2 of 51 crack tiles lost at min_road 0.5) and mask dilation as a fix | Owner | Not set | Open | Measure dilation on the same 148 tiles before changing the mask |
+| R4 | Set `min_road` from more human-annotated tiles (the current 0.4 is provisional, from 148 tiles) | Owner | Not set | Open | Annotate more tiles and re-measure drop and crack-loss rates before changing the default |
+| R5 | Nordic snow robustness check (model trained mostly on US and highway frames) | Owner | Not set | Open | Test on Nordic snow frames before relying on the mask there |
+| R6 | Wire the road mask into `api/pipeline.py` (`Pipeline.road_mask` returns `None`) and into `defects.infer.find_defects` (stub) | Owner | Not set | Open | Wire both, then re-measure the classifier effect |
+| R7 | CI audits only `requirements.lock` (`pip-audit`), so the `ml` extra, now including `segmentation-models-pytorch`, `safetensors` and `huggingface_hub` with their transitive packages, is not audited for known vulnerabilities | Owner | Not set | Open | Run `pip-audit` on an environment installed with `.[ml]`, or lock and audit the extra; the weights are hash-pinned and loaded from safetensors, so the runtime risk is low |
+
+## Appendix summary for ADR 0013
+
+| Item | Status |
+|---|---|
+| Road-mask licence chain legal review (R1) | Open |
+| Encoder ImageNet pre-training provenance (R2) | Open |
+| Shoulder-crack loss and mask dilation (R3) | Open |
+| `min_road` from more annotated tiles (R4) | Open |
+| Nordic snow robustness check (R5) | Open |
+| Mask wiring into pipeline and `find_defects` (R6) | Open |
+| Audit of the `ml` extra dependencies (R7) | Open |
+
 ## Assumptions made while writing the docs
 
 | Assumption | Recommendation |

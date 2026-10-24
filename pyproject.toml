@@ -37,6 +37,9 @@ ml = [
   "tqdm>=4.66",
   "mlflow>=3.0",
   "nuscenes-devkit>=1.1",
+  "segmentation-models-pytorch>=0.5",
+  "safetensors>=0.4",
+  "huggingface_hub>=0.24",
 ]
 rag = [
   "qdrant-client>=1.9",
@@ -70,6 +73,9 @@ module = [
   "tqdm.*",
   "mlflow.*",
   "nuscenes.*",
+  "segmentation_models_pytorch.*",
+  "safetensors.*",
+  "huggingface_hub.*",
 ]
 ignore_missing_imports = true
 

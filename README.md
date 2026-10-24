@@ -82,7 +82,7 @@ Per the proposed core-first gate, items 4, 6 and 8 stay at stub level until item
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) | Open questions, assumptions, blockers |
 | [docs/TRACEABILITY.md](docs/TRACEABILITY.md) | Fact-to-file matrix |
 | [docs/PROMPT_HISTORY.md](docs/PROMPT_HISTORY.md) | How this commit was produced |
-| [docs/adr/](docs/adr/0000-template.md) | Architecture decision records 0001-0012 |
+| [docs/adr/](docs/adr/0000-template.md) | Architecture decision records 0001-0013 |
 | [docs/agents/](docs/agents/00-scaffold.md) | Per-workstream agent briefs |
 
 ## Limitations
