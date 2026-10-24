@@ -1,4 +1,14 @@
 {
   "schema_version": 1,
-  "entries": []
+  "entries": [
+    {
+      "path": "nuscenes/raw",
+      "sha256": "bd93384cd6218d7b01008d6d15a946a6478d3be886f6dbc81980e5811cdfda0a",
+      "size_bytes": 5374922749,
+      "source": "nuscenes.org v1.0-mini (metadata and sensor blobs); sha256 is a digest over the sorted v1.0-mini/*.json tables, not the archive",
+      "version": "v1.0-mini",
+      "license": "unverified",
+      "retrieved": "2026-10-22"
+    }
+  ]
 }
