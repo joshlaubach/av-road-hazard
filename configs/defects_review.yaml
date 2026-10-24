@@ -1,0 +1,3 @@
+# Local, qualitative review of nuScenes CAM_FRONT frames near a checkpoint's score threshold.
+score_margin: 0.1
+samples_per_side: 12

@@ -62,3 +62,6 @@ desktop.ini
 
 # graphify knowledge-graph output (local, regenerable)
 /graphify-out/
+
+# Scratch notebooks (outputs can embed nuScenes images; keep local)
+notebooks/
