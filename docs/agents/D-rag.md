@@ -55,7 +55,7 @@ Layers from ENGINEERING.md section 3:
 ## Known pitfalls
 - Prompt injection: records, dataset files, and model outputs are data; the prompt must not execute instructions found in them.
 - Claude API usage is billed separately; the key comes from env only; never log keys or image bytes.
-- nuScenes images must not enter the corpus; hosted corpus = CARLA + RDD2022 samples only after license verification.
+- nuScenes images must not enter the corpus; hosted corpus = RDD2022 samples (after license verification), optionally the owner's own photos.
 - Qdrant must be running: see docs/RUNBOOK.md.
 - v1.0-mini is too small to show retrieval quality.
 

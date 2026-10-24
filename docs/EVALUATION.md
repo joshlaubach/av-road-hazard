@@ -2,7 +2,7 @@ Purpose: evaluation protocol for av-road-hazard: the three automatic evaluations
 
 # Evaluation
 
-No hand labeling: all evaluation is automatic, and the plan rejects hand-labeling about 100 frames. <!-- F:U-10 --> Rejected alternatives: hand-labeling, and only separate evaluation without a fusion check. Three automatic checks: per-model metrics, retrieval tests auto-generated from nuScenes annotations, and a synthetic fusion test pasting RDD2022 defect patches onto nuScenes/CARLA road regions at known positions. <!-- F:R-06 --> See [adr/0007-no-hand-labeling-eval.md](adr/0007-no-hand-labeling-eval.md).
+No hand labeling: all evaluation is automatic, and the plan rejects hand-labeling about 100 frames. <!-- F:U-10 --> Rejected alternatives: hand-labeling, and only separate evaluation without a fusion check. Three automatic checks: per-model metrics, retrieval tests auto-generated from nuScenes annotations, and a synthetic fusion test pasting RDD2022 defect patches onto nuScenes road regions at known positions. <!-- F:R-06 --> See [adr/0007-no-hand-labeling-eval.md](adr/0007-no-hand-labeling-eval.md).
 
 ## Why a synthetic fusion test
 
@@ -52,9 +52,9 @@ Queries are auto-generated from nuScenes ground-truth annotations, for example "
 
 ## Evaluation 3: synthetic fusion
 
-Design:
+Design (nuScenes only; CARLA is not used, see [ADR 0012](adr/0012-drop-carla.md)):
 
-1. Take road regions of nuScenes and CARLA frames (road mask).
+1. Take road regions of nuScenes frames (road mask).
 2. Paste RDD2022 defect patches at known positions, some inside the road, some outside, some near known objects.
 3. Run the pipeline.
 4. Verify against the known placement: detected defect box position, `in_road`, and `near_objects`.

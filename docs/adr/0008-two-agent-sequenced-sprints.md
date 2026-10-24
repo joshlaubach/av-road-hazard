@@ -15,3 +15,4 @@ Sequence work in sprints (BUILD_PLAN section 1): a Claude lane and a Codex lane,
 
 ## Consequences
 Lane boundaries must be respected (owned paths). Stubs let streams proceed in parallel. Scope-cut order if sprints overrun: React polish, CARLA corpus, LLM toggle UI, v1.0-full evaluation.
+Update 2026-10-23: CARLA was dropped from the project (ADR 0012); read "nuScenes/CARLA" as "nuScenes" and ignore the CARLA corpus item in the scope-cut order (the current order is in ADR 0012).

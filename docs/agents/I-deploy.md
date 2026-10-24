@@ -37,7 +37,7 @@ No other exploration of the source repos is allowed.
 ## Ordered task list
 1. Verify the RDD2022 license (owner) before including any RDD2022 sample image in the hosted corpus.
 2. Build the HF Space (CPU Docker); Claude key as a Space secret; Qdrant Cloud free tier.
-3. Hosted corpus = CARLA frames + RDD2022 samples (after license verified); precompute and cache outputs for the sample set so the demo stays fast on CPU.
+3. Hosted corpus = RDD2022 samples (after license verification), optionally the owner's own photos; precompute and cache outputs for the sample set so the demo stays fast on CPU.
 4. Per-IP rate limit, upload limits, EXIF GPS stripping, Claude monthly spend cap with hard cutoff and fallback message.
 5. README: architecture diagram, metrics table from `eval/results.json`, limitations (effective detection range, v1.0-mini confounds, domain gap), run instructions.
 6. Record a 2-3 minute walkthrough video; on tag, deploy and smoke-test the deployed `/health`; keep the previous image tag for rollback.
