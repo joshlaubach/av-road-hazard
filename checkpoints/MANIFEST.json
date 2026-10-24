@@ -1,4 +1,23 @@
 {
   "schema_version": 1,
-  "entries": []
+  "entries": [
+    {
+      "path": "road_mask/comma10k_unet/config.json",
+      "sha256": "2b8f16dbad9bd85386609386a9cb5dedc6e0c518253a9af484e0a128d9463c88",
+      "size_bytes": 374,
+      "source": "huggingface.co/commaai/comma10k-segnet",
+      "version": "b642c614eb0737fe7befa229f47fbd0245033038",
+      "license": "MIT per model card (not verified by counsel)",
+      "retrieved": "2026-10-23"
+    },
+    {
+      "path": "road_mask/comma10k_unet/model.safetensors",
+      "sha256": "8208672861ad1b111dc98f3a7c54196d29875b709c7353e2dd1b7614343fb3a8",
+      "size_bytes": 38502740,
+      "source": "huggingface.co/commaai/comma10k-segnet",
+      "version": "b642c614eb0737fe7befa229f47fbd0245033038",
+      "license": "MIT per model card (not verified by counsel)",
+      "retrieved": "2026-10-23"
+    }
+  ]
 }
