@@ -7,34 +7,34 @@ Read this first. Then read your brief in `docs/agents/`. Details live in [BUILD_
 ## 1. Project in five lines, and repo map
 
 1. av-road-hazard takes a front-camera driving frame and answers: what is in the scene (objects) and is the road damaged (defects).
-2. It fuses both into one `HazardRecord` per frame, indexes records and images for multimodal RAG (Qdrant), and serves an API (FastAPI) and a web UI (Next.js).
-3. Sources: ports of `nuscenes-stability` (detector) and `defect-detector` (classifier) into new packages; originals untouched.
+2. Fusion builds one `HazardRecord` per frame, and a FastAPI service exposes the stub-backed pipeline. Multimodal RAG (Qdrant) and a Next.js UI are planned.
+3. Planned model sources are `nuscenes-stability` (detector) and `defect-detector` (classifier); the original repositories remain untouched.
 4. Local only: nuScenes and Waymo images never leave the machine. Hosted demo is CPU-only.
-5. Current state: pre-implementation, documentation only. Sprint 0 scaffold comes next.
+5. Current state: scaffold, fusion, stub-backed API, defect data/training tools, and evaluation code exist. Real object and defect inference, RAG, and the web UI are still unfinished.
 
-Repo map (planned; see SPEC section 4):
+Repo map (current; see SPEC section 4 for the intended system):
 
 ```
-perception/   detector: train.py, infer.py (detect(frame) -> objects)
-defects/      classifier: train.py, infer.py, patches.py, road_crop.py
-fusion/       fuse.py, schema.py (HazardRecord pydantic model)
-rag/          embed.py, index.py, retrieve.py, llm.py (switchable)
-api/          FastAPI app, routes, settings
-web/          Next.js app
-eval/         per-model metrics, retrieval eval, synthetic fusion test
-data/         download scripts only; no data committed
-docker/       Dockerfiles, docker-compose.yml, compose.gpu.yml
-configs/      YAML configs; one source of truth for paths and thresholds
-tests/
+perception/   stub detect() entry point; real detector pending
+defects/      RDD2022 validation, datasets, splits, tiles, training, evaluation; inference stub
+fusion/       HazardRecord schema, configuration, and implemented fuse() logic
+rag/          package placeholder; indexing and retrieval pending
+api/          FastAPI routes and pipeline using stub detectors and an in-memory record store
+eval/         per-model metric functions; full evaluation pipeline pending
+data/         local datasets and metadata; do not commit raw images or weights
+docker/       API Dockerfile and Compose files
+configs/      YAML configuration for pipeline, fusion, and defect training
+tests/        unit, contract, integration, data, defects, fusion, ML, and e2e tests
+tools/        dataset preparation, overlays, prediction, and OpenAPI export
 docs/         architecture, environment, sources, licenses, ADRs, agent briefs
 ```
 
 ## 2. Session start checklist
 
 1. Read your brief in `docs/agents/<workstream>.md`.
-2. Read `fusion/schema.py` (once it exists after Sprint 0).
+2. Read `fusion/schema.py` when your work touches shared records or interfaces.
 3. Read `docs/OPEN_QUESTIONS.md` for blockers affecting your sprint.
-4. Confirm your branch is `agent/<workstream>`.
+4. Confirm you are on an `agent/*` branch for the workstream, not `main`.
 5. Confirm you own only the paths listed in your brief.
 
 One workstream per session. Start a fresh session instead of continuing a long one. Do not explore the source repos beyond the files named in your brief. <!-- F:A-04 -->
@@ -51,7 +51,7 @@ One workstream per session. Start a fresh session instead of continuing a long o
 
 ## 4. Commands
 
-Defined in Sprint 0. Run from the repo root with Python 3.12 or newer. Setup: `pip install -r requirements-dev.lock && pip install --no-deps -e .`
+Run from the repo root with Python 3.12 or newer. Setup: `pip install -r requirements-dev.lock && pip install --no-deps -e .`
 
 | Task | Command |
 |---|---|
@@ -67,10 +67,10 @@ Defined in Sprint 0. Run from the repo root with Python 3.12 or newer. Setup: `p
 | Draw a record on its image | `python -m tools.overlay IMAGE RECORD.json OUT.png` |
 | Refresh lockfiles (Python 3.12 target) | `pip install uv`, then `uv pip compile pyproject.toml --python-version 3.12 -o requirements.lock`; for the dev lock add `--extra dev -o requirements-dev.lock` |
 | Install git hooks | `pre-commit install` (hooks include a block on committing to `main`) |
-| Train | defined by workstreams A (detector) and B (defects); not implemented yet |
-| Eval | defined by workstream G; not implemented yet |
+| Defect training | `python -m defects.train MODE --config PATH` (`MODE` is `splits`, `fit`, or `oof`; `splits` also requires `--groups PATH`; configure local paths first) |
+| Evaluation tests | `python -m pytest tests/eval tests/defects/test_evaluation.py` |
 
-Environment: `USE_STUBS=1` is the default; real models raise `NotImplementedError` until workstreams A and B land. `DEBUG_DUMP_DIR=/some/dir` writes per-request intermediates under `<dir>/<request_id>/`.
+Environment: `USE_STUBS=1` is the default; `perception.infer.detect()` and `defects.infer.find_defects()` raise `NotImplementedError` with stubs off until real inference is wired. `DEBUG_DUMP_DIR=/some/dir` writes per-request intermediates under `<dir>/<request_id>/`.
 
 ## 5. How to work
 
@@ -79,7 +79,7 @@ Environment: `USE_STUBS=1` is the default; real models raise `NotImplementedErro
 - Reproduce-first debugging: capture the exact input image, config, seed, and git SHA; add it to `tests/fixtures/regressions/`.
 - Visual overlays before theorizing: use `tools/overlay.py` and `DEBUG_DUMP_DIR` first. Most bugs are coordinate bugs (tile to frame, width/height order, resize scale). <!-- F:A-05 -->
 - Never "fix" a failing test by weakening it.
-- Stubs first: `USE_STUBS=1` makes `perception.infer.detect()` and `defects.infer.find_defects()` return fixed fake outputs, so fusion, RAG, API and UI build in parallel. Integration swaps stubs for models. <!-- F:A-09 -->
+- Stub-backed integration: `USE_STUBS=1` makes `perception.infer.detect()` and `defects.infer.find_defects()` return fixed fake outputs. Fusion and the API use those outputs until real inference is wired. <!-- F:A-09 -->
 
 ## 6. Lanes and cross-review
 
@@ -93,7 +93,7 @@ Every PR is reviewed by the other tool, using the checklist in ENGINEERING.md se
 ## 7. Token and usage discipline
 
 - Usage limits, not coordination, are the bottleneck: one Claude plan and one Codex plan, so at most two agents run at once, one per tool. <!-- F:U-08 -->
-- One workstream per session; fresh sessions; give yourself only the brief plus `fusion/schema.py`. <!-- F:A-04 -->
+- One workstream per session; begin with its brief and, when relevant, `fusion/schema.py`. Search only the owned paths and nearby tests before opening more files. Keep raw dataset trees out of routine code searches. <!-- F:A-04 -->
 - Debug with `tools/overlay.py` and `DEBUG_DUMP_DIR` first. Owners hand agents a reproducing fixture, not a vague symptom. <!-- F:A-05 -->
 - Small, test-first PRs keep reviews cheap. <!-- F:A-06 -->
 - GPU training, downloads and evaluation run on the owner's machine at no token cost: launch them early and work on something else while they run. <!-- F:A-02 -->
