@@ -14,6 +14,7 @@ Third-party datasets (nuScenes, RDD2022, MVTec AD, Waymo Open Dataset) have thei
 | RDD2022 | Defect classifier training; synthetic paste patches; hosted corpus samples | figshare record (CRDDC 2022) names no license. UNVERIFIED | Yes | Only after license verification | No images until verified |
 | MVTec AD | Dropped from v1 | Not assessed; about 5 GB | No | No | No |
 | Waymo Open Dataset | Optional | Non-commercial; needs separate application/approval (UNVERIFIED terms) | Optional, local-only | No | No |
+| comma10k U-Net weights and comma10k training data | Road mask model (ADR 0013) | Verified: smp code MIT; weights MIT (HF model card); comma10k data MIT (GitHub README). UNVERIFIED: encoder ImageNet pre-training provenance; timm licence (Apache-2.0, from memory); third-party image rights beyond the MIT statement. Counsel review open | Weights fetched by `tools/fetch_road_model.py` into `<checkpoint dir>/road_mask/comma10k_unet`; no images | No images or weights hosted by this repo | No: weights and images never committed; SHA-256 pinned in `defects/road_crop.py` |
 
 ## Per-dataset facts and policy
 
@@ -21,6 +22,11 @@ Third-party datasets (nuScenes, RDD2022, MVTec AD, Waymo Open Dataset) have thei
 - **RDD2022.** **[CRITICAL]** The figshare record (CRDDC 2022) page named no license when checked. UNVERIFIED. Policy: do not publish any RDD2022 images (hosted corpus samples, README images, fixtures committed to the repo) until the license is confirmed. <!-- F:L-02 -->
 - **Waymo Open Dataset.** Non-commercial and requires separate application/approval (UNVERIFIED terms); optional, local-only, excluded from v1 by default. <!-- F:L-03 -->
 - **MVTec AD.** Dropped from v1. It was the only reason for Kaggle in defect-detector (about 5 GB). <!-- F:L-04 -->
+- **comma10k U-Net weights and comma10k training data.** Used for the road mask ([ADR 0013](adr/0013-road-mask-model.md)). Source: Hugging Face `commaai/comma10k-segnet` at revision `b642c614eb0737fe7befa229f47fbd0245033038` (files `config.json` and `model.safetensors`, 38,502,740 bytes), SHA-256 pinned in `defects/road_crop.py`. Loaded with safetensors only, never pickle.
+  - Verified: smp code MIT (package metadata); weights MIT (Hugging Face model card header `license: mit`); comma10k training data MIT (its GitHub README: "MIT license, no academic only restrictions").
+  - UNVERIFIED: provenance and licence of the encoder's ImageNet pre-training (the model card does not say); the timm licence (Apache-2.0, from memory); whether comma10k images carry third-party rights beyond the MIT statement.
+  - This repo hosts no images and no weights. Weights are fetched locally by `tools/fetch_road_model.py` and never committed.
+  - Legal review of this licence chain is open (see [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)).
 
 ## Hosted corpus
 
@@ -49,6 +55,7 @@ See [ENVIRONMENT.md](ENVIRONMENT.md): RDD2022 about 13.3 GB download / about 15 
 | nuScenes | Unverified; owner to verify |
 | RDD2022 | Unverified; blocks publishing any RDD2022 image |
 | Waymo | Unverified; excluded from v1 by default |
+| comma10k U-Net weights and data | Code, weights and data MIT (verified); encoder pre-training and timm unverified; counsel review open |
 | Repo license (MIT) | Recommendation, not a decision |
 
 ## Manifest entry format (L-08, format only; code arrives with workstream G)
