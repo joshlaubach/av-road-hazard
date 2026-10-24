@@ -21,11 +21,11 @@ Work is planned for several agents in parallel, but the available plans are one 
 
 The full sprint table (lanes per sprint, days, and what the owner's machine does) is in [BUILD_PLAN.md](../BUILD_PLAN.md) section 1; it is the single copy.
 
-The owner's machine runs downloads, training, and evaluation in the background at no token cost; launch them early. If a sprint overruns, cut in this order: React polish, CARLA corpus (use RDD2022 samples only), Claude/LLaMA toggle UI (keep the config switch), v1.0-full evaluation. <!-- F:A-02 --> <!-- F:R-12 -->
+The owner's machine runs downloads, training, and evaluation in the background at no token cost; launch them early. If a sprint overruns, cut in this order: React polish, Claude/LLaMA toggle UI (keep the config switch), v1.0-full evaluation. <!-- F:A-02 --> <!-- F:R-12 -->
 
 Merge order: Scaffold, then C and G data scripts, then A and B once checkpoints exist, then D, E, F, then the integration PR, then the deploy PR. <!-- F:P-05 -->
 
-Open items before agents start: push access to create the remote; RDD2022 license check; CARLA defect approach; which of the owner's coding skills each agent loads; training machine; Python version; experiment tracker; license choice; whether the scope cut (Q-03) is accepted. <!-- F:P-06 -->
+Open items before agents start: push access to create the remote; RDD2022 license check; which of the owner's coding skills each agent loads; training machine; Python version; experiment tracker; license choice; whether the scope cut (Q-03) is accepted. <!-- F:P-06 -->
 
 ## Session start checklist
 

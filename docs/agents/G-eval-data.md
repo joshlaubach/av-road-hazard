@@ -6,10 +6,10 @@ Purpose: self-contained brief for the G Eval + Data workstream of av-road-hazard
 Claude
 
 ## Sprint and dependencies
-Data scripts early (right after the scaffold, merge order: scaffold, then C and G data scripts); Sprint 3 (days 7-9) for the evaluations and the CARLA frame generator. Depends on A and B checkpoints for the real-model runs; evals first run on stubs.
+Data scripts early (right after the scaffold, merge order: scaffold, then C and G data scripts); Sprint 3 (days 7-9) for the evaluations. Depends on A and B checkpoints for the real-model runs; evals first run on stubs.
 
 ## Goal
-Provide data download scripts, the nuScenes loader, the CARLA frame generator, and the three automatic evaluations that write `eval/results.json` and a README table.
+Provide data download scripts, the nuScenes loader, and the three automatic evaluations that write `eval/results.json` and a README table.
 
 ## Owned paths
 - `eval/`
@@ -22,14 +22,13 @@ Do not touch:
 ## Inputs
 - `joshlaubach/nuscenes-stability` @ `9acd844bf61c7a3a02b7210d3fe0d9a284e212f6`: `src/data.py` (e.g. `compute_scene_split`), `src/metrics.py`, `src/utils_nuscenes.py` for metric reuse
 - docs/EVALUATION.md for the protocol
-- RDD2022 locally; nuScenes locally; CARLA 0.9.16 on the Windows host
+- RDD2022 locally; nuScenes locally
 
 No other exploration of the source repos is allowed.
 
 ## Outputs
 - Download scripts (RDD2022; nuScenes instructions) with SHA-256 verification against `data/MANIFEST.json`
 - nuScenes loader
-- CARLA frame generator (host-side script)
 - `eval/models.py`, `eval/retrieval.py`, `eval/fusion_synthetic.py`
 - `eval/results.json` and a markdown table for the README
 
@@ -40,12 +39,11 @@ No other exploration of the source repos is allowed.
 ## Ordered task list
 1. Write download scripts (RDD2022; nuScenes instructions) that verify hashes against `data/MANIFEST.json` and delete archives unless `--keep-archive`.
 2. Write the nuScenes loader.
-3. Write the CARLA frame generator as a host-side script; resolve the defect decals/textures decision with the owner (stock CARLA has no potholes or cracks).
-4. Implement `eval/models.py`: detector P/R/F1, COCO AP, condition slices; classifier macro-F1 on RDD2022 val, non-road false-positive rate.
-5. Implement `eval/retrieval.py`: queries auto-generated from nuScenes GT annotations (for example "frames with a pedestrian at night"), recall@k against annotation-derived answers.
-6. Implement `eval/fusion_synthetic.py`: paste RDD2022 defect patches on road regions at known positions; verify detected box, `in_road`, `near_objects`; report detection rate versus distance.
-7. Write a single `eval/results.json` and a README markdown table; state the limits of the synthetic test.
-8. Fill `eval/baselines.json` with the reproduced baselines.
+3. Implement `eval/models.py`: detector P/R/F1, COCO AP, condition slices; classifier macro-F1 on RDD2022 val, non-road false-positive rate.
+4. Implement `eval/retrieval.py`: queries auto-generated from nuScenes GT annotations (for example "frames with a pedestrian at night"), recall@k against annotation-derived answers.
+5. Implement `eval/fusion_synthetic.py`: paste RDD2022 defect patches on nuScenes road regions at known positions; verify detected box, `in_road`, `near_objects`; report detection rate versus distance.
+6. Write a single `eval/results.json` and a README markdown table; state the limits of the synthetic test.
+7. Fill `eval/baselines.json` with the reproduced baselines.
 
 ## Tests required
 Layers from ENGINEERING.md section 3:
@@ -57,8 +55,6 @@ Layers from ENGINEERING.md section 3:
 
 ## Known pitfalls
 - RDD2022 license unverified: do not publish pasted images or samples.
-- Stock CARLA has no defects; without decals the CARLA corpus exercises only the object side.
-- CARLA runs on the Windows host only, outside Docker; not on macOS.
 - Pasted patches are easier than real defects: never present synthetic results as real-world accuracy.
 - v1.0-mini confounds (night and location perfectly correlated; no rain).
 - Split by scene, never by frame; touch the test split once per release.

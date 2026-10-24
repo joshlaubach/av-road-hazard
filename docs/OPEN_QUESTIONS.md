@@ -11,12 +11,13 @@ Every recommended default is a recommendation, not a decision. Owner is the repo
 | 1 | Push access to create the remote repo (`joshlaubach/av-road-hazard`, private) <!-- F:P-06 --> | Owner | Before Sprint 0 | Owner creates the remote and pushes `main`, then enables branch protection (PRs required, CI required once CI exists) |
 | 2 | **[CRITICAL]** Which machine trains the models: Windows 11 + RTX 5080 (per source READMEs) or the macOS MacBook (linked dev computer)? UNCONFIRMED in the source docs. **Answered: Windows 11 + RTX 5080** (maintainer, setup session); README and ENVIRONMENT.md still say unconfirmed and need a follow-up edit. <!-- F:E-02 --> | Owner | Sprint 1 | Confirm; document both until then. Training and Docker GPU passthrough need an NVIDIA host |
 | 3 | **[CRITICAL]** RDD2022 license (figshare record names none). UNVERIFIED <!-- F:L-02 --> | Owner | Sprint 5 (publishing), earlier for fixtures | No RDD2022 images published or committed until confirmed |
-| 4 | CARLA defect approach: decals/textures vs skipping CARLA defects in v1 (stock CARLA has no potholes or cracks) <!-- F:L-05 --> | Owner | Sprint 3 | Decide before G; if skipped, the CARLA corpus exercises only the object side |
+| 4 | Defect approach for simulator frames: decals/textures vs skipping simulator defects in v1 (stock simulators have no potholes or cracks) <!-- F:L-05 --> | Owner | Sprint 3 | Closed 2026-10-23: CARLA dropped (ADR 0012) |
 | 5 | Which of the owner's coding skills each agent loads (not yet enumerated) <!-- F:U-14 --> | Owner | Before Sprint 0 | Fill into briefs. Placeholders: frontend-design for F, dataviz for charts |
 | 6 | Python version of the new repo <!-- F:E-11 --> | Owner | Sprint 0 | 3.12 (sources use 3.11 and 3.12). Applied in Sprint 0 as `requires-python >=3.12`; CI runs 3.12 and 3.13; Docker uses 3.12; lockfiles were compiled on 3.13 |
 | 7 | Experiment tracker: MLflow vs W&B <!-- F:R-13 --> | Owner | Sprint 1 | MLflow (self-hostable, free; UNVERIFIED preference) |
 | 8 | License for `LICENSE` | Owner | Before push | MIT (applied as the default; revisit if the owner prefers another) |
 | 9 | Accept core-first gating (ADR 0011)? <!-- F:Q-03 --> | Owner | Before Sprint 2 | Accept: gate D, F, I on A, B, C and the synthetic fusion evaluation producing numbers |
+| 10 | Hosted corpus source (CARLA dropped, ADR 0012): RDD2022 samples (after license verification), the owner's own photos, or both | Owner | Before deploy | Open. Decide before the hosted deploy; RDD2022 samples need license verification first |
 
 ## Verification needed (UNVERIFIED facts)
 
@@ -36,7 +37,7 @@ Sprint 0 additions (the scaffold author had no Docker daemon, so none of these r
 | nuScenes license terms (non-commercial, image redistribution) <!-- F:L-01 --> | Owner | Before any hosted text/metadata from nuScenes | Keep images local; show nothing nuScenes-derived on the hosted demo until confirmed |
 | Whether nuScenes-derived records may be shown as text/metadata/charts hosted <!-- F:L-07 --> | Owner | Sprint 5 | Default: do not show |
 | Waymo Open Dataset terms and approval <!-- F:L-03 --> | Owner | Optional, post-v1 | Excluded from v1 |
-| CARLA license terms for generated frames <!-- F:L-05 --> | Owner | Sprint 3 | Check before publishing corpus |
+| License terms for simulator-generated frames <!-- F:L-05 --> | Owner | Sprint 3 | Closed 2026-10-23: CARLA dropped (ADR 0012) |
 | Docker base image exact tag `nvidia/cuda:12.8.x-cudnn-runtime-ubuntu22.04` <!-- F:E-07 --> | E | Sprint 2 | Pick an existing 12.8 tag matching the PyTorch wheel |
 | 11B vision model VRAM 8-12 GB at 4-bit <!-- F:E-05 --> | E | Sprint 2 | Measure on the training machine |
 | nuScenes full size (~300 GB+) <!-- F:E-10 --> | Owner | Before v1.0-full download | Check free disk first |
@@ -49,8 +50,9 @@ Sprint 0 additions (the scaffold author had no Docker daemon, so none of these r
 | Item | Owner | Blocks | Recommendation |
 |---|---|---|---|
 | Confirm RDD2022 license terms (see 3 above) | Owner | Sprint 5 | See above |
-| Decide how to add defects to CARLA (see 4 above) | Owner | Sprint 3 | See above |
-| Whether drivenet-carla-av's driving policy joins later as a "drive-aware" extension (out of scope for v1) | Owner | Post-v1 | Defer <!-- F:U-04 --> |
+| Decide how to add defects to simulator frames (see 4 above) | Owner | Sprint 3 | Closed 2026-10-23: CARLA dropped (ADR 0012) |
+| Whether drivenet-carla-av's driving policy joins later as a "drive-aware" extension (out of scope for v1) | Owner | Post-v1 | Closed 2026-10-23: CARLA dropped (ADR 0012) <!-- F:U-04 --> |
+| Hosted corpus source (see 10 above) | Owner | Before deploy | Open (10 above) |
 
 ## From BUILD_PLAN.md section 7 (Appendix B)
 
@@ -58,7 +60,7 @@ Sprint 0 additions (the scaffold author had no Docker daemon, so none of these r
 |---|---|
 | Push access to create the repo | Open (1 above) |
 | RDD2022 license check | Open (3 above) |
-| CARLA defect approach (decals vs skip in v1) | Open (4 above) |
+| Simulator defect approach (decals vs skip in v1) | Closed 2026-10-23: CARLA dropped (ADR 0012) |
 | Which of your coding skills each agent should load (fill into the briefs) | Open (5 above) |
 
 ## Assumptions made while writing the docs

@@ -24,10 +24,6 @@ Cause: an 11B vision model needs roughly 8-12 GB VRAM at 4-bit (UNVERIFIED), com
 
 Cause: Docker on macOS cannot use the Apple GPU or an NVIDIA GPU; containers run CPU-only. Run natively to use PyTorch MPS, or train on the NVIDIA machine. Not a bug.
 
-## CARLA not reachable
-
-Cause: CARLA 0.9.16 runs on the Windows host (DirectX 12, `-dx12`) outside Docker, and does not run on macOS; the client cannot reach the simulator. Fix: to be completed when implemented.
-
 ## Other known source-repo behaviors
 
 - Missing EfficientNet checkpoint raises `RuntimeError`.
