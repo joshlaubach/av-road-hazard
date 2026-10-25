@@ -56,7 +56,7 @@ def defect_settings(cfg: dict[str, Any]) -> DefectSettings:
 def _load_classifier(checkpoint: Path) -> Classifier:
     import json
 
-    from defects.train import load_checkpoint
+    from defects.model import load_checkpoint
 
     if not checkpoint.is_file():
         raise FileNotFoundError(f"classifier checkpoint not found: {checkpoint}")
