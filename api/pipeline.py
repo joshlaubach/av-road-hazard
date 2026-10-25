@@ -1,9 +1,12 @@
-"""Service object that turns an image into a HazardRecord (detectors are stubs; fusion is real)."""
+"""Service object: image in, HazardRecord out (detectors are stubs; fusion and mask are real)."""
 
 from __future__ import annotations
 
 import hashlib
 import io
+import logging
+from collections.abc import Callable
+from pathlib import Path
 
 import numpy as np
 from PIL import Image, UnidentifiedImageError
@@ -11,9 +14,12 @@ from PIL import Image, UnidentifiedImageError
 from common.config import get_config
 from common.debug import dump
 from defects.infer import find_defects
+from defects.road_crop import MODEL_SUBDIR, ModelIntegrityError, RoadSegmenter
 from fusion.fuse import RoadMask, fuse
 from fusion.schema import HazardRecord, Source
 from perception.infer import detect
+
+log = logging.getLogger("api")
 
 
 class InvalidImage(ValueError):
@@ -47,17 +53,31 @@ def frame_id_for(data: bytes) -> str:
 
 
 class Pipeline:
-    """Loads models once (none yet) and analyzes frames."""
+    """Loads models once (the road model on first use) and analyzes frames."""
+
+    def __init__(self, segmenter: Callable[[np.ndarray], RoadMask] | None = None) -> None:
+        # Injected in tests; otherwise built on first use from the checkpoint directory.
+        self._segmenter = segmenter
 
     def road_mask(self, frame: np.ndarray) -> RoadMask | None:
         """Boolean (height, width) road mask for the frame, or None when none is available.
 
-        None means "unavailable or untrustworthy" (no road model yet, or it failed): fusion then
-        reports in_road as unknown (null) and still scores the defect. An all-False mask is a
-        different, legitimate answer ("no road detected") and makes every defect in_road=False.
-        Do not turn a failure into an empty mask. Stub: no road model exists yet, so always None.
+        None means "unavailable or untrustworthy" (stubs on, or the road model is missing,
+        unverified or failed): fusion then reports in_road as unknown (null) and still scores the
+        defect. An all-False mask is a different, legitimate answer ("no road detected") and makes
+        every defect in_road=False. Do not turn a failure into an empty mask. With stubs on no
+        model is loaded; with stubs off a failure is logged and gives None.
         """
-        return None
+        if get_config()["pipeline"]["use_stubs"]:
+            return None
+        try:
+            if self._segmenter is None:
+                weights_dir = Path(get_config()["paths"]["checkpoint_dir"]) / MODEL_SUBDIR
+                self._segmenter = RoadSegmenter(weights_dir)
+            return self._segmenter(frame)
+        except (ModelIntegrityError, OSError, ImportError, RuntimeError) as exc:
+            log.error("road mask unavailable, in_road stays unknown: %s", exc)
+            return None
 
     def analyze(self, data: bytes, source: Source = "upload") -> HazardRecord:
         """Run one image through detection, defect finding and fusion; return a HazardRecord.
@@ -69,7 +89,8 @@ class Pipeline:
         frame = decode_image(data)
         h, w = frame.shape[:2]  # numpy arrays are (height, width, channels)
         objects = detect(frame)
-        defects = find_defects(frame)
+        road_mask = self.road_mask(frame)
+        defects = find_defects(frame, objects=objects, road_mask=road_mask)
         dump("objects", [o.model_dump(mode="json") for o in objects])
         dump("defects_raw", [d.model_dump(mode="json") for d in defects])
         record = fuse(
@@ -78,7 +99,7 @@ class Pipeline:
             image_size=(w, h),
             objects=objects,
             defects=defects,
-            road_mask=self.road_mask(frame),
+            road_mask=road_mask,
         )
         dump("record", record)
         return record
