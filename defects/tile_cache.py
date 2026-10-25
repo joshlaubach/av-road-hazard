@@ -24,8 +24,8 @@ from typing import Any
 
 from PIL import Image, UnidentifiedImageError
 
+from defects.labels import ALL
 from defects.tile_index import TileParams, TileRecord
-from defects.voc import ALL
 
 CACHE_VERSION = 1
 MANIFEST_NAME = "cache.json"
