@@ -10,6 +10,13 @@ paths:
 pipeline:
   use_stubs: true         # env USE_STUBS (1/0) overrides; real models arrive with workstreams A and B
 
+perception:
+  # COCO object detector (zero-shot, ADR 0014). Weights come from tools/fetch_detector.py into
+  # <checkpoint_dir>/detector. env DETECTOR_MODEL overrides. Both values are provisional until the
+  # phase-3 measurement on nuScenes picks a model and a threshold.
+  model: fasterrcnn_mobilenet_v3_large_fpn   # or fasterrcnn_resnet50_fpn_v2 (heavier, slower on CPU)
+  score_threshold: 0.5
+
 defects:
   # Tile classifier checkpoint (best.pt with its best.json beside it); env DEFECT_CHECKPOINT overrides.
   # null = not set: find_defects fails with a clear message instead of guessing a path.
