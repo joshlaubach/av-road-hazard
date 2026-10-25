@@ -63,7 +63,7 @@ Licences (see [DATA_AND_LICENSES.md](../DATA_AND_LICENSES.md)):
 - Dependencies added to the `ml` extra: segmentation-models-pytorch, safetensors and huggingface_hub (see `pyproject.toml`). The lock files are unchanged because the `ml` extra is not locked.
 - Setup step added: `python -m tools.fetch_road_model` must run before the road mask works. A missing or mismatched file is handled in [RUNBOOK.md](../RUNBOOK.md).
 - The threshold `DEFAULT_MIN_ROAD = 0.4` is provisional. The test set is small, so the thresholds are noisy.
-- Current state: the mask is not yet wired into `api/pipeline.py` (`Pipeline.road_mask` still returns `None`), and `defects.infer.find_defects` is still a stub.
+- Current state: `Pipeline.road_mask` uses the model when stubs are off (a failure logs and gives `None`) and `find_defects` accepts the mask. With stubs off the pipeline still stops at the object detector, which does not exist yet.
 - Follow-ups:
   - Shoulder-edge cracks: two of 51 crack tiles are lost at 0.5 because the model treats the shoulder as undrivable. Dilating the mask is a candidate.
   - Hard-negative training for over-firing.
