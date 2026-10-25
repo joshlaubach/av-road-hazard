@@ -40,6 +40,7 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
         "DATA_DIR": ("paths", "data_dir"),
         "CHECKPOINT_DIR": ("paths", "checkpoint_dir"),
         "DEBUG_DUMP_DIR": ("paths", "debug_dump_dir"),
+        "DETECTOR_MODEL": ("perception", "model"),
         "DEFECT_CHECKPOINT": ("defects", "classifier_checkpoint"),
         "LLM_BACKEND": ("llm", "backend"),
         "OLLAMA_HOST": ("llm", "ollama_host"),
