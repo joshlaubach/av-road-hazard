@@ -65,3 +65,6 @@ desktop.ini
 
 # Scratch notebooks (outputs can embed nuScenes images; keep local)
 notebooks/
+
+# Git worktrees that Claude Code creates for parallel agents (local, disposable)
+.claude/worktrees/
