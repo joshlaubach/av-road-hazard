@@ -18,6 +18,24 @@
       "version": "b642c614eb0737fe7befa229f47fbd0245033038",
       "license": "MIT per model card (not verified by counsel)",
       "retrieved": "2026-10-23"
+    },
+    {
+      "path": "detector/fasterrcnn_resnet50_fpn_v2.safetensors",
+      "sha256": "2a67bf22150dd96d91775f895b561f186b12b6d655bad795cc115cd002a63e4e",
+      "size_bytes": 175128544,
+      "source": "download.pytorch.org (torchvision COCO_V1 weights)",
+      "version": "fasterrcnn_resnet50_fpn_v2_coco-dd69338a.pth",
+      "license": "BSD-3 (torchvision code); trained on COCO (not verified by counsel)",
+      "retrieved": "2026-10-25"
+    },
+    {
+      "path": "detector/fasterrcnn_mobilenet_v3_large_fpn.safetensors",
+      "sha256": "f7731b02ff6365453ad4fb85c008f4dc86dea63a2d4d77377f986fa54b797e21",
+      "size_bytes": 77769480,
+      "source": "download.pytorch.org (torchvision COCO_V1 weights)",
+      "version": "fasterrcnn_mobilenet_v3_large_fpn-fb6a3cc7.pth",
+      "license": "BSD-3 (torchvision code); trained on COCO (not verified by counsel)",
+      "retrieved": "2026-10-25"
     }
   ]
 }
