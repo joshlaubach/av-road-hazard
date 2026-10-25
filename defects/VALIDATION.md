@@ -3,7 +3,7 @@
 Before preparing splits on the PC, export a validated sample index:
 
 ```powershell
-python -m defects.validate_annotations "$env:RDD2022_ROOT" --report artifacts/validation.json --sample-index artifacts/samples.json
+python -m tools.validate_annotations "$env:RDD2022_ROOT" --report artifacts/validation.json --sample-index artifacts/samples.json
 ```
 
 Set `sample_index` in the training YAML to the generated index (relative to the
