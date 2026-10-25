@@ -74,7 +74,7 @@ Status of every item is open. No due date has been set by the owner, so the Due 
 | R3 | Shoulder-edge crack loss (2 of 51 crack tiles lost at min_road 0.5) and mask dilation as a fix | Owner | Not set | Open | Measure dilation on the same 148 tiles before changing the mask |
 | R4 | Set `min_road` from more human-annotated tiles (the current 0.4 is provisional, from 148 tiles) | Owner | Not set | Open | Annotate more tiles and re-measure drop and crack-loss rates before changing the default |
 | R5 | Nordic snow robustness check (model trained mostly on US and highway frames) | Owner | Not set | Open | Test on Nordic snow frames before relying on the mask there |
-| R6 | Wire the road mask into `api/pipeline.py` (`Pipeline.road_mask` returns `None`) and into `defects.infer.find_defects` (stub) | Owner | Not set | Open | Wire both, then re-measure the classifier effect |
+| R6 | Wire the road mask into `api/pipeline.py` and `defects.infer.find_defects` | Owner | Not set | Partly done | Wired; the real path waits on the object detector. Re-measure the classifier effect end to end once it runs |
 | R7 | CI audits only `requirements.lock` (`pip-audit`), so the `ml` extra, now including `segmentation-models-pytorch`, `safetensors` and `huggingface_hub` with their transitive packages, is not audited for known vulnerabilities | Owner | Not set | Open | Run `pip-audit` on an environment installed with `.[ml]`, or lock and audit the extra; the weights are hash-pinned and loaded from safetensors, so the runtime risk is low |
 
 ## Appendix summary for ADR 0013
