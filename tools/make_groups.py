@@ -6,7 +6,7 @@ pairs), so the only usable grouping signal is the pixels: images whose perceptua
 are chained into one group, and defects/splits.py keeps each group on one side of every split.
 
 Usage: python -m tools.make_groups --sample-index INDEX.json --out GROUPS.json [--report R.json]
-The sample index is the file written by defects/validate_annotations.py. Groups never span
+The sample index is the file written by tools/validate_annotations.py. Groups never span
 countries (the first folder of the sample id). Library code never reads dataset images; only main()
 does, and it never copies them.
 """

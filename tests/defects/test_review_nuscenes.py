@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 
 from defects.patches import Tile
-from defects.review_nuscenes import ReviewHit, annotate_frame, select_hits
+from tools.review_nuscenes import ReviewHit, annotate_frame, select_hits
 
 
 def _hit(name: str, score: float) -> ReviewHit:
