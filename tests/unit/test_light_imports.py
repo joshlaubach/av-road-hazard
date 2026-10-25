@@ -1,4 +1,4 @@
-"""Training modules must import in the base install; the ml extra is only needed when they run.
+"""Covered modules must import in the base install; the ml extra is only needed when they run.
 
 CI installs the base and dev dependencies only. Test modules import `defects.train` before they
 skip themselves for a missing torch, so an eager `import tqdm` or `import mlflow` at module level
@@ -17,6 +17,14 @@ MODULES = (
     "defects.tile_dataset",
     "defects.tile_predict",
     "defects.runtime",
+    "defects.infer",
+    "defects.road_crop",
+    "defects.tile_defects",
+    "defects.patches",
+    "perception.infer",
+    "perception.detector",
+    "perception.labels",
+    "api.pipeline",
     "tools.predict_images",
     "tools.box_sizes",
 )
