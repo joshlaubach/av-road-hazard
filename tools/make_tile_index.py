@@ -3,7 +3,7 @@
 Usage: python -m tools.make_tile_index --root RAW --sample-index INDEX.json --config CFG.yaml
        --out TILE_INDEX.json
 RAW is the dataset root the sample ids are relative to; the sample index is the file written by
-defects/validate_annotations.py; the config supplies tile_size, tile_overlap, positive_overlap and
+tools/validate_annotations.py; the config supplies tile_size, tile_overlap, positive_overlap and
 negative_overlap. Boxes are read from the annotation XML, including out-of-scope codes, because
 those decide which tiles are ignored. The index holds only numbers and ids, never pixels.
 """

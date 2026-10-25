@@ -109,7 +109,7 @@ def test_fractional_image_size_is_still_invalid(tmp_path: Path) -> None:
 
 
 def test_cli_exports_only_valid_samples(tmp_path: Path) -> None:
-    from defects.validate_annotations import main
+    from tools.validate_annotations import main
 
     data = tmp_path / "data"
     data.mkdir()
