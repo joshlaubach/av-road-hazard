@@ -17,6 +17,7 @@ import numpy as np
 
 from common.config import get_config
 from defects.labels import CODES
+from defects.patches import IntBox
 from fusion.fuse import RoadMask
 from fusion.schema import Defect, Object
 
@@ -83,12 +84,16 @@ def find_defects(
     road_mask: RoadMask | None = None,
     classifier: Classifier | None = None,
     settings: DefectSettings | None = None,
+    region: IntBox | None = None,
 ) -> list[Defect]:
     """Find road defects in an RGB uint8 frame (H, W, 3). Boxes are pixel (x1, y1, x2, y2).
 
     objects and road_mask are optional filters: tiles mostly covered by objects, or mostly off the
-    road, are not scored. With no mask the road is unknown and no tile is dropped. classifier and
-    settings default to the configured ones.
+    road, are not scored. With no mask the road is unknown and no tile is dropped. region is
+    (x1, y1, x2, y2) in frame pixels and limits scoring to that part of the frame (default: all of
+    it); tiles are laid out from its top-left corner, so a sub-region can score different crops than
+    the whole frame does. Boxes stay in frame pixels. classifier and settings default to the
+    configured ones.
     """
     cfg = get_config()
     if cfg["pipeline"]["use_stubs"]:
@@ -106,6 +111,7 @@ def find_defects(
         max_object_cover=chosen.max_object_cover,
         road_mask=road_mask,
         min_road_cover=chosen.min_road_cover,
+        region=region,
     )
 
 
