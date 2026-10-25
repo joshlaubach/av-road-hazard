@@ -74,8 +74,20 @@ Status of every item is open. No due date has been set by the owner, so the Due 
 | R3 | Shoulder-edge crack loss (2 of 51 crack tiles lost at min_road 0.5) and mask dilation as a fix | Owner | Not set | Open | Measure dilation on the same 148 tiles before changing the mask |
 | R4 | Set `min_road` from more human-annotated tiles (the current 0.4 is provisional, from 148 tiles) | Owner | Not set | Open | Annotate more tiles and re-measure drop and crack-loss rates before changing the default |
 | R5 | Nordic snow robustness check (model trained mostly on US and highway frames) | Owner | Not set | Open | Test on Nordic snow frames before relying on the mask there |
-| R6 | Wire the road mask into `api/pipeline.py` and `defects.infer.find_defects` | Owner | Not set | Partly done | Wired; the real path waits on the object detector. Re-measure the classifier effect end to end once it runs |
+| R6 | Wire the road mask into `api/pipeline.py` and `defects.infer.find_defects` | Owner | Not set | Done | Wired (PRs #31-#33) and the detector now exists (ADR 0014). Re-measuring the classifier effect on annotated data is still open |
 | R7 | CI audits only `requirements.lock` (`pip-audit`), so the `ml` extra, now including `segmentation-models-pytorch`, `safetensors` and `huggingface_hub` with their transitive packages, is not audited for known vulnerabilities | Owner | Not set | Open | Run `pip-audit` on an environment installed with `.[ml]`, or lock and audit the extra; the weights are hash-pinned and loaded from safetensors, so the runtime risk is low |
+
+## From ADR 0014 (object detector)
+
+Status of every item is open. No due date has been set by the owner, so the Due column reads "Not set".
+
+| # | Question | Owner | Due | Status | Recommendation (not a decision) |
+|---|---|---|---|---|---|
+| D1 | Licence of the COCO-trained torchvision weights (BSD-3 code; COCO training data terms not verified by counsel) | Owner (counsel) | Before any hosted release | Open | Review before the hosted demo; no change to the pinned weights until then |
+| D2 | Fine-tuning on nuScenes: needs explicit licence approval (nuScenes is non-commercial and restricts redistribution) and a measured gap that justifies it | Owner | Not set | Open | Do not fine-tune until both hold; the zero-shot numbers are in ADR 0014 |
+| D3 | Detection on Norwegian RDD2022 photos, where vehicles are masked as grey blobs | Owner | Not set | Open | Check a sample of Norwegian images before relying on object masking there |
+| D4 | The score threshold 0.5 is provisional; nuScenes mini has 10 scenes and the held-out split has 2 | Owner | Not set | Open | Re-measure on more scenes (v1.0-full) before changing it; on this data 0.3 and 0.5 give the same tile defects |
+| D5 | CPU speed on the real hosted machine (measured only with 24, 4 and 2 threads on one laptop CPU) | Owner | Before the hosted demo | Open | Run `tools/eval_detector.py --threads N` on the target host |
 
 ## Appendix summary for ADR 0013
 
@@ -93,7 +105,7 @@ Status of every item is open. No due date has been set by the owner, so the Due 
 
 | Assumption | Recommendation |
 |---|---|
-| Detector regression tolerance (S-05 baseline F1 0.534, AP@0.50 0.312) is not specified <!-- F:S-05 --> | Set after the first reproducible run; start with a small absolute band |
+| Detector regression tolerance (S-05 baseline F1 0.534, AP@0.50 0.312) is not specified <!-- F:S-05 --> | The first run is in ADR 0014 (zero-shot, different ground-truth rules, so not like-for-like); set a small absolute band from it once the ground-truth rules are settled |
 | Pass criteria for the synthetic fusion test (box IoU, distance tolerance) are not specified | Define in the G brief; tune in config only |
 | Retrieval query templates and k values are not specified | Define in the G brief |
 | Road mask method (nuScenes map data vs a road segmentation model) is undecided <!-- F:R-11 --> | Try nuScenes map data first for nuScenes; decide a model for uploads after measuring |
