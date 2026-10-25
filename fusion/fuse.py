@@ -17,6 +17,7 @@ from collections.abc import Callable, Sequence
 import numpy as np
 import numpy.typing as npt
 
+from common.geometry import box_iou as box_iou
 from fusion.config import FusionConfig, load_fusion_config
 from fusion.schema import (
     Box,
@@ -37,15 +38,6 @@ RoadMask = npt.NDArray[np.bool_]  # shape (height, width), True where the road i
 def unknown_severity(_: Defect) -> Severity:
     """Default severity: unknown for every defect until the class mapping is verified."""
     return "unknown"
-
-
-def box_iou(a: Box, b: Box) -> float:
-    """Intersection over union of two boxes (0.0 for disjoint or degenerate boxes)."""
-    iw = min(a[2], b[2]) - max(a[0], b[0])
-    ih = min(a[3], b[3]) - max(a[1], b[1])
-    inter = max(iw, 0.0) * max(ih, 0.0)
-    union = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
-    return inter / union if union > 0 else 0.0
 
 
 def object_distance_px(obj_box: Box, defect_box: Box) -> float:

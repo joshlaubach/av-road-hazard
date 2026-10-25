@@ -18,7 +18,7 @@ from typing import Any
 
 import numpy as np
 
-from defects.runtime import select_device
+from common.device import select_device
 from fusion.schema import Object
 from perception.labels import coco_label
 
