@@ -62,6 +62,7 @@ def training_case(
         )
 
     monkeypatch.setattr("defects.train.build_model", tiny_model)
+    monkeypatch.setattr("defects.model.build_model", tiny_model)
     return samples, path, cfg
 
 
