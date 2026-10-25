@@ -2,6 +2,7 @@
 
 Usage: python -m tools.eval_detector --nuscenes-root data/nuscenes/raw [--version v1.0-mini]
            [--models NAME ...] [--timing-frames 100] [--threads N] [--out report.json]
+--timing-frames 0 skips the speed test.
 Needs the nuscenes-devkit and the weights from tools/fetch_detector.py. Ground truth is each
 annotation's 3D box projected into the image and clamped to it, with labels mapped by
 perception/labels.py. Two ground-truth sets are scored: all projected boxes, and the evaluable ones
@@ -41,7 +42,7 @@ from eval.models import (
     recall_by_size,
 )
 from perception.detector import DETECTOR_SUBDIR, DETECTORS, detect_objects, load_detector_model
-from perception.labels import nuscenes_label
+from perception.labels import FUSION_LABELS, nuscenes_label
 
 COLLECT_THRESHOLD = 0.05  # keep nearly everything once; thresholds are applied afterwards
 THRESHOLD_GRID = [round(0.1 + 0.05 * i, 2) for i in range(17)]  # 0.10 .. 0.90
@@ -128,6 +129,38 @@ def _frames(
     ]
 
 
+def threshold_sweep(
+    data: Sequence[FrameData],
+    thresholds: Sequence[float],
+    *,
+    only_evaluable: bool,
+    label: str | None = None,
+) -> list[dict[str, float]]:
+    """Precision, recall and F1 at each score threshold, optionally for one class only."""
+    keep = evaluable if only_evaluable else _all
+    rows: list[dict[str, float]] = []
+    for threshold in thresholds:
+        frames: list[Frame] = [
+            (
+                [d for d in preds if label is None or d.label == label],
+                [g for g in gts if label is None or g.label == label],
+            )
+            for preds, gts in _frames(data, keep_gt=keep, threshold=threshold)
+        ]
+        score = detection_prf(frames)
+        rows.append(
+            {
+                "threshold": threshold,
+                "precision": score.precision,
+                "recall": score.recall,
+                "f1": score.f1,
+                "n_predictions": sum(len(preds) for preds, _ in frames),
+                "n_ground_truth": sum(len(gts) for _, gts in frames),
+            }
+        )
+    return rows
+
+
 def _all(_: GtBox) -> bool:
     return True
 
@@ -158,6 +191,12 @@ def score_model(data: Sequence[FrameData], train_scenes: set[str]) -> dict[str, 
         "all_frames_evaluable": _score(data, threshold, only_evaluable=True),
         "day_evaluable": _score([f for f in data if not f.night], threshold, only_evaluable=True),
         "night_evaluable": _score([f for f in data if f.night], threshold, only_evaluable=True),
+        "sweep_evaluable": threshold_sweep(data, THRESHOLD_GRID, only_evaluable=True),
+        "sweep_all_gt": threshold_sweep(data, THRESHOLD_GRID, only_evaluable=False),
+        "sweep_by_class_evaluable": {
+            label: threshold_sweep(data, THRESHOLD_GRID, only_evaluable=True, label=label)
+            for label in FUSION_LABELS
+        },
         "recall_by_size_all_gt": [
             {"low": lo, "high": None if math.isinf(hi) else hi, "n": n, "recall": r}
             for lo, hi, n, r in recall_by_size(at_threshold, SIZE_EDGES)
@@ -231,7 +270,8 @@ def run_model(
     ]
     train, _ = split_scenes(sorted({f[0] for f in frames}))
     result = score_model(data, set(train))
-    result["cpu_latency"] = _time_on_cpu(name, weights, frames, timing_frames, threads)
+    if timing_frames > 0:
+        result["cpu_latency"] = _time_on_cpu(name, weights, frames, timing_frames, threads)
     return result
 
 

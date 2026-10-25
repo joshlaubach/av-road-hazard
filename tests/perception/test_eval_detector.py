@@ -6,12 +6,14 @@ import pytest
 
 from eval.models import Detection, GroundTruth
 from tools.eval_detector import (
+    FrameData,
     GtBox,
     best_threshold,
     evaluable,
     is_night,
     latency_summary,
     split_scenes,
+    threshold_sweep,
 )
 
 # ---------------------------------------------------------------- scene split
@@ -104,3 +106,65 @@ def test_latency_summary_reports_median_and_p95() -> None:
 def test_latency_needs_at_least_one_sample() -> None:
     with pytest.raises(ValueError, match="sample"):
         latency_summary([])
+
+
+# -------------------------------------------------------------------- sweep
+
+
+def data_frame() -> FrameData:
+    """Two cars and a person. Detections: car 0.9, car 0.6, person 0.3 (hits), car 0.4 (false)."""
+    box = (0.0, 0.0, 100.0, 100.0)
+    other = (200.0, 0.0, 300.0, 100.0)
+    far = (500.0, 500.0, 600.0, 600.0)
+    return FrameData(
+        "s",
+        False,
+        [
+            Detection("car", 0.9, box),
+            Detection("car", 0.6, other),
+            Detection("car", 0.4, far),
+            Detection("pedestrian", 0.3, (400.0, 0.0, 500.0, 100.0)),
+        ],
+        [
+            GtBox("car", box, 4),
+            GtBox("car", other, 4),
+            GtBox("pedestrian", (400.0, 0.0, 500.0, 100.0), 4),
+        ],
+    )
+
+
+def test_sweep_gives_one_row_per_threshold_with_precision_and_recall() -> None:
+    rows = threshold_sweep([data_frame()], [0.3, 0.5, 0.7], only_evaluable=False)
+    assert [r["threshold"] for r in rows] == [0.3, 0.5, 0.7]
+    # 0.3 keeps all four (3 true, 1 false); 0.5 keeps 0.9 and 0.6; 0.7 keeps only 0.9.
+    assert rows[0]["precision"] == pytest.approx(0.75)
+    assert rows[0]["recall"] == pytest.approx(1.0)
+    assert rows[1]["precision"] == pytest.approx(1.0)
+    assert rows[1]["recall"] == pytest.approx(2 / 3)
+    assert rows[2]["precision"] == pytest.approx(1.0)
+    assert rows[2]["recall"] == pytest.approx(1 / 3)
+
+
+def test_recall_never_rises_as_the_threshold_rises() -> None:
+    rows = threshold_sweep([data_frame()], [0.1, 0.3, 0.5, 0.7, 0.9], only_evaluable=False)
+    recalls = [r["recall"] for r in rows]
+    assert recalls == sorted(recalls, reverse=True)
+
+
+def test_sweep_can_be_limited_to_one_class() -> None:
+    rows = threshold_sweep([data_frame()], [0.2, 0.5], only_evaluable=False, label="pedestrian")
+    # The only person detection scores 0.3: found at 0.2, gone at 0.5.
+    assert rows[0]["recall"] == pytest.approx(1.0) and rows[1]["recall"] == 0.0
+
+
+def test_sweep_can_skip_ground_truth_that_is_not_evaluable() -> None:
+    frame = FrameData(
+        "s",
+        False,
+        [],
+        [GtBox("car", (0.0, 0.0, 100.0, 100.0), 1)],  # under 40% visible
+    )
+    only = threshold_sweep([frame], [0.5], only_evaluable=True)
+    everything = threshold_sweep([frame], [0.5], only_evaluable=False)
+    assert only[0]["recall"] == 0.0 and only[0]["n_ground_truth"] == 0
+    assert everything[0]["n_ground_truth"] == 1
