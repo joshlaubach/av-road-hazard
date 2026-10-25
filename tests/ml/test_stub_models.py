@@ -6,6 +6,7 @@ from PIL import Image
 
 from defects.infer import find_defects
 from fusion.schema import Defect, Object
+from perception.detector import DetectorUnavailable
 from perception.infer import detect
 
 pytestmark = pytest.mark.ml
@@ -26,15 +27,19 @@ def test_stub_outputs_fit_inside_frame(frame_bytes: bytes) -> None:
         assert 0 <= x1 <= x2 <= w and 0 <= y1 <= y2 <= h
 
 
-def test_real_models_not_yet_available(monkeypatch, frame_bytes: bytes) -> None:  # type: ignore[no-untyped-def]
-    """With stubs off, the detector raises instead of returning fake results."""
+def test_detector_without_weights_raises(monkeypatch, tmp_path, frame_bytes: bytes) -> None:  # type: ignore[no-untyped-def]
+    """With stubs off and no weights, the detector raises instead of returning fake results.
+
+    CHECKPOINT_DIR points at an empty folder so weights fetched on this machine are not used.
+    """
     from common import config
 
     monkeypatch.setenv("USE_STUBS", "0")
+    monkeypatch.setenv("CHECKPOINT_DIR", str(tmp_path))
     config.get_config.cache_clear()
     try:
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(DetectorUnavailable):
             detect(_frame(frame_bytes))
     finally:
-        monkeypatch.delenv("USE_STUBS")
+        monkeypatch.undo()
         config.get_config.cache_clear()

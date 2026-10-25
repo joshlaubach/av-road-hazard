@@ -70,7 +70,7 @@ Run from the repo root with Python 3.12 or newer. Setup: `pip install -r require
 | Defect training | `python -m defects.train MODE --config PATH` (`MODE` is `splits`, `fit`, or `oof`; `splits` also requires `--groups PATH`; configure local paths first) |
 | Evaluation tests | `python -m pytest tests/eval tests/defects/test_evaluation.py` |
 
-Environment: `USE_STUBS=1` is the default; `perception.infer.detect()` raises `NotImplementedError` with stubs off until real inference is wired; `defects.infer.find_defects()` then runs the tile classifier named by `DEFECT_CHECKPOINT` (or `defects.classifier_checkpoint`) and raises if none is set. `DEBUG_DUMP_DIR=/some/dir` writes per-request intermediates under `<dir>/<request_id>/`.
+Environment: `USE_STUBS=1` is the default; `perception.infer.detect()` then runs the COCO detector named by `perception.model` (weights from `python -m tools.fetch_detector`) and raises `DetectorUnavailable`, which the API turns into a 503, if it cannot load; `defects.infer.find_defects()` then runs the tile classifier named by `DEFECT_CHECKPOINT` (or `defects.classifier_checkpoint`) and raises if none is set. `DEBUG_DUMP_DIR=/some/dir` writes per-request intermediates under `<dir>/<request_id>/`.
 
 ## 5. How to work
 

@@ -17,6 +17,7 @@ from api.pipeline import InvalidImage, Pipeline
 from common.config import get_config
 from common.logging import configure_logging, request_id_var
 from fusion.schema import HazardRecord
+from perception.detector import DetectorUnavailable
 
 log = logging.getLogger("api")
 # A client-supplied x-request-id is only accepted if it looks like this. The id ends up in log lines
@@ -100,6 +101,13 @@ def create_app() -> FastAPI:
         Registered once here so routes do not each need their own try/except.
         """
         return JSONResponse({"detail": str(exc)}, status_code=422)
+
+    @app.exception_handler(DetectorUnavailable)
+    async def detector_unavailable(_: Request, exc: DetectorUnavailable) -> JSONResponse:
+        """Fail loudly when the detector cannot run: a record built without object evidence would
+        look safer than it is. The reason (paths, hashes) goes to the log, not to the client."""
+        log.error("object detector unavailable: %s", exc)
+        return JSONResponse({"detail": "object detector unavailable"}, status_code=503)
 
     # POST /analyze: one image in, one HazardRecord out. The record is also kept in the store so it
     # can be fetched later with GET /records/{id}. (Comments, not docstrings, on the routes below:
