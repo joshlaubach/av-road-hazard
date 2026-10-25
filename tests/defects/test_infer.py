@@ -140,3 +140,19 @@ def test_cover_limit_comes_from_settings(classifier: Classifier) -> None:
         white_frame(), objects=[car], classifier=classifier, settings=defect_settings(cfg)
     )
     assert [d.name for d in kept] == ["D00"]
+
+
+@pytest.mark.usefixtures("real_path")
+def test_region_limits_scoring_to_part_of_the_frame(classifier: Classifier) -> None:
+    left, right = (0, 0, 100, 100), (100, 0, 200, 100)
+    (defect,) = find_defects(white_frame(), classifier=classifier, region=left)
+    assert (defect.name, defect.box) == ("D00", (0.0, 0.0, 100.0, 100.0))
+    assert find_defects(white_frame(), classifier=classifier, region=right) == []
+
+
+@pytest.mark.usefixtures("real_path")
+def test_region_boxes_stay_in_frame_pixels(classifier: Classifier) -> None:
+    frame = np.zeros((FRAME_H, FRAME_W, 3), dtype=np.uint8)
+    frame[:, 100:] = 255  # white right tile only
+    (defect,) = find_defects(frame, classifier=classifier, region=(100, 0, 200, 100))
+    assert defect.box == (100.0, 0.0, 200.0, 100.0)
