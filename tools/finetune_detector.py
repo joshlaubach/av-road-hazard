@@ -82,11 +82,20 @@ def items_for(frames: list[SceneFrame]) -> list[TrainItem]:
 
 
 RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+WINDOWS_RESERVED = {
+    "con",
+    "prn",
+    "aux",
+    "nul",
+    *(f"com{i}" for i in range(1, 10)),
+    *(f"lpt{i}" for i in range(1, 10)),
+}
 
 
 def check_run_id(run_id: str) -> str:
     """The run id, if it is one plain folder name (no separators, no '..'): it names a folder."""
-    if not RUN_ID.fullmatch(run_id) or ".." in run_id:
+    reserved = run_id.split(".")[0].lower() in WINDOWS_RESERVED  # CON, nul.txt: not real folders
+    if not RUN_ID.fullmatch(run_id) or ".." in run_id or run_id.endswith(".") or reserved:
         raise ValueError(f"run id must be a plain folder name, got {run_id!r}")
     return run_id
 

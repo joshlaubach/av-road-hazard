@@ -41,6 +41,9 @@ from tools.eval_detector import ladder_rungs, thread_limit
 from tools.finetune_detector import DEFAULT_CONFIG, SceneFrame, load_config, load_scene_frames
 
 FRONT = "CAM_FRONT"
+ADR_CAMERAS = (
+    "CAM_FRONT", "CAM_FRONT_LEFT", "CAM_FRONT_RIGHT", "CAM_BACK", "CAM_BACK_LEFT", "CAM_BACK_RIGHT",
+)  # fmt: skip
 OLD_CLASSES = FINETUNE_CLASSES[:6]
 
 
@@ -52,14 +55,19 @@ def check_fold_meta(
         raise ValueError(f"model for {scene} was held out of {meta.get('held_out_scene')!r}")
     if sorted(meta.get("train_scenes", [])) != sorted(s for s in scenes if s != scene):
         raise ValueError(f"model for {scene} was not trained on exactly the other scenes")
-    if meta.get("smoke"):
-        raise ValueError(f"model for {scene} is from a smoke run")
+    if meta.get("smoke") is not False:
+        raise ValueError(f"model for {scene} is not marked as a full (non-smoke) run")
     if meta.get("epochs") != cfg["train"]["epochs"]:
         raise ValueError(f"model for {scene} used {meta.get('epochs')} epochs, not the config's")
     if meta.get("classes") != list(FINETUNE_CLASSES):
         raise ValueError(f"model for {scene} has different classes")
-    if meta.get("config", {}).get("model") != cfg["model"]:
+    saved = meta.get("config", {})
+    if saved.get("model") != cfg["model"]:
         raise ValueError(f"model for {scene} is not the configured model")
+    if saved.get("train") != cfg["train"]:
+        raise ValueError(f"model for {scene} was trained with other settings than the config")
+    if saved.get("cameras") != cfg["cameras"]:
+        raise ValueError(f"model for {scene} was trained on other cameras than the config")
 
 
 def load_finetuned(
@@ -148,9 +156,16 @@ def time_on_cpu(model: Any, paths: list[Path], threads: int) -> dict[str, Any]:
         }
 
 
+def check_cameras(cameras: list[str]) -> None:
+    """The ADR 0015 verdict is for all six cameras; a config naming fewer is refused."""
+    if sorted(cameras) != sorted(ADR_CAMERAS):
+        raise ValueError(f"ADR 0015 needs the six cameras {list(ADR_CAMERAS)}, got {cameras}")
+
+
 def exit_status(report: dict[str, Any]) -> int:
-    """0 only if the six-camera detection checks and every measured CPU speed pass."""
-    speeds_pass = all(r["passed"] for r in report.get("cpu_latency_ladder", []))
+    """0 only if the six-camera detection checks pass and CPU speed was measured and passes."""
+    ladder = report.get("cpu_latency_ladder", [])
+    speeds_pass = bool(ladder) and all(r["passed"] for r in ladder)
     return 0 if report["all_cameras"]["passed"] and speeds_pass else 1
 
 
@@ -167,6 +182,7 @@ def main(argv: list[str] | None = None) -> int:
     from common.device import select_device
 
     cfg = load_config(args.config)
+    check_cameras(cfg["cameras"])
     device = select_device()
     frames = load_scene_frames(args.nuscenes_root, args.version, cfg["cameras"])
     scenes = sorted({f.scene for f in frames})
