@@ -1,20 +1,21 @@
-"""Pure helpers of tools/eval_detector.py: scene split, GT filtering, thresholds and timing."""
+"""eval/detector.py helpers: scene split, GT filtering, thresholds, sweeps and timing."""
 
 from __future__ import annotations
 
 import pytest
 
-from eval.models import Detection, GroundTruth
-from tools.eval_detector import (
+from eval.detector import (
     FrameData,
     GtBox,
     best_threshold,
     evaluable,
     is_night,
     latency_summary,
+    score_model,
     split_scenes,
     threshold_sweep,
 )
+from eval.models import Detection, GroundTruth
 
 # ---------------------------------------------------------------- scene split
 
@@ -168,3 +169,27 @@ def test_sweep_can_skip_ground_truth_that_is_not_evaluable() -> None:
     everything = threshold_sweep([frame], [0.5], only_evaluable=False)
     assert only[0]["recall"] == 0.0 and only[0]["n_ground_truth"] == 0
     assert everything[0]["n_ground_truth"] == 1
+
+
+# ------------------------------------------------------------------ score_model
+
+
+def test_score_model_uses_the_labels_it_is_given_and_holds_out_other_scenes() -> None:
+    train = FrameData("a", False, [], [])
+    held_out = data_frame()
+    report = score_model([train, held_out], {"a"}, ["car", "pedestrian"])
+    assert set(report["sweep_by_class_evaluable"]) == {"car", "pedestrian"}
+    assert report["held_out_all"]["frames"] == 1 and report["train_scenes_evaluable"]["frames"] == 1
+
+
+def test_the_evaluation_module_does_not_import_perception() -> None:
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    code = (
+        "import sys; sys.path.insert(0, sys.argv[1]); import eval.detector; "
+        "assert not [m for m in sys.modules if m == 'perception' or m.startswith('perception.')]"
+    )
+    subprocess.run([sys.executable, "-I", "-c", code, str(root)], check=True)
