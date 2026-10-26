@@ -1,6 +1,7 @@
 """Verified class codes; human-readable names await the label check."""
 
 CODES = ("D00", "D10", "D20", "D40")
+ALL = "ALL"  # pseudo-country used for the totals across all countries
 NAMES: dict[str, str | None] = dict.fromkeys(CODES)
 
 

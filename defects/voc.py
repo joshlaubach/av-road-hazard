@@ -13,11 +13,12 @@ import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from pathlib import Path
 
+from defects.labels import ALL as ALL
+
 # The four defect codes the project uses. Deliberately only codes, no names: which code means which
 # defect is exactly what this script helps verify (docs/SOURCE_REPOS.md, S-11).
 EXPECTED_CODES = ("D00", "D10", "D20", "D40")
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png")
-ALL = "ALL"  # pseudo-country used for the totals across all countries
 
 Box = tuple[str, int, int, int, int]  # (code, xmin, ymin, xmax, ymax)
 
