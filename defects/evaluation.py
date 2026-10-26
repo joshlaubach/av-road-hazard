@@ -25,8 +25,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-from defects.labels import CODES
-from defects.voc import ALL
+from defects.labels import ALL, CODES
 
 Array = npt.NDArray[np.float64]
 METRICS = ("auroc", "average_precision", "precision", "recall", "f1")

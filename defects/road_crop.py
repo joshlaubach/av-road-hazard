@@ -15,7 +15,8 @@ from typing import Any
 
 import numpy as np
 
-from defects.runtime import select_device
+from common.device import select_device
+from common.hashing import file_sha256
 from fusion.fuse import RoadMask
 
 # The model is pinned to one Hugging Face revision and to the SHA-256 of each file, so a changed or
@@ -39,8 +40,6 @@ INPUT_HEIGHT = 384
 # comma10k classes: 0 road, 1 lane markings, 2 undrivable, 3 movable, 4 own car. Road is 0 and 1.
 ROAD_CLASSES = (0, 1)
 
-# verify_model_files hashes in chunks so a large file is never held in memory just to be checked.
-_HASH_CHUNK_BYTES = 1024 * 1024
 # load_road_model needs both of these, and each must come with an expected hash.
 _REQUIRED_FILES = ("config.json", "model.safetensors")
 
@@ -49,21 +48,13 @@ class ModelIntegrityError(ValueError):
     """The model files are missing, changed, or not the model this code expects."""
 
 
-def _sha256_of(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while chunk := handle.read(_HASH_CHUNK_BYTES):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def verify_model_files(weights_dir: Path, expected: Mapping[str, str] = MODEL_FILES) -> None:
     """Raise ModelIntegrityError unless every expected file exists with the expected SHA-256."""
     for name, want in expected.items():
         path = weights_dir / name
         if not path.is_file():
             raise ModelIntegrityError(f"{name}: expected sha256 {want}, got missing")
-        got = _sha256_of(path)
+        got = file_sha256(path)
         if got != want:
             raise ModelIntegrityError(f"{name}: expected sha256 {want}, got {got}")
 

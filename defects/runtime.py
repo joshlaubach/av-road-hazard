@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from common.device import select_device
+
+__all__ = ["amp_enabled", "forward_logits", "select_device"]
+
 
 def amp_enabled(cfg: dict[str, Any]) -> bool:
     """Whether to run under bf16 autocast; only "none" and "bf16" are supported."""
@@ -24,14 +28,3 @@ def forward_logits(model: Any, images: Any, device: str, cfg: dict[str, Any]) ->
         device_type=torch.device(device).type, dtype=torch.bfloat16, enabled=amp_enabled(cfg)
     ):
         return model(images).float()
-
-
-def select_device() -> str:
-    """Best available device: cuda, then mps, then cpu."""
-    import torch
-
-    if torch.cuda.is_available():
-        return "cuda"
-    if torch.backends.mps.is_available():
-        return "mps"
-    return "cpu"

@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import argparse
 import datetime
-import hashlib
 import json
 import os
 import shutil
@@ -25,6 +24,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from common.config import get_config
+from common.hashing import file_sha256
 from perception.detector import DETECTOR_SUBDIR, DETECTORS, DetectorSpec
 
 SOURCE = "download.pytorch.org (torchvision COCO_V1 weights)"
@@ -56,14 +56,6 @@ def http_download(url: str, dest: Path) -> None:
             out.write(chunk)
 
 
-def _sha256_of(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while chunk := handle.read(_CHUNK_BYTES):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def convert_to_safetensors(source: Path, dest: Path) -> None:
     """Re-save a torch state dict as safetensors; weights_only means no pickled code is run."""
     import torch
@@ -80,7 +72,7 @@ def fetch_detector(
     if not spec.url.startswith("https://"):
         raise ValueError(f"refusing to fetch a non-https url: {spec.url}")
     target = checkpoint_dir / DETECTOR_SUBDIR / spec.filename
-    if target.is_file() and _sha256_of(target) == spec.sha256:
+    if target.is_file() and file_sha256(target) == spec.sha256:
         print(f"{spec.filename}: already present and verified")
     else:
         print(f"{spec.filename}: fetching {spec.url}")
@@ -105,14 +97,14 @@ def _fetch_into(target: Path, spec: DetectorSpec, download: Downloader) -> None:
             download(spec.url, source)
         except Exception as exc:  # network errors are many types; report them uniformly
             raise FetchError(f"download of {spec.name} failed: {exc}") from exc
-        got = _sha256_of(source)
+        got = file_sha256(source)
         if got != spec.source_sha256:
             raise FetchError(
                 f"{spec.name}: sha256 mismatch, expected {spec.source_sha256}, got {got}"
             )
         converted = scratch / spec.filename
         convert_to_safetensors(source, converted)
-        got = _sha256_of(converted)
+        got = file_sha256(converted)
         if got != spec.sha256:
             raise FetchError(
                 f"{spec.name}: converted file sha256 mismatch, expected {spec.sha256}, got {got}"

@@ -14,6 +14,7 @@ from typing import Any
 
 from PIL import Image
 
+from common.hashing import file_sha256 as file_sha256
 from defects.labels import CODES, class_index
 from defects.validation import image_issues, read_annotation
 from defects.voc import iter_annotations
@@ -106,11 +107,6 @@ def build_samples(
         samples.append(Sample(sample_id, image_path, tuple(labels)))
         unexpected.included_images += 1
     return samples, unexpected
-
-
-def file_sha256(path: Path) -> str:
-    with path.open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
 def build_dataset_manifest(samples: Sequence[Sample]) -> Manifest:
