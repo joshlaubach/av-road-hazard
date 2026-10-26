@@ -9,7 +9,7 @@ Items marked UNVERIFIED came from memory or inference, not a checked source.
 | Machine | Facts |
 |---|---|
 | macOS MacBook (the machine the docs were drafted on) | macOS, arm64 (Apple silicon), device name "joshs-macbook-pro-2-local", Claude desktop app 3.1623.0. Its home directory contains tool folders including `.codex`, `.ollama`, `.kaggle`, `.conda`, `miniconda3`, `.nvm`, `.streamlit` (names observed; contents unverified). <!-- F:E-01 --> |
-| Windows 11 + NVIDIA RTX 5080 (per source READMEs) | The drivenet-carla-av and defect-detector READMEs describe development on Windows 11 with an RTX 5080, CUDA 12.8, PyTorch CUDA 12.8 wheels (needed for 50-series). **[CRITICAL]** It is UNCONFIRMED whether this is a separate desktop or whether the owner now works on the MacBook. This decides where training runs and whether Docker GPU passthrough is possible. Blocks Sprint 1; tracked in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). <!-- F:E-02 --> |
+| Windows 11 + NVIDIA RTX 5080 (per source READMEs) | The defect-detector README describes development on Windows 11 with an RTX 5080, CUDA 12.8, PyTorch CUDA 12.8 wheels (needed for 50-series). **[CRITICAL]** It is UNCONFIRMED whether this is a separate desktop or whether the owner now works on the MacBook. This decides where training runs and whether Docker GPU passthrough is possible. Blocks Sprint 1; tracked in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). <!-- F:E-02 --> |
 
 ## Docker GPU rules
 
@@ -44,7 +44,7 @@ CPU only (Hugging Face Spaces). EfficientNet-B4 over 64 patches plus Faster R-CN
 
 ## Timing measurements
 
-Measured by the source repo on an RTX 5080 for one 640x640 RDD2022 frame with `--no-llama --no-dqn`: EfficientNet-B4 over 64 patches about 1.9 s (one patch per forward pass; batching is an easy speed-up); LLaMA 3.2 Vision about 2-5 s per defect patch on Ollama. With a trigger-happy classifier (31 of 64 patches flagged), a frame can take 1-2 minutes end to end. The source tool is framed as batch/post-drive, not real time. <!-- F:E-09 -->
+Measured by the source repo on an RTX 5080 for one 640x640 RDD2022 frame with `--no-llama`: EfficientNet-B4 over 64 patches about 1.9 s (one patch per forward pass; batching is an easy speed-up); LLaMA 3.2 Vision about 2-5 s per defect patch on Ollama. With a trigger-happy classifier (31 of 64 patches flagged), a frame can take 1-2 minutes end to end. The source tool is framed as batch/post-drive, not real time. <!-- F:E-09 -->
 
 ## Disk sizes
 
@@ -60,7 +60,7 @@ Measured by the source repo on an RTX 5080 for one 640x640 RDD2022 frame with `-
 
 ## Versions
 
-drivenet-carla-av uses Python 3.11 and PyTorch 2.3.1; defect-detector uses Python 3.12. The new repo's Python version is undecided: open question with recommendation 3.12. <!-- F:E-11 -->
+defect-detector uses Python 3.12. The new repo's Python version is undecided: open question with recommendation 3.12. <!-- F:E-11 -->
 
 ## Local services and paths
 

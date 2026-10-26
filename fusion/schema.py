@@ -13,7 +13,7 @@ from typing import Annotated, Literal
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
 Severity = Literal["high", "medium", "low", "unknown"]
-Source = Literal["carla", "rdd2022", "upload", "nuscenes"]
+Source = Literal["rdd2022", "upload", "nuscenes"]
 TimeOfDay = Literal["day", "night", "unknown"]
 Prob = Annotated[float, Field(ge=0.0, le=1.0)]
 

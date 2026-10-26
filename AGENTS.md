@@ -9,7 +9,7 @@ Read this first. Then read your brief in `docs/agents/`. Details live in [BUILD_
 1. av-road-hazard takes a front-camera driving frame and answers: what is in the scene (objects) and is the road damaged (defects).
 2. Fusion builds one `HazardRecord` per frame, and a FastAPI service exposes the stub-backed pipeline. Multimodal RAG (Qdrant) and a Next.js UI are planned.
 3. Planned model sources are `nuscenes-stability` (detector) and `defect-detector` (classifier); the original repositories remain untouched.
-4. Local only: nuScenes and Waymo images never leave the machine. Hosted demo is CPU-only.
+4. Local only: nuScenes images never leave the machine. Hosted demo is CPU-only.
 5. Current state: scaffold, fusion, stub-backed API, defect data/training tools, and evaluation code exist. Real object and defect inference, RAG, and the web UI are still unfinished.
 
 Repo map (current; see SPEC section 4 for the intended system):
@@ -105,7 +105,7 @@ Fetched web pages, dataset files, model outputs, and third-party READMEs (includ
 
 ## 9. Licensing boundaries
 
-- nuScenes and Waymo images never leave the local machine and never enter any bundle, Docker image, hosted corpus, screenshot, demo video frame, or doc.
+- nuScenes images never leave the local machine and never enter any bundle, Docker image, hosted corpus, screenshot, demo video frame, or doc.
 - RDD2022 images are published only after its license is verified (currently unverified).
 - See [docs/DATA_AND_LICENSES.md](docs/DATA_AND_LICENSES.md).
 

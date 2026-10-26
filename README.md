@@ -2,7 +2,7 @@ Purpose: entry point for av-road-hazard, a planned system that fuses road-object
 
 # av-road-hazard
 
-> **Status: Sprint 0 scaffold.** Contracts, a stub API, tests, CI and a Docker skeleton exist; the models, fusion logic, RAG layer and UI do not. Stub outputs are fixed fake values. This documentation was drafted on 2026-10-21 from the READMEs and part of the code of the source repositories (shallow clones); none of that code was run. <!-- F:P-07 -->
+> **Status: core under evaluation.** The object detector, road mask, defect classifier, fusion and evaluation notebooks exist and run on real models; RAG and the web UI do not. See [docs/ROADMAP.md](docs/ROADMAP.md) for what is done and what to build next. Parts of this documentation were drafted on 2026-10-21 from the source repositories and have not all been re-checked. <!-- F:P-07 -->
 
 ## What it is
 
@@ -15,13 +15,12 @@ Spec details: [SPEC.md](SPEC.md). Repo: `joshlaubach/av-road-hazard`, private.
 - Audience is portfolio and recruiters. Interface is a web UI plus an API. The demo is hosted and public. <!-- F:U-06 -->
 - Timeline target is a demoable v1 in 1-2 weeks, using parallel agents. Front end: React/Next.js (chosen over Streamlit; timeline tradeoff accepted, mitigated by an OpenAPI-generated client). <!-- F:U-07 -->
 - A multimodal RAG layer sits on top of the fused output, queried with mixed visual and text criteria, for example "show me frames with a pothole in the lane near a pedestrian". <!-- F:U-05 -->
-- `drivenet-carla-av` is out of scope for v1. CARLA is not used at all ([ADR 0012](docs/adr/0012-drop-carla.md)). <!-- F:U-04 -->
 - No hand labeling: all evaluation is automatic. <!-- F:U-10 -->
 - Hosted demo budget is up to about $20/month. A Claude API key exists; API usage is billed separately from the Claude subscription. A spend cap with hard cutoff is required. <!-- F:U-09 -->
 - The repo `av-road-hazard` is private under `joshlaubach`. <!-- F:U-11 -->
 - Engineering practices (requirements, design, testing, debugging, CI/CD, operations, security, documentation), agentic practices, and the full build plan are written into files. The first commit required every planned fact to be present in at least one file (see [docs/TRACEABILITY.md](docs/TRACEABILITY.md)). <!-- F:U-12 -->
 - Documentation style: concise, direct, minimal formatting, no filler. <!-- F:U-15 -->
-- Decisions: drop the DQN gate in v1; Qdrant; road-masked tiling with auto-labeled negatives; the three automatic evaluations; switchable LLM; Hugging Face Spaces plus Qdrant Cloud free tier; hosted corpus source open (RDD2022 samples after license verification, the owner's own photos, or both); React/Next.js; nuScenes v1.0-mini first then full; upload-your-own-image hosted demo model. <!-- F:U-16 -->
+- Decisions: Qdrant; road-masked tiling with auto-labeled negatives; the three automatic evaluations; switchable LLM; Hugging Face Spaces plus Qdrant Cloud free tier; hosted corpus source open (RDD2022 samples after license verification, the owner's own photos, or both); React/Next.js; nuScenes v1.0-mini first then full; upload-your-own-image hosted demo model. <!-- F:U-16 -->
 
 ## Evidence standards
 
@@ -79,10 +78,11 @@ Per the proposed core-first gate, items 4, 6 and 8 stay at stub level until item
 | [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md) | Lanes, sprints, handoffs, review, token rules |
 | [docs/GLOSSARY.md](docs/GLOSSARY.md) | Terms |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Known failures and causes |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Where the project stands, what is next, and what production-ready means |
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) | Open questions, assumptions, blockers |
 | [docs/TRACEABILITY.md](docs/TRACEABILITY.md) | Fact-to-file matrix |
 | [docs/PROMPT_HISTORY.md](docs/PROMPT_HISTORY.md) | How this commit was produced |
-| [docs/adr/](docs/adr/0000-template.md) | Architecture decision records 0001-0013 |
+| [docs/adr/](docs/adr/0000-template.md) | Architecture decision records |
 | [docs/agents/](docs/agents/00-scaffold.md) | Per-workstream agent briefs |
 
 ## Limitations

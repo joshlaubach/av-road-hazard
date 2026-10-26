@@ -15,7 +15,7 @@
 
 ## Checks
 - [ ] Contract change: this PR is labeled `contract-change` and has a `CONTRACT_CHANGELOG.md` entry (or: no contract touched)
-- [ ] License boundary: no nuScenes or Waymo images anywhere; no RDD2022 images unless its license is verified
+- [ ] License boundary: no nuScenes images anywhere; no RDD2022 images unless its license is verified
 
 ## Token and usage note
 <!-- Approximate usage, anything that should be a fresh session. -->
