@@ -20,6 +20,8 @@ perception:
 defects:
   # Tile classifier checkpoint (best.pt with its best.json beside it); env DEFECT_CHECKPOINT overrides.
   # null = not set: find_defects fails with a clear message instead of guessing a path.
+  # Chosen checkpoint: run tile-fold0-hn2, fold0/best.pt, SHA-256 762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8
+  # (recall guard PASS 2026-10-26, docs/ROADMAP.md). The weights are not in the repo: set DEFECT_CHECKPOINT to your copy.
   classifier_checkpoint: null
   thresholds:             # per-class tile probability cutoffs in D00, D10, D20, D40 order; provisional (noisy-label analysis)
     D00: 0.90
