@@ -8,8 +8,9 @@ tile by tile at the end (defects/tile_predict.py), not from these pools.
 
 from __future__ import annotations
 
+import json
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Sequence, Set
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +19,8 @@ from PIL import Image
 from defects.dataset import DatasetBase, image_transform
 from defects.labels import CODES
 from defects.tile_cache import missing_tiles, tile_cache_path
-from defects.tile_index import TileIndex, TileRecord, training_pool
+from defects.tile_index import TileIndex, TileRecord, image_tiles, training_pool
+from defects.tile_labels import NEGATIVE
 
 
 class TileDataset(DatasetBase):
@@ -63,6 +65,56 @@ def tile_pools(
         )
 
     return pool(train_ids), pool(val_ids)
+
+
+def _entry(index_in_file: int, row: object) -> tuple[str, int, int]:
+    """(image_id, row, col) of one file entry, or a ValueError naming the entry."""
+    where = f"extra negatives entry {index_in_file}"
+    if not isinstance(row, dict):
+        raise ValueError(f"{where}: expected an object with image_id, row and col, got {row!r}")
+    image_id, r, c = row.get("image_id"), row.get("row"), row.get("col")
+    if not isinstance(image_id, str) or not image_id:
+        raise ValueError(f"{where}: image_id must be a non-empty string")
+    for name, value in (("row", r), ("col", c)):
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError(f"{where}: {name} must be an integer, got {value!r}")
+    return image_id, int(r), int(c)  # type: ignore[arg-type]
+
+
+def extra_negative_tiles(
+    index: TileIndex, path: Path, allowed_ids: Set[str], *, repeat: int
+) -> list[TileRecord]:
+    """Annotator-confirmed clean tiles, each repeated `repeat` times, for training only.
+
+    The file is a JSON list of {"image_id", "row", "col"}. Tiles of images outside allowed_ids
+    (a fold's validation or held-out images, or the final test set) are skipped, so they cannot
+    leak into training. Each listed tile is used once however often it is listed. An image missing
+    from the index, a tile outside its grid, or a tile the index labels positive or ignored is an
+    error: only clean negatives belong here.
+    """
+    if repeat < 1:
+        raise ValueError(f"repeat must be at least 1, got {repeat}")
+    rows = json.loads(path.read_text())
+    if not isinstance(rows, list):
+        raise ValueError(f"{path} must hold a JSON list of tiles, got {type(rows).__name__}")
+    wanted = dict.fromkeys(_entry(n, row) for n, row in enumerate(rows))  # unique, in file order
+    grids: dict[str, dict[tuple[int, int], TileRecord]] = {}
+    tiles: list[TileRecord] = []
+    for image_id, r, c in wanted:
+        if image_id not in index.images:
+            raise ValueError(f"{image_id} is not in the tile index")
+        if image_id not in allowed_ids:
+            continue
+        if image_id not in grids:
+            grid = image_tiles(index.params, image_id, index.images[image_id])
+            grids[image_id] = {(t.row, t.col): t for t in grid}
+        tile = grids[image_id].get((r, c))
+        if tile is None:
+            raise ValueError(f"{image_id} row {r} col {c} is not in the tile grid")
+        if tile.status != NEGATIVE:
+            raise ValueError(f"{image_id} row {r} col {c} is not a clean negative ({tile.status})")
+        tiles.extend([tile] * repeat)
+    return tiles
 
 
 def check_cached(tiles: Sequence[TileRecord], cache_dir: Path) -> None:
