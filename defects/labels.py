@@ -1,12 +1,15 @@
-"""Verified class codes; human-readable names await the label check."""
+"""RDD2022 class codes and their names, verified against the paper and the annotation files."""
 
 CODES = ("D00", "D10", "D20", "D40")
 ALL = "ALL"  # pseudo-country used for the totals across all countries
-NAMES: dict[str, str | None] = dict.fromkeys(CODES)
-
-
-class LabelNamesNotVerified(ValueError):
-    """A name was requested before its mapping was verified."""
+# Arya et al., RDD2022 (arXiv 2209.08538). Pinned by tests/defects/test_label_mapping.py, which also
+# compares the box counts in the annotation files with the paper.
+NAMES: dict[str, str] = {
+    "D00": "longitudinal crack",
+    "D10": "transverse crack",
+    "D20": "alligator crack",
+    "D40": "pothole",
+}
 
 
 def class_index(code: str) -> int:
@@ -14,7 +17,4 @@ def class_index(code: str) -> int:
 
 
 def name_of(code: str) -> str:
-    name = NAMES[code]
-    if name is None:
-        raise LabelNamesNotVerified(f"Name for {code} has not been verified")
-    return name
+    return NAMES[code]
