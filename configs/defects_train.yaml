@@ -43,5 +43,10 @@ tile_size: 384
 tile_overlap: 0.2
 clean_per_positive: 1.0
 min_clean_per_image: 1
+# Annotator-confirmed clean tiles to add to every fold's training pool (JSON list of
+# {"image_id", "row", "col"}; tiles of that fold's validation or test images are skipped), each
+# repeated extra_negatives_repeat times. null adds none.
+extra_negatives: null
+extra_negatives_repeat: 1
 # Tile crop cache (defects/tile_cache.py): JPEG quality of the native-size tile crops.
 cache_jpeg_quality: 95

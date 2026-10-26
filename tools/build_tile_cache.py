@@ -3,8 +3,9 @@
 Usage: python -m tools.build_tile_cache --sample-index INDEX.json --tile-index TILES.json
        --splits SPLITS.json --config CFG.yaml --cache-dir DIR
 The tiles are the training pool (all positives plus the capped, seeded clean sample; see
-defects/tile_index.py) of every image outside the final test set. Pools are chosen per image with
-the global seed, so one cache serves every fold. Re-running only writes what is missing. The
+defects/tile_index.py) of every image outside the final test set, plus the tiles in the config's
+extra_negatives file when it names one. Pools are chosen per image with the global seed, so one
+cache serves every fold. Re-running only writes what is missing. The
 cache holds RDD2022 pixels: keep it under the gitignored data/ folder.
 """
 
@@ -19,6 +20,7 @@ import yaml
 from common.config import get_config
 from defects.splits import read_splits
 from defects.tile_cache import DEFAULT_WORKERS, build_tile_cache
+from defects.tile_dataset import extra_negative_tiles
 from defects.tile_index import read_tile_index, training_pool
 
 
@@ -44,6 +46,13 @@ def main(argv: list[str] | None = None) -> int:
         min_clean=int(cfg["min_clean_per_image"]),
         seed=int(get_config()["seed"]),
     )
+    if cfg.get("extra_negatives"):
+        # Repeats are a training-time choice; each tile is cached once.
+        pool = [
+            *pool,
+            *extra_negative_tiles(index, Path(cfg["extra_negatives"]), set(non_test), repeat=1),
+        ]
+        pool = list({(t.image_id, t.row, t.col): t for t in pool}.values())
     rows = json.loads(args.sample_index.read_text())
     paths = {r["id"]: (args.sample_index.parent / r["image_path"]).resolve() for r in rows}
     written = build_tile_cache(
