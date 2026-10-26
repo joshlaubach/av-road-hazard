@@ -28,6 +28,10 @@ Cause: Docker on macOS cannot use the Apple GPU or an NVIDIA GPU; containers run
 
 Cause: the comma10k U-Net weights were not fetched into `<checkpoint dir>/road_mask/comma10k_unet`, or a file (`config.json` or `model.safetensors`) has a SHA-256 that differs from the value pinned in `defects/road_crop.py`. Fix: run `python -m tools.fetch_road_model`. Never edit the pinned hashes to make a mismatch pass. Never replace the file by hand. The model loads from safetensors only, never pickle. See [ADR 0013](adr/0013-road-mask-model.md).
 
+## Object detector unavailable (503 from /analyze)
+
+Cause: with stubs off, the COCO detector weights were not fetched into `<checkpoint dir>/detector`, a file has a SHA-256 that differs from the value pinned in `perception/detector.py`, or the `ml` packages are missing. The API answers 503 `object detector unavailable`; the reason is in the log (`object detector unavailable: ...`). Fix: run `python -m tools.fetch_detector --model NAME` (NAME is `perception.model` in `configs/default.yaml`). Never edit the pinned hashes to make a mismatch pass, and never replace the file by hand. The model loads from safetensors only. See [ADR 0014](adr/0014-object-detector.md).
+
 ## Other known source-repo behaviors
 
 - Missing EfficientNet checkpoint raises `RuntimeError`.

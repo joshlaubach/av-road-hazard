@@ -2,6 +2,8 @@ Purpose: self-contained brief for the A Perception workstream of av-road-hazard;
 
 # Brief: A Perception
 
+> Update 2026-10-25: the detector was built differently from the plan below: zero-shot torchvision COCO models with pinned weights, no fine-tuning (see [ADR 0014](../adr/0014-object-detector.md)). The tasks below that port and fine-tune the notebook model are on hold until a measured gap and licence approval.
+
 ## Lane
 Codex
 
