@@ -28,7 +28,7 @@ from defects.dataset import (
     file_sha256,
 )
 from defects.labels import CODES
-from defects.model import build_model
+from defects.model import build_model, load_checkpoint
 from defects.provenance import _git_dirty, _git_sha, _run_directory, _verify, manifest_path
 from defects.runtime import amp_enabled, forward_logits, select_device
 from defects.splits import make_splits, read_splits, write_splits
@@ -421,20 +421,6 @@ def _fit(
         if best_epoch >= 0:
             tracker.log_file(checkpoint.with_suffix(".json"))
     return FitResult(checkpoint, history, best_epoch)
-
-
-def load_checkpoint(checkpoint: Path, cfg: dict[str, Any], *, device: str = "cpu") -> Any:
-    """Check byte integrity and class order before loading weights."""
-    import torch
-
-    sidecar = json.loads(checkpoint.with_suffix(".json").read_text())
-    if sidecar["class_codes"] != list(CODES) or sidecar["checkpoint_sha256"] != file_sha256(
-        checkpoint
-    ):
-        raise ValueError("Checkpoint provenance mismatch")
-    model = build_model({**cfg, "pretrained": False}).to(device)
-    model.load_state_dict(torch.load(checkpoint, map_location=device, weights_only=True))
-    return model
 
 
 def out_of_fold(

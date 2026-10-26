@@ -87,6 +87,7 @@ def tile_case(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TileCase:
         )
 
     monkeypatch.setattr("defects.train.build_model", tiny_model)
+    monkeypatch.setattr("defects.model.build_model", tiny_model)
     return samples, splits_file, cfg, index
 
 
