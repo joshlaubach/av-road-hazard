@@ -48,13 +48,9 @@ def test_the_pinned_names_cover_exactly_the_four_codes() -> None:
     assert tuple(PINNED_NAMES) == CODES
 
 
-def test_a_name_set_in_labels_can_only_be_the_pinned_one() -> None:
-    """NAMES may stay unverified (None), but never take the source repo's wrong mapping."""
-    assert set(NAMES) == set(CODES)
-    for code, name in NAMES.items():
-        assert name is None or name == PINNED_NAMES[code], (
-            f"{code} is named {name!r} but the paper says {PINNED_NAMES[code]!r}"
-        )
+def test_the_names_in_labels_are_the_pinned_ones() -> None:
+    """The source repo's wrong mapping (D00 pothole, ...) must never come back."""
+    assert NAMES == PINNED_NAMES
 
 
 @pytest.mark.data

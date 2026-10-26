@@ -5,18 +5,20 @@ from pathlib import Path
 
 import pytest
 
-from defects.labels import CODES, NAMES, LabelNamesNotVerified, class_index, name_of
+from defects.labels import CODES, class_index, name_of
 from defects.mining import rank_hard_examples
 from defects.splits import make_splits, read_splits, write_splits
 
 
-def test_codes_only() -> None:
+def test_codes_and_verified_names() -> None:
     assert CODES == ("D00", "D10", "D20", "D40")
-    # Run the label check and update this test only when names have been verified.
-    assert all(name is None for name in NAMES.values())
+    assert [name_of(code) for code in CODES] == [
+        "longitudinal crack",
+        "transverse crack",
+        "alligator crack",
+        "pothole",
+    ]
     assert class_index("D40") == 3
-    with pytest.raises(LabelNamesNotVerified):
-        name_of("D00")
     with pytest.raises(ValueError):
         class_index("unknown")
 

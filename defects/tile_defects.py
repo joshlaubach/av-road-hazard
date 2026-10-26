@@ -3,8 +3,8 @@
 This is the real body of defects.infer.find_defects: everything except model and checkpoint
 loading, so it can be tested without either. A Defect's box is its tile's
 rectangle in frame pixels, because the classifier scores whole tiles, not boxes inside them. The
-name is the RDD2022 class code (for example "D00"): human-readable names wait for the label check
-(defects/labels.py).
+name is the RDD2022 class code (for example "D00"); the human-readable names are in
+defects/labels.py.
 """
 
 from __future__ import annotations
