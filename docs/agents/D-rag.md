@@ -6,7 +6,7 @@ Purpose: self-contained brief for the D RAG workstream of av-road-hazard; read i
 Claude
 
 ## Sprint and dependencies
-Sprint 2 (days 4-7). Depends on the scaffold and on the `HazardRecord` contract (stubs suffice). Gated by the proposed core-first gate: beyond stubs only after A, B, C and the synthetic fusion evaluation produce reportable numbers, or the owner overrides.
+Sprint 2 (days 4-7). Depends on the scaffold and on the `HazardRecord` contract (stubs suffice). Gated by the core-first gate: beyond stubs only after A, B, C and the synthetic fusion evaluation produce reportable numbers, or the owner overrides.
 
 ## Goal
 Build multimodal RAG: CLIP-style embeddings, Qdrant collection, hybrid retrieval, and a switchable LLM wrapper grounded strictly in retrieved records.

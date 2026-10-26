@@ -15,11 +15,11 @@ Quality is a requirement, not a polish step. <!-- F:U-13 --> The plan is partly 
 
 <!-- F:Q-02 -->
 
-## Core scope (proposed, see ADR 0011)
+## Core scope (see ADR 0011)
 
-Keep detection, road-masked tiling, fusion, and the synthetic evaluation, with a simple API and a small demo. Add RAG only if the core results justify it. [ADR 0011](adr/0011-core-first-gate.md) records this with status "proposed". Acceptance is tracked in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). <!-- F:Q-03 -->
+Keep detection, road-masked tiling, fusion, and the synthetic evaluation, with a simple API and a small demo. Add RAG only if the core results justify it. [ADR 0011](adr/0011-core-first-gate.md) records this; the maintainer accepted it on 2026-10-26. <!-- F:Q-03 -->
 
-## Core-first gate (proposed)
+## Core-first gate (accepted, ADR 0011)
 
 Do not start D (RAG), F (React UI), or I (deploy) beyond stubs until A, B, C and the synthetic fusion evaluation produce reportable numbers, or the maintainer overrides. <!-- F:Q-04 -->
 

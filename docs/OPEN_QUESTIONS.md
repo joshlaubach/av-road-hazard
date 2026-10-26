@@ -15,7 +15,7 @@ Every recommended default is a recommendation, not a decision. Owner is the repo
 | 6 | Python version of the new repo <!-- F:E-11 --> | Owner | Sprint 0 | 3.12 (sources use 3.11 and 3.12). Applied in Sprint 0 as `requires-python >=3.12`; CI runs 3.12 and 3.13; Docker uses 3.12; lockfiles were compiled on 3.13 |
 | 7 | Experiment tracker: MLflow vs W&B <!-- F:R-13 --> | Owner | Sprint 1 | MLflow (self-hostable, free; UNVERIFIED preference) |
 | 8 | License for `LICENSE` | Owner | Before push | MIT (applied as the default; revisit if the owner prefers another) |
-| 9 | Accept core-first gating (ADR 0011)? <!-- F:Q-03 --> | Owner | Before Sprint 2 | Accept: gate D, F, I on A, B, C and the synthetic fusion evaluation producing numbers |
+| 9 | Accept core-first gating (ADR 0011)? <!-- F:Q-03 --> | Owner | Before Sprint 2 | Closed 2026-10-26: accepted (ADR 0011). D, F and I stay at stub level until A, B, C and the synthetic fusion evaluation produce numbers |
 | 10 | Hosted corpus source: RDD2022 samples (after license verification), the owner's own photos, or both | Owner | Before deploy | Open. Decide before the hosted deploy; RDD2022 samples need license verification first |
 
 ## Verification needed (UNVERIFIED facts)

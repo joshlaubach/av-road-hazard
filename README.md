@@ -56,7 +56,7 @@ Planned, none implemented:
 7. Three automatic evaluations with no hand labeling (per-model metrics, retrieval, synthetic fusion).
 8. Hosted demo on Hugging Face Spaces (CPU) with Qdrant Cloud free tier, upload-your-own-image.
 
-Per the proposed core-first gate, items 4, 6 and 8 stay at stub level until items 1, 2, 3 and the synthetic fusion evaluation produce reportable numbers ([ADR 0011](docs/adr/0011-core-first-gate.md), status proposed). <!-- F:Q-04 -->
+Per the core-first gate, items 4, 6 and 8 stay at stub level until items 1, 2, 3 and the synthetic fusion evaluation produce reportable numbers ([ADR 0011](docs/adr/0011-core-first-gate.md), status accepted). <!-- F:Q-04 -->
 
 ## Documentation map
 

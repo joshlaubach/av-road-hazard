@@ -15,4 +15,4 @@ Next.js + TypeScript backed by FastAPI. The TypeScript client is generated from 
 - Gradio: same.
 
 ## Consequences
-Larger integration surface (Python + TypeScript). React polish is first in the scope-cut order. Under the proposed core-first gate (ADR 0011) the UI stays at stub level until core metrics exist.
+Larger integration surface (Python + TypeScript). React polish is first in the scope-cut order. Under the core-first gate (ADR 0011) the UI stays at stub level until core metrics exist.
