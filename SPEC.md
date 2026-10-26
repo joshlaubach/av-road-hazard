@@ -46,19 +46,21 @@ frame ─► perception/ (Faster R-CNN)  ─► objects[]
 
 ```
 av-road-hazard/
-  perception/     # detector: train.py, infer.py (detect(frame) -> objects)
-  defects/        # classifier: train.py, infer.py, patches.py, road_crop.py
-  fusion/         # fuse.py, schema.py (HazardRecord pydantic model)
-  rag/            # embed.py, index.py, retrieve.py, llm.py (switchable)
-  api/            # FastAPI app, routes, settings
-  web/            # Next.js app
-  eval/           # per-model metrics, retrieval eval, synthetic fusion test
-  data/           # download scripts only; no data committed
-  docker/         # Dockerfiles, docker-compose.yml, compose.gpu.yml
-  configs/        # YAML configs; one source of truth for paths and thresholds
-  common/         # config loader, JSON logging, debug dumps, manifest format (shared by all packages)
-  tools/          # export_openapi.py, overlay.py (debug overlay)
-  tests/          # unit, contract, integration, ml, data, e2e, fixtures
+  api/            # FastAPI app (main.py), request/response models, service pipeline
+  common/         # config loader, JSON logging, debug dumps, progress bar, tracking, device, geometry, hashing (shared by all packages)
+  configs/        # YAML configs: default.yaml, fusion.yaml, defects_train.yaml, defects_review.yaml
+  defects/        # road-masked tiling, tile labels and index, classifier model, training, inference, evaluation, mining
+  docker/         # Dockerfile.api, docker-compose.yml, compose.gpu.yml
+  docs/           # architecture, evaluation, runbook, sources and licenses; adr/ (decision records); agents/ (workstream briefs)
+  eval/           # per-model metrics (models.py), detector evaluation logic (detector.py), baselines.json
+  fusion/         # fuse.py (hazard score), config.py, schema.py (HazardRecord contract), README.md
+  perception/     # COCO object detector: detector.py (pinned weights, hash-checked load), infer.py (detect()), labels.py; train.py only if the detector is ever fine-tuned (ADR 0014)
+  rag/            # package placeholder; planned: embed.py, index.py, retrieve.py, llm.py (switchable)
+  web/            # Next.js app (planned, not created yet)
+  tools/          # command-line tools run with python -m tools.NAME, e.g. export_openapi, fetch_detector, eval_detector, validate_annotations, review_nuscenes, overlay
+  tests/          # unit, contract, integration, ml, data, e2e, defects, eval, fusion, perception, fixtures
+  checkpoints/    # MANIFEST.json; model weights live here, never committed
+  data/           # MANIFEST.json; datasets are local only, no data committed
   openapi.json    # exported API contract (CI fails on drift)
   SPEC.md  README.md  .env.example
 ```
@@ -99,7 +101,7 @@ Rules: separate packages (the two source repos both have a `src/`); no hardcoded
 
 ## 6. Workstreams (for parallel agents)
 
-1. **Perception:** extract Faster R-CNN from notebook 02 into `perception/`, train on v1.0-mini, save checkpoint, `detect()` + tests.
+1. **Perception:** extract Faster R-CNN from notebook 02 into `perception/`, train on v1.0-mini, save checkpoint, `detect()` + tests. (Superseded by [ADR 0014](docs/adr/0014-object-detector.md): zero-shot COCO weights, no training unless a measured gap and licence approval justify it.)
 2. **Defects:** download RDD2022, retrain EfficientNet-B4 (watch the 0.92 train / 0.73 val overfit gap in the original). Replace the fixed 8x8 grid with road-masked tiling: mask the drivable road (nuScenes map data or a road segmentation model), tile only that region with overlap at native resolution (focus on the bottom third, where defects are large enough), upscale tiles to classifier input size. Add non-road tiles from nuScenes frames as automatically labeled negatives (labeled by the road mask, no hand labeling) so the classifier learns sky, vehicles, and buildings are not defects. Then `find_defects()` + tests. Waymo Open Dataset is optional, local-only, and needs separate approval.
 3. **Fusion:** schema, patch→box mapping, road mask, proximity logic, hazard score; unit tests with synthetic inputs. Depends only on the interfaces above, so it can start with stubs.
 4. **RAG:** CLIP embeddings, Qdrant collections (image vector + text vector + metadata payload), filtered retrieval, switchable LLM wrapper, Ollama and Claude backends.

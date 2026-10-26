@@ -32,7 +32,7 @@ Baselines live in `eval/baselines.json` (placeholder in Sprint 0). A metric regr
 
 ### Metric definitions (confirmed)
 
-Implemented in `eval/models.py` as pure functions; synthetic-case tests in `tests/eval/`.
+Implemented in `eval/models.py` as pure functions; the detector scene split, ground-truth filtering, thresholds and scoring are in `eval/detector.py` (used by `tools/eval_detector.py`). Synthetic-case tests in `tests/eval/`.
 
 | What | Definition |
 |---|---|
