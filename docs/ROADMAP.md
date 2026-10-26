@@ -4,7 +4,7 @@ Purpose: where av-road-hazard stands today, what is being worked on now, what to
 
 Last updated: 2026-10-26. Whoever finishes or changes a row should update this file in the same PR. If a row here disagrees with the code, the code is right and this file is out of date.
 
-The order follows the proposed core-first gate ([ADR 0011](adr/0011-core-first-gate.md)). The core (detector, defect classifier, fusion and the synthetic fusion evaluation) has to give reportable numbers before RAG, the web UI or deployment go beyond stubs.
+The order follows the core-first gate ([ADR 0011](adr/0011-core-first-gate.md)). The core (detector, defect classifier, fusion and the synthetic fusion evaluation) has to give reportable numbers before RAG, the web UI or deployment go beyond stubs.
 
 ## Done
 
@@ -17,6 +17,7 @@ The order follows the proposed core-first gate ([ADR 0011](adr/0011-core-first-g
 | Fusion | Done | `fusion/fuse.py` sets `in_road` and `near_objects` and computes the deterministic `hazard_score`. Severity is still "unknown" (see Next, row 4). |
 | Evaluation tooling | Done | Code in `eval/`, plus notebooks `03_eval_classifier` and `04_eval_detector`. They report 90% Wilson intervals, a provenance block and a recall guard. |
 | Hard-negative training | Option merged, result not accepted yet | Adding clean tiles with `extra_negatives` (repeated 20 times) cut nuScenes alerts from 80 to 46 over 404 frames. D10 validation recall also fell from 0.586 to 0.513, so the recall guard fails. |
+| Core-first gate | Accepted 2026-10-26 | [ADR 0011](adr/0011-core-first-gate.md): RAG, the web UI and deployment stay at stub level until the core produces reportable numbers. Building `web/` against the stub API is allowed. |
 
 Not started: RAG (`rag/` is empty), `web/`, the retrieval evaluation, the synthetic fusion evaluation and the hosted deployment.
 
@@ -38,7 +39,6 @@ Do these in order. A row should not start until the one above it has met its exi
 
 | # | What to build | Finished when | Suggested branch |
 |---|---|---|---|
-| 0 | Decide on the core-first gate (ADR 0011): accept it or override it | The ADR status is no longer "proposed" and open question 9 is closed | none, this is a decision |
 | 1 | Choose the classifier checkpoint and its thresholds | One checkpoint is named in config, its thresholds come from `03_eval_classifier`, and the guard result (or the decision to keep the baseline) is written here | `agent/defects-ship-checkpoint` |
 | 2 | Run `/analyze` end to end with the stubs off | 20 fixture images give valid HazardRecords and no stub path is left in `api/pipeline.py`. The road model must load, and designated fixtures must give a non-null `in_road`. Failures are counted separately from valid records, because a failed road model still produces valid records with an unknown `in_road`. Overlays for all 20 are checked by eye against the source images, since the schema only checks box corner order and shifted tile-to-frame coordinates would still validate. | `agent/api-real-pipeline` |
 | 3 | Synthetic fusion evaluation (`eval/fusion_synthetic.py`, a tool and tests) | RDD2022 patches are pasted onto nuScenes road regions at known positions, and the report gives detection rate by position and size in the image, box IoU, `in_road` accuracy and `near_objects` accuracy. The pass criteria are in config. `in_road` is scored against road ground truth that does not come from the road model being tested (for example nuScenes map data). Positions are image coordinates, so a range in metres needs a stated way to assign distance, with its uncertainty; otherwise the README reports image-space size, not physical range. It runs through the real pipeline from row 2. | `agent/eval-synthetic-fusion` |
