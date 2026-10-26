@@ -74,7 +74,7 @@ Local GPU jobs (training, full eval) run on your machine; CI never needs a GPU.
 - Keep SPEC.md, ADRs, and CONTRACT_CHANGELOG.md current; stale docs are a bug.
 
 ## 10. Definition of done (per PR)
-Tests added or updated and passing; lint/type checks clean; config not code for tunables; docs and changelog updated if behavior or contract changed; no secrets, data, or weights committed; reviewer from outside the author checked it.
+Tests added or updated and passing; lint/type checks clean; config not code for tunables; docs and changelog updated if behavior or contract changed; `docs/ROADMAP.md` updated for the task (move it from Now or Next to Done, record the result, and set the next Now); no secrets, data, or weights committed; reviewer from outside the author checked it.
 
 ---
 
