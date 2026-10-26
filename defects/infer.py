@@ -22,6 +22,13 @@ from fusion.fuse import RoadMask
 from fusion.schema import Defect, Object
 
 
+class DefectsUnavailable(RuntimeError):
+    """The tile classifier cannot be used: no checkpoint set, the file is missing, or it is invalid.
+
+    The API answers 503 instead of returning no defects, which would look like a clean road.
+    """
+
+
 class Classifier(NamedTuple):
     """A loaded tile classifier and the training config its tiling and transform need."""
 
@@ -59,10 +66,13 @@ def _load_classifier(checkpoint: Path) -> Classifier:
     from defects.model import load_checkpoint
 
     if not checkpoint.is_file():
-        raise FileNotFoundError(f"classifier checkpoint not found: {checkpoint}")
-    sidecar = json.loads(checkpoint.with_suffix(".json").read_text())
-    # load_checkpoint checks the file hash and class order against the sidecar before loading.
-    model = load_checkpoint(checkpoint, sidecar["config"]).eval()
+        raise DefectsUnavailable(f"classifier checkpoint not found: {checkpoint}")
+    try:
+        sidecar = json.loads(checkpoint.with_suffix(".json").read_text())
+        # load_checkpoint checks the file hash and class order against the sidecar before loading.
+        model = load_checkpoint(checkpoint, sidecar["config"]).eval()
+    except (OSError, ValueError, KeyError, RuntimeError, ImportError) as exc:
+        raise DefectsUnavailable(f"classifier checkpoint could not be loaded: {exc}") from exc
     return Classifier(model, sidecar["config"])
 
 
@@ -70,7 +80,7 @@ def load_classifier() -> Classifier:
     """The configured classifier, loaded once per process."""
     path = get_config()["defects"]["classifier_checkpoint"]
     if not path:
-        raise ValueError(
+        raise DefectsUnavailable(
             "no classifier checkpoint set: put its path in defects.classifier_checkpoint "
             "or the DEFECT_CHECKPOINT environment variable"
         )
