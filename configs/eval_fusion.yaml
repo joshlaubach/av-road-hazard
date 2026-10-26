@@ -1,0 +1,40 @@
+# Settings for tools/eval_fusion_synthetic.py (the synthetic fusion evaluation, docs/ROADMAP.md).
+# Every number here is provisional: chosen to be sensible, not measured.
+
+seed: 7
+
+# What gets pasted. Widths are the pasted box's width in frame pixels, drawn log-uniformly. The
+# patch is the defect plus patch_context of extra road on each side, so the edge is not on the defect.
+patch:
+  min_width_px: 50
+  max_width_px: 420
+  min_defect_side_px: 30     # source defects smaller than this (in the RDD2022 image) are not used
+  # Keep crops that look like road surface: the defect sits in the lower half of its photo, takes
+  # up at most max_area_frac of it, and the crop is not a sliver (width / height within the range).
+  min_center_y_frac: 0.5
+  max_area_frac: 0.4
+  aspect_range: [0.4, 2.5]
+  max_upscale: 1.4           # a patch is never enlarged more than this, so it does not blur
+  context: 0.25
+  feather: 0.15              # soft edge, as a share of the box's shorter side
+  countries: [Czech, India, Japan, Norway]   # United_States is never used (see AGENTS.md)
+
+# Placement per frame. A box counts as on road only if it lies inside the hand-drawn polygon shrunk
+# by margin_px, and off road only if it lies outside the polygon grown by margin_px.
+placement:
+  on_road_per_frame: 6
+  off_road_per_frame: 3
+  margin_px: 30
+  min_y_frac: 0.5            # patches stay in the lower half of the frame
+
+# Report bands.
+bands:
+  size_edges_px: [64, 128]   # small / medium / large, by the defect's width in the frame
+  y_edges_frac: [0.65, 0.8]  # far / mid / near, by the defect's vertical position
+
+# Pass criteria (provisional).
+criteria:
+  min_detection_rate_large: 0.70   # on-road patches 128 px wide or more that get a defect box
+  min_in_road_accuracy: 0.90       # reported in_road agrees with the hand-drawn road
+  max_off_road_leak_rate: 0.10     # off-road patches reported as on the road (or unknown)
+  min_near_recall: 0.50            # ground-truth near objects that fusion lists as near
