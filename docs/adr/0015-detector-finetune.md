@@ -2,7 +2,7 @@ Purpose: ADR 0015: the plan for fine-tuning the object detector on nuScenes so i
 
 # ADR 0015: Detector fine-tune for work-zone labels
 
-Status: proposed (2026-10-26). Becomes accepted when the owner approves it. Nothing is trained until then.
+Status: accepted (2026-10-26). The owner approved the plan and the pass limits; the 10-fold training started the same day.
 
 ## Context
 The zero-shot COCO detector ([ADR 0014](0014-object-detector.md)) has no word for traffic cones or barriers. On nuScenes mini (404 front-camera frames) that is 20% of all annotated objects, and 457 of the clearly visible ones. The owner chose to fine-tune. Motional confirmed that a portfolio project counts as non-commercial and that a public demo may serve a model fine-tuned on nuScenes ([DATA_AND_LICENSES.md](../DATA_AND_LICENSES.md)). The weights still carry the nuScenes terms and stay out of the repo.
