@@ -57,11 +57,13 @@ LoadedFrame = tuple[str, bool, Path, list[GtBox]]
 # ------------------------------------------------------------------- nuScenes
 
 
-def _project(nusc: Any, sample: dict[str, Any]) -> tuple[Path, list[GtBox]]:
+def _project(
+    nusc: Any, sample: dict[str, Any], camera: str = "CAM_FRONT"
+) -> tuple[Path, list[GtBox]]:
     from nuscenes.utils.geometry_utils import BoxVisibility, view_points
     from PIL import Image
 
-    token = sample["data"]["CAM_FRONT"]
+    token = sample["data"][camera]
     path, boxes, intrinsic = nusc.get_sample_data(token, box_vis_level=BoxVisibility.ANY)
     with Image.open(path) as image:
         width, height = image.size
