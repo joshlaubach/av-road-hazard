@@ -1,12 +1,13 @@
-"""Service object: image in, HazardRecord out (detectors are stubs; fusion and mask are real)."""
+"""Service object: image in, HazardRecord out. With USE_STUBS=1 the detectors are fixed fakes."""
 
 from __future__ import annotations
 
 import hashlib
 import io
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import Any, NamedTuple
 
 import numpy as np
 from PIL import Image, UnidentifiedImageError
@@ -14,9 +15,15 @@ from PIL import Image, UnidentifiedImageError
 from common.config import get_config
 from common.debug import dump
 from defects.infer import find_defects
-from defects.road_crop import MODEL_SUBDIR, ModelIntegrityError, RoadSegmenter
+from defects.road_crop import (
+    MODEL_SUBDIR,
+    REQUIRED_FILES,
+    ModelIntegrityError,
+    RoadSegmenter,
+)
 from fusion.fuse import RoadMask, fuse
 from fusion.schema import HazardRecord, Source
+from perception.detector import DETECTOR_SUBDIR
 from perception.infer import detect
 
 log = logging.getLogger("api")
@@ -52,6 +59,44 @@ def frame_id_for(data: bytes) -> str:
     return "up-" + hashlib.sha256(data).hexdigest()[:16]
 
 
+class Analysis(NamedTuple):
+    """One analyzed frame: the record, and whether a road mask was used for it.
+
+    road_mask_used False means every defect's in_road is unknown (null), not "off the road".
+    """
+
+    record: HazardRecord
+    road_mask_used: bool
+
+
+def model_status(cfg: Mapping[str, Any]) -> dict[str, str]:
+    """What /health reports per component, from the config and the files on disk.
+
+    Stubs on: the fixed stub answer. Stubs off: "available" when the files a model needs exist,
+    else "unavailable". This checks files only; hashes are verified when a model first loads.
+    """
+    if cfg["pipeline"]["use_stubs"]:
+        return {"perception": "stub", "defects": "stub", "fusion": "stub", "rag": "stub"}
+    checkpoints = Path(cfg["paths"]["checkpoint_dir"])
+    detector = checkpoints / DETECTOR_SUBDIR / f"{cfg['perception']['model']}.safetensors"
+    classifier = cfg["defects"]["classifier_checkpoint"]
+    classifier_ok = bool(classifier) and (
+        Path(classifier).is_file() and Path(classifier).with_suffix(".json").is_file()
+    )
+    road_ok = all((checkpoints / MODEL_SUBDIR / name).is_file() for name in REQUIRED_FILES)
+
+    def state(ok: bool) -> str:
+        return "available" if ok else "unavailable"
+
+    return {
+        "perception": state(detector.is_file()),
+        "defects": state(classifier_ok),
+        "road_mask": state(road_ok),
+        "fusion": "ready",
+        "rag": "stub",
+    }
+
+
 class Pipeline:
     """Loads models once (the road model on first use) and analyzes frames."""
 
@@ -80,11 +125,15 @@ class Pipeline:
             return None
 
     def analyze(self, data: bytes, source: Source = "upload") -> HazardRecord:
-        """Run one image through detection, defect finding and fusion; return a HazardRecord.
+        """Run one image through detection, defect finding and fusion; return a HazardRecord."""
+        return self.analyze_checked(data, source).record
 
-        Decode, call the two (stub) detectors, dump intermediates for debugging when
-        DEBUG_DUMP_DIR is set, then fuse them with the road mask (if any) into the record.
-        Severity stays "unknown" inside fuse() until the RDD2022 label mapping is verified.
+    def analyze_checked(self, data: bytes, source: Source = "upload") -> Analysis:
+        """Like analyze, but also says whether a road mask was used.
+
+        Decode, call the two detectors, dump intermediates for debugging when DEBUG_DUMP_DIR is
+        set, then fuse them with the road mask (if any) into the record. Severity stays "unknown"
+        inside fuse() until severity is turned on (docs/ROADMAP.md, row 4).
         """
         frame = decode_image(data)
         h, w = frame.shape[:2]  # numpy arrays are (height, width, channels)
@@ -102,4 +151,4 @@ class Pipeline:
             road_mask=road_mask,
         )
         dump("record", record)
-        return record
+        return Analysis(record, road_mask is not None)
