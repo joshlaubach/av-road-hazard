@@ -33,7 +33,7 @@ Sprint 0 additions (the scaffold author had no Docker daemon, so none of these r
 | Fact | Where | Blocks | Recommendation |
 |---|---|---|---|
 | RDD2022 label names: source maps D00 pothole; the paper says D40 pothole <!-- F:S-11 --> | Workstream B | Sprint 1 (before porting) | Closed 2026-10-26: verified against the paper and the annotation box counts, pinned by `tests/defects/test_label_mapping.py` |
-| nuScenes license terms (non-commercial, image redistribution) <!-- F:L-01 --> | Owner | Before any hosted text/metadata from nuScenes | Terms read 2026-10-26, see DATA_AND_LICENSES.md. Answered by Motional (owner's report, recorded 2026-10-26; keep the email): a portfolio project counts as non-commercial if it is not used in actual production, and a public demo may serve a model fine-tuned on nuScenes. See DATA_AND_LICENSES.md. |
+| nuScenes license terms (non-commercial, image redistribution) <!-- F:L-01 --> | Owner | Before any hosted text/metadata from nuScenes | Terms read 2026-10-26, see DATA_AND_LICENSES.md. Open: does a portfolio project count as non-commercial, and may a public demo serve a model fine-tuned on nuScenes? Email nuScenes@motional.com |
 | Whether nuScenes-derived records may be shown as text/metadata/charts hosted <!-- F:L-07 --> | Owner | Sprint 5 | Closed 2026-10-26: derived data is allowed under the same terms (non-commercial, attribution); images stay local by project policy |
 | Docker base image exact tag `nvidia/cuda:12.8.x-cudnn-runtime-ubuntu22.04` <!-- F:E-07 --> | E | Sprint 2 | Pick an existing 12.8 tag matching the PyTorch wheel |
 | 11B vision model VRAM 8-12 GB at 4-bit <!-- F:E-05 --> | E | Sprint 2 | Measure on the training machine |
