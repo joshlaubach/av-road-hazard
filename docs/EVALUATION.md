@@ -56,7 +56,7 @@ Queries are auto-generated from nuScenes ground-truth annotations, for example "
 
 ## Evaluation 3: synthetic fusion
 
-Design (nuScenes only; CARLA is not used, see [ADR 0012](adr/0012-drop-carla.md)):
+Design (nuScenes only):
 
 1. Take road regions of nuScenes frames (road mask).
 2. Paste RDD2022 defect patches at known positions, some inside the road, some outside, some near known objects.

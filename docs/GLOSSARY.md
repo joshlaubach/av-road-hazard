@@ -25,6 +25,5 @@ Purpose: definitions of terms used across av-road-hazard docs.
 | RAG | Retrieval-augmented generation: retrieve frame records, then answer grounded in them |
 | Qdrant | Vector database used for the RAG store (Docker locally, Qdrant Cloud free tier hosted) |
 | Ollama | Local LLM runtime serving LLaMA 3.2 Vision at `http://localhost:11434` |
-| CARLA | Driving simulator that was considered as a frame generator; dropped on 2026-10-23 and not used ([ADR 0012](adr/0012-drop-carla.md)). |
 | Stub | Fixed fake output of `detect()`/`find_defects()` behind `USE_STUBS=1` |
 | Core-first gate | Proposed rule: RAG, React UI, and deploy stay at stub level until the core metrics exist |

@@ -23,6 +23,12 @@ Contracts are frozen after Phase 0. Any change needs a PR labeled `contract-chan
 
 ## Entries
 
+### v0.3.0: 2026-10-26
+- `fusion/schema.py`: the `source` values lose `carla`; they are now `rdd2022`, `upload` and `nuscenes`. `openapi.json` regenerated; the `source` enum is the only difference.
+- Why: nothing in the project produces frames from that source.
+- Compatibility: breaking for any writer that sends `source: "carla"`, which now fails validation. No code in the repo did; the only use was one test, now changed to `nuscenes`.
+- PR: #49, labeled `contract-change`.
+
 ### v0.2.0: 2026-10-21 (workstream C, fusion)
 - `fusion/schema.py`: `DefectRecord.in_road` changes from `bool` to `bool | None`. `True` means on the road, `False` means confirmed off the road, and `null` means unknown (for example no usable road mask). `openapi.json` regenerated; that field is the only schema difference.
 - Why: missing road information must not silently become `False`, because fusion would then score the defect 0 and hide a possibly urgent hazard. Fusion scores unknown like on-road and keeps the uncertainty visible.

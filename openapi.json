@@ -173,7 +173,6 @@
           },
           "source": {
             "enum": [
-              "carla",
               "rdd2022",
               "upload",
               "nuscenes"

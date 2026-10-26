@@ -185,7 +185,7 @@ def test_scores_are_bounded_and_records_validate_under_random_inputs() -> None:
         mask = [None, ALL_ROAD, NO_ROAD][int(rng.integers(0, 3))]
         record = fuse(
             frame_id="fz",
-            source="carla",
+            source="nuscenes",
             image_size=(W, H),
             objects=objs,
             defects=[defect],
