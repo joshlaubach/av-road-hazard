@@ -16,13 +16,12 @@ One end-to-end system that takes a front-camera driving frame and answers two qu
 | Sources | Port code from `nuscenes-stability` and `defect-detector`; originals untouched |
 | Weights | None exist; retrain both locally (RTX 5080) |
 | Data | nuScenes v1.0-mini first, then v1.0-full; RDD2022; MVTec AD dropped from v1 |
-| DQN gate | Dropped in v1 (scan all patches); revisit later |
 | Domain gap | Road-masked overlapping tiling at native resolution (bottom third, near-field), auto-labeled non-road negatives added to training, measure with synthetic paste test |
 | RAG store | Qdrant (Docker locally, Qdrant Cloud free tier hosted) |
 | LLM | Switchable via config: LLaMA 3.2 Vision (Ollama, local) or Claude API (hosted; key available) |
 | Front end | React/Next.js, backed by FastAPI |
 | Hosting | Hugging Face Spaces (CPU) + Qdrant Cloud free tier; budget up to ~$20/mo |
-| Hosted corpus | OPEN: RDD2022 samples (verify RDD2022 license before publishing any images), the owner's own photos, or both ([OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md)). CARLA is not used ([ADR 0012](docs/adr/0012-drop-carla.md)) |
+| Hosted corpus | OPEN: RDD2022 samples (verify RDD2022 license before publishing any images), the owner's own photos, or both ([OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md)). |
 | nuScenes images | Local only; never shown or redistributed in the hosted demo |
 | Eval | No hand labeling (see section 7) |
 | Local runtime | Docker Compose; GPU passthrough only on an NVIDIA host (Windows 11 + WSL2 or Linux). Training machine UNCONFIRMED: the source READMEs say Windows 11 + RTX 5080, but the linked dev computer is a macOS arm64 MacBook Pro (no NVIDIA GPU in Docker) |
@@ -78,7 +77,7 @@ Rules: separate packages (the two source repos both have a `src/`); no hardcoded
 ```json
 {
   "frame_id": "str",
-  "source": "carla|rdd2022|upload|nuscenes",
+  "source": "rdd2022|upload|nuscenes",
   "image_size": [1600, 900],
   "objects": [{"label": "pedestrian", "score": 0.91, "box": [x1,y1,x2,y2]}],
   "defects": [{"name": "pothole", "confidence": 0.84, "box": [x1,y1,x2,y2],
@@ -88,8 +87,6 @@ Rules: separate packages (the two source repos both have a `src/`); no hardcoded
   "meta": {"time_of_day": "day|night|unknown", "location": "str|null"}
 }
 ```
-
-`carla` is unused: kept in the frozen contract until a contract-change PR removes it (see [ADR 0012](docs/adr/0012-drop-carla.md)).
 
 `hazard_score` is a documented, deterministic formula (defect severity x confidence x proximity to vulnerable objects), not a learned value.
 
@@ -102,7 +99,7 @@ Rules: separate packages (the two source repos both have a `src/`); no hardcoded
 ## 6. Workstreams (for parallel agents)
 
 1. **Perception:** extract Faster R-CNN from notebook 02 into `perception/`, train on v1.0-mini, save checkpoint, `detect()` + tests. (Superseded by [ADR 0014](docs/adr/0014-object-detector.md): zero-shot COCO weights, no training unless a measured gap and licence approval justify it.)
-2. **Defects:** download RDD2022, retrain EfficientNet-B4 (watch the 0.92 train / 0.73 val overfit gap in the original). Replace the fixed 8x8 grid with road-masked tiling: mask the drivable road (nuScenes map data or a road segmentation model), tile only that region with overlap at native resolution (focus on the bottom third, where defects are large enough), upscale tiles to classifier input size. Add non-road tiles from nuScenes frames as automatically labeled negatives (labeled by the road mask, no hand labeling) so the classifier learns sky, vehicles, and buildings are not defects. Then `find_defects()` + tests. Waymo Open Dataset is optional, local-only, and needs separate approval.
+2. **Defects:** download RDD2022, retrain EfficientNet-B4 (watch the 0.92 train / 0.73 val overfit gap in the original). Replace the fixed 8x8 grid with road-masked tiling: mask the drivable road (nuScenes map data or a road segmentation model), tile only that region with overlap at native resolution (focus on the bottom third, where defects are large enough), upscale tiles to classifier input size. Add non-road tiles from nuScenes frames as automatically labeled negatives (labeled by the road mask, no hand labeling) so the classifier learns sky, vehicles, and buildings are not defects. Then `find_defects()` + tests.
 3. **Fusion:** schema, patch→box mapping, road mask, proximity logic, hazard score; unit tests with synthetic inputs. Depends only on the interfaces above, so it can start with stubs.
 4. **RAG:** CLIP embeddings, Qdrant collections (image vector + text vector + metadata payload), filtered retrieval, switchable LLM wrapper, Ollama and Claude backends.
 5. **API + Docker:** FastAPI, compose files (api, qdrant, ollama), GPU config, CUDA 12.8 base image for the 5080.

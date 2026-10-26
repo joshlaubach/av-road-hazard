@@ -33,7 +33,7 @@ Lanes:
 | 4 | 9-11 | Integration: swap stubs for models, fix coordinate and schema bugs | Tests and fixtures for gaps, UI fixes | Run full evals; record baselines |
 | 5 | 11-14 | Deploy (HF Space, Qdrant Cloud), README, final review | Review pass, polish, walkthrough video support | Record video |
 
-If a sprint overruns, cut in this order: React polish, Claude/LLaMA toggle UI (keep config switch), v1.0-full evaluation ([ADR 0012](docs/adr/0012-drop-carla.md)).
+If a sprint overruns, cut in this order: React polish, Claude/LLaMA toggle UI (keep config switch), v1.0-full evaluation.
 
 Token-saving rules:
 - One workstream per session; start fresh sessions instead of long ones.
@@ -77,7 +77,7 @@ Done when: `docker compose up` serves stub `/analyze` and `/health`; CI green; a
 - Road-masked tiling (`road_crop.py`, `patches.py`): drivable-road mask (nuScenes map data or a road segmentation model), overlapping tiles on the near-field road at native resolution, upscale to 380x380.
 - Auto-labeled negatives: non-road tiles from nuScenes frames added to training as "no defect"; no hand labeling.
 - `find_defects(frame) -> list[Defect]` with tile-to-frame box mapping; severity heuristic or optional LLM text (off by default).
-- DQN, MVTec, Waymo excluded from v1.
+- MVTec is excluded from v1.
 - Done when: macro-F1 on RDD2022 val reported, negatives reduce false positives on non-road tiles (measure rate), tiling tested on fixtures.
 
 ### C. Fusion (`fusion/`, `tests/fusion/`)

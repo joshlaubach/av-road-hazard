@@ -7,7 +7,7 @@ Applies to every contributor, human or agent. Companion to SPEC.md and BUILD_PLA
 
 ## 1. Design and decisions
 - Interfaces live in `fusion/schema.py` and `openapi.json`. They are versioned; changes need a PR labeled `contract-change` and an entry in `CONTRACT_CHANGELOG.md`.
-- Significant choices get a short ADR in `docs/adr/NNN-title.md` (context, decision, alternatives, consequences). Seed ADRs: Qdrant, road-masked tiling, dropping the DQN gate, switchable LLM backend, nuScenes kept local.
+- Significant choices get a short ADR in `docs/adr/NNN-title.md` (context, decision, alternatives, consequences). Seed ADRs: Qdrant, road-masked tiling, switchable LLM backend, nuScenes kept local.
 - Every PR states which spec section it implements.
 
 ## 2. Version control and review
@@ -65,7 +65,7 @@ Local GPU jobs (training, full eval) run on your machine; CI never needs a GPU.
 ## 8. Security and licensing
 - Secrets only in env or the hosting platform's secret store; `.env` gitignored; rotate if ever committed.
 - Validate uploads (type, size, decode safely), strip EXIF GPS from stored images.
-- nuScenes and Waymo images never ship in images, bundles, or the hosted corpus. RDD2022 images only after its license is confirmed.
+- nuScenes images never ship in images, bundles, or the hosted corpus. RDD2022 images only after its license is confirmed.
 - Dependabot or Renovate for updates; lockfiles committed.
 
 ## 9. Documentation

@@ -18,7 +18,7 @@ Retrain the EfficientNet-B4 multi-label defect classifier on RDD2022, replace th
 Do not touch:
 - `perception/`, `fusion/`, `api/`
 - `fusion/schema.py` (contract-change PR only)
-- DQN, MVTec, Waymo, Streamlit dashboard are not ported in v1
+- MVTec and the Streamlit dashboard are not ported in v1
 
 ## Inputs
 - `joshlaubach/defect-detector` @ `9da52cdf7b7c3bedf70f32b3750b2834f3acf433`: `src/pipeline.py`, `src/utils/patches.py` (`patch_index_to_coords()`), `src/datasets/rdd2022.py`, `report.py`, `config.py`
@@ -63,7 +63,6 @@ Layers from ENGINEERING.md section 3:
 - Over-firing: the source flagged 31 of 64 patches at threshold 0.5.
 - Overfit gap 0.92 train vs 0.73 val.
 - Domain gap: RDD2022 close-ups vs wide frames; scale mismatch, no negatives, perspective.
-- Committed source `dqn.pth` is incompatible and there is no usable checkpoint; DQN not ported.
 - RDD2022 license unverified: no RDD2022 images in committed fixtures or docs.
 - Name collision: do not create a top-level `src/` package; source has `src/utils/`.
 - Coordinate bugs: tile to frame, width/height order, resize scale.

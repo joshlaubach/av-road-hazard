@@ -36,6 +36,5 @@ Cause: with stubs off, the COCO detector weights were not fetched into `<checkpo
 
 - Missing EfficientNet checkpoint raises `RuntimeError`.
 - `ROIAlign` non-determinism: results reproduce only on the same hardware and library versions.
-- Source `dqn.pth` will not load into the 65-output network (DQN is not ported).
 
 Debug playbook: ENGINEERING.md section 4.

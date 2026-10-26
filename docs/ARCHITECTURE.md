@@ -24,7 +24,7 @@ frame ─► perception/ (Faster R-CNN)  ─► objects[]
 | Stage | Package | Input | Output | Notes |
 |---|---|---|---|---|
 | 1. Object detection | `perception/` | RGB uint8 frame | `list[Object]` (`label`, `score`, `box`) | Faster R-CNN ResNet50 FPN v2, trained on nuScenes CAM_FRONT; batch and device-aware; CPU path for hosting |
-| 2. Defect detection | `defects/` | RGB frame | `list[Defect]` (`cls`, `name`, `confidence`, `box`, `patch_row`, `patch_col`) | Road crop, overlapping tiles at native resolution on the near-field road (bottom third), upscaled to 380x380, EfficientNet-B4 multi-label sigmoid over 4 RDD2022 classes (D00, D10, D20, D40), threshold from config. Replaces the source's fixed 8x8 grid. No DQN gate in v1 |
+| 2. Defect detection | `defects/` | RGB frame | `list[Defect]` (`cls`, `name`, `confidence`, `box`, `patch_row`, `patch_col`) | Road crop, overlapping tiles at native resolution on the near-field road (bottom third), upscaled to 380x380, EfficientNet-B4 multi-label sigmoid over 4 RDD2022 classes (D00, D10, D20, D40), threshold from config. Replaces the source's fixed 8x8 grid. |
 | 3. Fusion | `fusion/` | objects, defects, road mask | `HazardRecord` | Pure functions, no model imports. Maps patch to pixel boxes, intersects with road mask (`in_road`), finds nearest objects (`near_objects`: IoU and pixel distance), computes `hazard_score` |
 | 4. Index | `rag/` | `HazardRecord` + image | Qdrant point | Image embedding (CLIP-style), text embedding of the record and report, metadata payload, one collection |
 | 5. Retrieve and answer | `rag/` | text and/or image query, filters | answer + retrieved records | Metadata filter, then vector search (image and text), then rerank; LLM grounded only in retrieved records, citing frame IDs |
@@ -38,7 +38,7 @@ One record per frame.
 ```json
 {
   "frame_id": "str",
-  "source": "carla|rdd2022|upload|nuscenes",
+  "source": "rdd2022|upload|nuscenes",
   "image_size": [1600, 900],
   "objects": [{"label": "pedestrian", "score": 0.91, "box": [x1,y1,x2,y2]}],
   "defects": [{"name": "pothole", "confidence": 0.84, "box": [x1,y1,x2,y2],
@@ -49,14 +49,12 @@ One record per frame.
 }
 ```
 
-`carla` is unused: kept in the frozen contract until a contract-change PR removes it (see [ADR 0012](adr/0012-drop-carla.md)).
-
 ### Field semantics
 
 | Field | Meaning |
 |---|---|
 | `frame_id` | Unique id of the frame; cited by RAG answers |
-| `source` | Where the frame came from: `carla` (unused, see the note above), `rdd2022`, `upload`, `nuscenes` |
+| `source` | Where the frame came from: `rdd2022`, `upload`, `nuscenes` |
 | `image_size` | Image size in pixels; the example is `[1600, 900]` (nuScenes). Ordering (width, height) must be pinned in `fusion/schema.py`; image size ordering is a likely coordinate bug (BUILD_PLAN section 4) |
 | `objects[]` | Detections: `label`, `score`, `box` as `[x1,y1,x2,y2]` pixels |
 | `defects[].name` | Defect class name. Depends on the RDD2022 label mapping, which must be verified first (see [SOURCE_REPOS.md](SOURCE_REPOS.md), S-11) |
