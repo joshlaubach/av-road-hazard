@@ -13,25 +13,20 @@ The order follows the core-first gate ([ADR 0011](adr/0011-core-first-gate.md)).
 | Contracts, stub API, CI, Docker skeleton | Done | `fusion/schema.py`, `openapi.json`, `.github/workflows/ci.yml`. The Docker build and compose file have never been run (see [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)). |
 | Object detector | Done, used zero-shot | Pretrained COCO Faster R-CNN with pinned weights ([ADR 0014](adr/0014-object-detector.md)). On nuScenes mini at score 0.5, the default MobileNet model finds 38% of pedestrians (90% range 35-42%) and 21% of cyclists (14-31%, from only 57 objects). Its CPU speed meets the p95 limit of 2 s at 24, 4 and 2 threads. |
 | Road mask | Done | comma10k model, pinned and hash-checked, with `min_road` set to 0.4 ([ADR 0013](adr/0013-road-mask-model.md)). It is wired into `api/pipeline.py`. |
-| Defect classifier | Trained, thresholds still provisional | EfficientNet-B4 on RDD2022 tiles. `find_defects` skips tiles covered by objects or off the road and uses per-class thresholds from config. The class names are verified against the paper and the annotation files, and pinned by a test. |
+| Defect classifier | Checkpoint chosen 2026-10-26, thresholds still provisional | Run `tile-fold0-hn2` (SHA-256 starts `762f4b38`), EfficientNet-B4 on RDD2022 tiles. `find_defects` skips tiles covered by objects or off the road and uses per-class thresholds from config. The class names are verified against the paper and the annotation files, and pinned by a test. |
 | Fusion | Done | `fusion/fuse.py` sets `in_road` and `near_objects` and computes the deterministic `hazard_score`. Severity is still "unknown" (see Next, row 4). |
 | Evaluation tooling | Done | Code in `eval/`, plus notebooks `03_eval_classifier` and `04_eval_detector`. They report 90% Wilson intervals, a provenance block and a recall guard. |
-| Hard-negative training | Option merged, result not accepted yet | Adding clean tiles with `extra_negatives` (repeated 20 times) cut nuScenes alerts from 80 to 46 over 404 frames. D10 validation recall also fell from 0.586 to 0.513, so the recall guard fails. |
+| Hard-negative training | Done, repeat 10 accepted 2026-10-26 | `extra_negatives` repeated 10 times (run `tile-fold0-hn2`, 680 extra tiles) cut nuScenes alerts from 80 to 53 over 404 frames (0.198 to 0.131 per frame) and the clean probe tiles still flagged from 23 to 13 of 23. The recall guard passes: validation recall changed by -1.9 (D00), +3.3 (D10), +2.8 (D20) and +0.9 (D40) points, and 5 of the 6 reviewed cracks are still flagged. Repeat 20 failed the guard (D10 lost 6.6 points, 5 of 6 cracks). Limits: one fold, one reviewer, 5 of 6 is the lowest passing score, and 13 of the 53 alerts have not been reviewed yet. |
 | Core-first gate | Accepted 2026-10-26 | [ADR 0011](adr/0011-core-first-gate.md): RAG, the web UI and deployment stay at stub level until the core produces reportable numbers. Building `web/` against the stub API is allowed. |
 
 Not started: RAG (`rag/` is empty), `web/`, the retrieval evaluation, the synthetic fusion evaluation and the hosted deployment.
 
 ## Now
 
-Retrain with `extra_negatives_repeat: 10`, using a new run id (about 2-3 hours on the GPU; keep the laptop awake). The checked-in `configs/defects_train.yaml` has `extra_negatives: null`, so the run needs a config that points `extra_negatives` at the confirmed-clean tile file. Afterwards, check that the run's `best.json` shows a nonzero `extra_negative_tiles`, otherwise the run had no hard negatives at all.
+Row 1 is finished (see Done). Two things are open next:
 
-Then run `03_eval_classifier` with the nuScenes review inputs. Without them the guard cannot check the reviewed cracks and can print PASS without looking at any. A real result lists how many of the 6 reviewed cracks are still flagged.
-
-There are two valid outcomes, and both finish this step:
-- The new checkpoint passes the guard: no class loses more than 3 points of validation recall, and at least 5 of the 6 reviewed cracks are still flagged.
-- It fails, and you keep the baseline checkpoint. The baseline is the reference the guard compares against, so it cannot fail the guard. Choosing it is a recorded decision.
-
-Write the outcome next to row 1 below.
+- Review the 13 nuScenes alerts the new checkpoint raised that nobody has judged (exported as an annotation batch by `tools/eval_classifier.py`). They show whether the true false-alarm drop is bigger or smaller than the table above.
+- Row 2: run `/analyze` end to end on the 20 fixtures with the real models and check the overlays by eye.
 
 ## Next
 
@@ -39,7 +34,7 @@ Do these in order. A row should not start until the one above it has met its exi
 
 | # | What to build | Finished when | Suggested branch |
 |---|---|---|---|
-| 1 | Choose the classifier checkpoint and its thresholds | One checkpoint is named in config, its thresholds come from `03_eval_classifier`, and the guard result (or the decision to keep the baseline) is written here | `agent/defects-ship-checkpoint` |
+| 1 | Choose the classifier checkpoint and its thresholds | Done 2026-10-26. The checkpoint is run `tile-fold0-hn2` (SHA-256 `762f4b38...805922b8`), named in `configs/default.yaml` and set per machine with `DEFECT_CHECKPOINT` (the weights stay outside the repo). Thresholds are unchanged (D00 0.90, D10 0.75, D20 0.65, D40 0.75), because the guard run used them. They stay provisional. Guard result: PASS, see Done. | `agent/defects-ship-checkpoint` |
 | 2 | Run `/analyze` end to end with the stubs off. Code is done: `python -m tools.smoke_analyze FOLDER --out DIR` (needs `USE_STUBS=0`), `/health` reporting the real model states, and a 503 when the classifier is missing. Still to do: run it on the 20 fixtures with the real models, after the retrain frees the GPU. | 20 fixture images give valid HazardRecords and no stub path is left in `api/pipeline.py`. The road model must load, and designated fixtures must give a non-null `in_road`. Failures are counted separately from valid records, because a failed road model still produces valid records with an unknown `in_road`. Overlays for all 20 are checked by eye against the source images, since the schema only checks box corner order and shifted tile-to-frame coordinates would still validate. | `agent/api-real-pipeline` |
 | 3 | Synthetic fusion evaluation (`eval/fusion_synthetic.py`, a tool and tests) | RDD2022 patches are pasted onto nuScenes road regions at known positions, and the report gives detection rate by position and size in the image, box IoU, `in_road` accuracy and `near_objects` accuracy. The pass criteria are in config. `in_road` is scored against road ground truth that does not come from the road model being tested (for example nuScenes map data). Positions are image coordinates, so a range in metres needs a stated way to assign distance, with its uncertainty; otherwise the README reports image-space size, not physical range. It runs through the real pipeline from row 2. | `agent/eval-synthetic-fusion` |
 | 3b | Construction and work-zone labels | Step 1 (in review): the labels, provisional weights, and the notebook report of what the detector cannot name. Step 2: run notebook 04 to record the gap numbers here. Step 3: email Motional (nuScenes@motional.com) to confirm that a portfolio project counts as non-commercial and that a public demo may serve a model fine-tuned on nuScenes. Step 4: fine-tune the detector on nuScenes for the new labels and report its recall. Weights stay out of the repo and carry the nuScenes terms. | `agent/construction-labels`, then `agent/detector-finetune` |
