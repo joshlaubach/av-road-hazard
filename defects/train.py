@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import random
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
@@ -32,8 +33,14 @@ from defects.model import build_model, load_checkpoint
 from defects.provenance import _git_dirty, _git_sha, _run_directory, _verify, manifest_path
 from defects.runtime import amp_enabled, forward_logits, select_device
 from defects.splits import make_splits, read_splits, write_splits
-from defects.tile_dataset import TileDataset, check_cached, image_scores, tile_pools
-from defects.tile_index import TileParams, TileRecord, read_tile_index
+from defects.tile_dataset import (
+    TileDataset,
+    check_cached,
+    extra_negative_tiles,
+    image_scores,
+    tile_pools,
+)
+from defects.tile_index import TileIndex, TileParams, TileRecord, read_tile_index
 from defects.tile_predict import predict_tiled
 from eval.models import macro_f1, per_class_prf
 
@@ -52,6 +59,9 @@ __all__ = [
     "select_device",
     "setup_determinism",
 ]
+
+
+log = logging.getLogger(__name__)
 
 
 def setup_determinism(seed: int, deterministic: bool = True) -> None:
@@ -143,6 +153,20 @@ class _FoldData:
     sidecar: dict[str, Any]  # extra provenance written next to the checkpoint
 
 
+def _extra_negatives(
+    index: TileIndex, train_ids: Sequence[str], cfg: dict[str, Any]
+) -> list[TileRecord]:
+    """Confirmed hard negatives of this fold's training images; none when the config has no file."""
+    if not cfg.get("extra_negatives"):
+        return []
+    return extra_negative_tiles(
+        index,
+        Path(cfg["extra_negatives"]),
+        set(train_ids),
+        repeat=int(cfg.get("extra_negatives_repeat", 1)),
+    )
+
+
 def _fold_data(
     by_id: dict[str, Sample],
     train_ids: Sequence[str],
@@ -175,7 +199,20 @@ def _fold_data(
             f"the tile pool is empty for this fold (train {len(train_tiles)}, "
             f"validation {len(val_tiles)}); check the tile index and the clean-tile settings"
         )
+    extras = _extra_negatives(
+        index, train_ids, cfg
+    )  # after the empty check: extras alone can't train
+    train_tiles = [*train_tiles, *extras]
     check_cached([*train_tiles, *val_tiles], cache_dir)
+    sidecar_extras = {}
+    if cfg.get("extra_negatives"):
+        if not extras:
+            log.warning("extra_negatives %s adds no tile to this fold", cfg["extra_negatives"])
+        sidecar_extras = {
+            "extra_negatives_sha256": file_sha256(Path(cfg["extra_negatives"])),
+            "extra_negatives_repeat": int(cfg.get("extra_negatives_repeat", 1)),
+            "extra_negative_tiles": len(extras),
+        }
     return _FoldData(
         _data_loader(TileDataset(train_tiles, cache_dir, cfg, training=True), cfg, training=True),
         _data_loader(TileDataset(val_tiles, cache_dir, cfg, training=False), cfg, training=False),
@@ -184,6 +221,7 @@ def _fold_data(
             "input": "tiles",
             "tile_params": asdict(params),
             "tile_index_sha256": file_sha256(index_path),
+            **sidecar_extras,
         },
     )
 
