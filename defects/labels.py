@@ -14,3 +14,7 @@ NAMES: dict[str, str] = {
 
 def class_index(code: str) -> int:
     return CODES.index(code)
+
+
+def name_of(code: str) -> str:
+    return NAMES[code]

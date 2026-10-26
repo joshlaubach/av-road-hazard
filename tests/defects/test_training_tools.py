@@ -5,14 +5,14 @@ from pathlib import Path
 
 import pytest
 
-from defects.labels import CODES, NAMES, class_index
+from defects.labels import CODES, class_index, name_of
 from defects.mining import rank_hard_examples
 from defects.splits import make_splits, read_splits, write_splits
 
 
 def test_codes_and_verified_names() -> None:
     assert CODES == ("D00", "D10", "D20", "D40")
-    assert [NAMES[code] for code in CODES] == [
+    assert [name_of(code) for code in CODES] == [
         "longitudinal crack",
         "transverse crack",
         "alligator crack",
