@@ -52,6 +52,24 @@ def test_counts_match_by_label_and_overlap() -> None:
     assert class_counts([frame], "traffic_cone", 0.5) == {"tp": 1, "fp": 1, "fn": 1}
 
 
+def test_finding_an_annotated_cone_too_hidden_to_count_is_not_a_false_alarm() -> None:
+    frame = _frame(
+        "s",
+        [Detection("traffic_cone", 0.9, BOX), Detection("traffic_cone", 0.8, FAR)],
+        [_gt(), _gt(box=FAR, visibility=1)],  # the second is real but not clearly visible
+    )
+    assert class_counts([frame], "traffic_cone", 0.5) == {"tp": 1, "fp": 0, "fn": 0}
+
+
+def test_a_hidden_cone_cannot_excuse_a_second_detection_of_the_same_spot() -> None:
+    frame = _frame(
+        "s",
+        [Detection("traffic_cone", 0.9, FAR), Detection("traffic_cone", 0.8, FAR)],
+        [_gt(box=FAR, visibility=1)],
+    )
+    assert class_counts([frame], "traffic_cone", 0.5)["fp"] == 1  # the duplicate still counts
+
+
 def test_the_cutoff_removes_weak_detections() -> None:
     frame = _frame("s", [Detection("traffic_cone", 0.6, BOX)], [_gt()])
     assert class_counts([frame], "traffic_cone", 0.5)["tp"] == 1
@@ -140,6 +158,14 @@ def test_a_pass_with_a_wide_range_is_flagged_as_a_caveat() -> None:
     rows = [_row("a", 14, 6, 6)]
     result = new_label_verdict(rows, "traffic_cone", LIMITS)
     assert result["passed"] and result["caveat"]
+
+
+def test_a_weak_scene_is_flagged_even_when_a_big_scene_makes_the_pooled_range_look_safe() -> None:
+    # Scene "a" passes at 14 of 20 (precision 0.70) but its 90% range dips below the limit.
+    rows = [_row("a", 14, 6, 6), _row("b", 400, 5, 10)]
+    result = new_label_verdict(rows, "traffic_cone", LIMITS)
+    assert result["passed"] and result["caveat"]
+    assert result["caveat_scenes"] == ["a"]
 
 
 def test_regression_allows_small_drops_only() -> None:

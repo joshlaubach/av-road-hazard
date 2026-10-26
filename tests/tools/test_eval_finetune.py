@@ -13,8 +13,14 @@ import pytest
 from eval.detector import GtBox
 from eval.models import Detection
 from perception.detector import build_model
-from perception.finetune import swap_head
-from tools.eval_finetune import group_by_scene, load_finetuned, predict
+from perception.finetune import FINETUNE_CLASSES, swap_head
+from tools.eval_finetune import (
+    check_fold_meta,
+    exit_status,
+    group_by_scene,
+    load_finetuned,
+    predict,
+)
 from tools.finetune_detector import SceneFrame, save_model
 
 needs_torch = pytest.mark.skipif(
@@ -91,3 +97,51 @@ def test_detections_stay_aligned_with_their_frames() -> None:
     first = [Detection("car", 0.9, (0.0, 0.0, 5.0, 5.0))]
     grouped: Any = group_by_scene(frames, [first, []])
     assert grouped["a"][0].detections == first and grouped["a"][1].detections == []
+
+
+SCENES = ["a", "b", "c"]
+CFG = {"model": "fasterrcnn_mobilenet_v3_large_fpn", "train": {"epochs": 12}}
+
+
+def _good_meta() -> dict[str, Any]:
+    return {
+        "held_out_scene": "a", "train_scenes": ["b", "c"], "smoke": False, "epochs": 12,
+        "classes": list(FINETUNE_CLASSES), "config": CFG,
+    }  # fmt: skip
+
+
+def test_a_correct_fold_record_is_accepted() -> None:
+    check_fold_meta(_good_meta(), "a", SCENES, CFG)
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        ({"held_out_scene": "b"}, "held out"),
+        ({"train_scenes": ["a", "b", "c"]}, "trained on"),
+        ({"train_scenes": ["b"]}, "trained on"),
+        ({"smoke": True}, "smoke"),
+        ({"epochs": 1}, "epochs"),
+        ({"classes": ["car"]}, "classes"),
+        ({"config": {"model": "other", "train": {"epochs": 12}}}, "model"),
+    ],
+)
+def test_a_fold_record_that_does_not_match_its_scene_is_refused(
+    change: dict[str, Any], message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        check_fold_meta({**_good_meta(), **change}, "a", SCENES, CFG)
+
+
+def _report(passed: bool, speeds: list[bool] | None) -> dict[str, Any]:
+    report: dict[str, Any] = {"all_cameras": {"passed": passed}}
+    if speeds is not None:
+        report["cpu_latency_ladder"] = [{"passed": s} for s in speeds]
+    return report
+
+
+def test_the_exit_status_needs_the_detection_checks_and_every_measured_speed_to_pass() -> None:
+    assert exit_status(_report(True, [True, True])) == 0
+    assert exit_status(_report(True, None)) == 0  # timing was switched off by the caller
+    assert exit_status(_report(True, [True, False])) == 1
+    assert exit_status(_report(False, [True])) == 1

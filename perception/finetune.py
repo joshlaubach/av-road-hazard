@@ -47,7 +47,9 @@ def class_index(label: str) -> int:
 
 
 def class_name(index: int) -> str:
-    """The label of a 1-based class index."""
+    """The label of a 1-based class index; background (0) and out-of-range indices have none."""
+    if not 1 <= index <= len(FINETUNE_CLASSES):
+        raise ValueError(f"no class has index {index}")
     return FINETUNE_CLASSES[index - 1]
 
 
