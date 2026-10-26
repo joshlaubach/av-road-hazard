@@ -33,8 +33,8 @@ Sprint 0 additions (the scaffold author had no Docker daemon, so none of these r
 | Fact | Where | Blocks | Recommendation |
 |---|---|---|---|
 | RDD2022 label names: source maps D00 pothole; the paper says D40 pothole <!-- F:S-11 --> | Workstream B | Sprint 1 (before porting) | Closed 2026-10-26: verified against the paper and the annotation box counts, pinned by `tests/defects/test_label_mapping.py` |
-| nuScenes license terms (non-commercial, image redistribution) <!-- F:L-01 --> | Owner | Before any hosted text/metadata from nuScenes | Keep images local; show nothing nuScenes-derived on the hosted demo until confirmed |
-| Whether nuScenes-derived records may be shown as text/metadata/charts hosted <!-- F:L-07 --> | Owner | Sprint 5 | Default: do not show |
+| nuScenes license terms (non-commercial, image redistribution) <!-- F:L-01 --> | Owner | Before any hosted text/metadata from nuScenes | Terms read 2026-10-26, see DATA_AND_LICENSES.md. Open: does a portfolio project count as non-commercial, and may a public demo serve a model fine-tuned on nuScenes? Email nuScenes@motional.com |
+| Whether nuScenes-derived records may be shown as text/metadata/charts hosted <!-- F:L-07 --> | Owner | Sprint 5 | Closed 2026-10-26: derived data is allowed under the same terms (non-commercial, attribution); images stay local by project policy |
 | Docker base image exact tag `nvidia/cuda:12.8.x-cudnn-runtime-ubuntu22.04` <!-- F:E-07 --> | E | Sprint 2 | Pick an existing 12.8 tag matching the PyTorch wheel |
 | 11B vision model VRAM 8-12 GB at 4-bit <!-- F:E-05 --> | E | Sprint 2 | Measure on the training machine |
 | nuScenes full size (~300 GB+) <!-- F:E-10 --> | Owner | Before v1.0-full download | Check free disk first |
@@ -78,7 +78,7 @@ Status of every item is open. No due date has been set by the owner, so the Due 
 | # | Question | Owner | Due | Status | Recommendation (not a decision) |
 |---|---|---|---|---|---|
 | D1 | Licence of the COCO-trained torchvision weights (BSD-3 code; COCO training data terms not verified by counsel) | Owner (counsel) | Before any hosted release | Open | Review before the hosted demo; no change to the pinned weights until then |
-| D2 | Fine-tuning on nuScenes: needs explicit licence approval (nuScenes is non-commercial and restricts redistribution) and a measured gap that justifies it | Owner | Not set | Open | Do not fine-tune until both hold; the zero-shot numbers are in ADR 0014 |
+| D2 | Fine-tuning on nuScenes: the terms (read 2026-10-26) allow non-commercial use and say nothing about trained models; weights should be treated as under the same terms. The owner chose to fine-tune for the construction labels. Open: whether a portfolio is non-commercial and whether a public demo may serve the weights | Owner | Not set | Partly closed | Email nuScenes@motional.com before the hosted demo serves fine-tuned weights; keep weights out of the repo; measure the gap first (ADR 0014) |
 | D3 | Detection on Norwegian RDD2022 photos, where vehicles are masked as grey blobs | Owner | Not set | Open | Check a sample of Norwegian images before relying on object masking there |
 | D4 | The score threshold 0.5 is provisional; nuScenes mini has 10 scenes and the held-out split has 2 | Owner | Not set | Open | Re-measure on more scenes (v1.0-full) before changing it; on this data 0.3 and 0.5 give the same tile defects |
 | D5 | CPU speed on the real hosted machine (measured only with 24, 4 and 2 threads on one laptop CPU) | Owner | Before the hosted demo | Open | Run `tools/eval_detector.py --threads N` on the target host |
