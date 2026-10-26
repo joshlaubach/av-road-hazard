@@ -18,6 +18,7 @@ pytest.importorskip("torchvision")
 from defects.infer import (  # noqa: E402
     Classifier,
     DefectSettings,
+    DefectsUnavailable,
     defect_settings,
     find_defects,
 )
@@ -96,7 +97,7 @@ def test_stubs_on_still_returns_the_stub(monkeypatch: pytest.MonkeyPatch) -> Non
 
 @pytest.mark.usefixtures("real_path")
 def test_stubs_off_without_a_checkpoint_fails_clearly() -> None:
-    with pytest.raises(ValueError, match="DEFECT_CHECKPOINT"):
+    with pytest.raises(DefectsUnavailable, match="DEFECT_CHECKPOINT"):
         find_defects(white_frame())
 
 
@@ -106,7 +107,7 @@ def test_stubs_off_missing_checkpoint_file_fails_clearly(
 ) -> None:
     monkeypatch.setenv("DEFECT_CHECKPOINT", str(tmp_path / "nope.pt"))
     config.get_config.cache_clear()
-    with pytest.raises(FileNotFoundError, match=r"nope.pt"):
+    with pytest.raises(DefectsUnavailable, match=r"nope.pt"):
         find_defects(white_frame())
 
 
