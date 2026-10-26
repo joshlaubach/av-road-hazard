@@ -45,7 +45,13 @@ def test_the_output_folder_must_be_outside_the_repository(tmp_path: Path) -> Non
         check_outside_repo(REPO)
 
 
-@pytest.mark.parametrize("bad", ["", "..", "../x", "a/b", "a\b", "C:/x", "/abs", ".hidden", "a b"])
+BAD_RUN_IDS = [
+    "", "..", "../x", "a/b", "a" + chr(92) + "b", "C:/x", "/abs", ".hidden", "a b",
+    "CON", "nul.txt", "run.", "com1",
+]  # fmt: skip
+
+
+@pytest.mark.parametrize("bad", BAD_RUN_IDS)
 def test_a_run_id_must_be_a_single_plain_folder_name(bad: str) -> None:
     with pytest.raises(ValueError, match="run id"):
         check_run_id(bad)

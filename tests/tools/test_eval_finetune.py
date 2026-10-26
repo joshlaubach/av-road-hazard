@@ -15,6 +15,8 @@ from eval.models import Detection
 from perception.detector import build_model
 from perception.finetune import FINETUNE_CLASSES, swap_head
 from tools.eval_finetune import (
+    ADR_CAMERAS,
+    check_cameras,
     check_fold_meta,
     exit_status,
     group_by_scene,
@@ -100,7 +102,11 @@ def test_detections_stay_aligned_with_their_frames() -> None:
 
 
 SCENES = ["a", "b", "c"]
-CFG = {"model": "fasterrcnn_mobilenet_v3_large_fpn", "train": {"epochs": 12}}
+CFG: dict[str, Any] = {
+    "model": "fasterrcnn_mobilenet_v3_large_fpn",
+    "train": {"epochs": 12, "lr": 0.005, "seed": 42},
+    "cameras": list(ADR_CAMERAS),
+}
 
 
 def _good_meta() -> dict[str, Any]:
@@ -123,7 +129,10 @@ def test_a_correct_fold_record_is_accepted() -> None:
         ({"smoke": True}, "smoke"),
         ({"epochs": 1}, "epochs"),
         ({"classes": ["car"]}, "classes"),
-        ({"config": {"model": "other", "train": {"epochs": 12}}}, "model"),
+        ({"config": {**CFG, "model": "other"}}, "model"),
+        ({"smoke": None}, "smoke"),
+        ({"config": {**CFG, "train": {**CFG["train"], "lr": 0.1}}}, "settings"),
+        ({"config": {**CFG, "cameras": ["CAM_FRONT"]}}, "cameras"),
     ],
 )
 def test_a_fold_record_that_does_not_match_its_scene_is_refused(
@@ -131,6 +140,12 @@ def test_a_fold_record_that_does_not_match_its_scene_is_refused(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         check_fold_meta({**_good_meta(), **change}, "a", SCENES, CFG)
+
+
+def test_a_config_must_name_all_six_adr_cameras() -> None:
+    check_cameras(list(ADR_CAMERAS))
+    with pytest.raises(ValueError, match="six cameras"):
+        check_cameras(["CAM_FRONT"])
 
 
 def _report(passed: bool, speeds: list[bool] | None) -> dict[str, Any]:
@@ -142,6 +157,7 @@ def _report(passed: bool, speeds: list[bool] | None) -> dict[str, Any]:
 
 def test_the_exit_status_needs_the_detection_checks_and_every_measured_speed_to_pass() -> None:
     assert exit_status(_report(True, [True, True])) == 0
-    assert exit_status(_report(True, None)) == 0  # timing was switched off by the caller
+    assert exit_status(_report(True, None)) == 1  # no speed measured: not a pass
+    assert exit_status(_report(True, [])) == 1
     assert exit_status(_report(True, [True, False])) == 1
     assert exit_status(_report(False, [True])) == 1
