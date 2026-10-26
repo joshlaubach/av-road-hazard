@@ -35,6 +35,12 @@ def test_the_class_set_is_the_six_coco_labels_plus_the_two_new_ones() -> None:
     assert set(FINETUNE_CLASSES) <= set(FUSION_LABELS)
 
 
+def test_background_and_out_of_range_indices_have_no_class_name() -> None:
+    for index in (0, -1, len(FINETUNE_CLASSES) + 1):
+        with pytest.raises(ValueError, match="no class"):
+            class_name(index)
+
+
 def test_class_indices_start_at_one_because_zero_is_background() -> None:
     assert [class_index(c) for c in FINETUNE_CLASSES] == list(range(1, 9))
     assert all(class_name(class_index(c)) == c for c in FINETUNE_CLASSES)

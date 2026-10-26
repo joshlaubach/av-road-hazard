@@ -44,11 +44,41 @@ FRONT = "CAM_FRONT"
 OLD_CLASSES = FINETUNE_CLASSES[:6]
 
 
-def load_finetuned(folder: Path, device: str) -> Any:
-    """A fine-tuned fold model, after checking its file against the hash in its meta.json."""
+def check_fold_meta(
+    meta: dict[str, Any], scene: str, scenes: list[str], cfg: dict[str, Any]
+) -> None:
+    """Refuse a record that does not describe a full run that left exactly this scene out."""
+    if meta.get("held_out_scene") != scene:
+        raise ValueError(f"model for {scene} was held out of {meta.get('held_out_scene')!r}")
+    if sorted(meta.get("train_scenes", [])) != sorted(s for s in scenes if s != scene):
+        raise ValueError(f"model for {scene} was not trained on exactly the other scenes")
+    if meta.get("smoke"):
+        raise ValueError(f"model for {scene} is from a smoke run")
+    if meta.get("epochs") != cfg["train"]["epochs"]:
+        raise ValueError(f"model for {scene} used {meta.get('epochs')} epochs, not the config's")
+    if meta.get("classes") != list(FINETUNE_CLASSES):
+        raise ValueError(f"model for {scene} has different classes")
+    if meta.get("config", {}).get("model") != cfg["model"]:
+        raise ValueError(f"model for {scene} is not the configured model")
+
+
+def load_finetuned(
+    folder: Path,
+    device: str,
+    *,
+    scene: str | None = None,
+    scenes: list[str] | None = None,
+    cfg: dict[str, Any] | None = None,
+) -> Any:
+    """A fine-tuned fold model, after checking its file against the hash in its meta.json.
+
+    With scene, scenes and cfg given, the record must also say the model left that scene out.
+    """
     from safetensors.torch import load_file
 
     meta = json.loads((folder / "meta.json").read_text(encoding="utf-8"))
+    if scene is not None and scenes is not None and cfg is not None:
+        check_fold_meta(meta, scene, scenes, cfg)
     weights = folder / "model.safetensors"
     if file_sha256(weights) != meta["sha256"]:
         raise ValueError(f"{weights} does not match the hash in its meta.json")
@@ -118,6 +148,12 @@ def time_on_cpu(model: Any, paths: list[Path], threads: int) -> dict[str, Any]:
         }
 
 
+def exit_status(report: dict[str, Any]) -> int:
+    """0 only if the six-camera detection checks and every measured CPU speed pass."""
+    speeds_pass = all(r["passed"] for r in report.get("cpu_latency_ladder", []))
+    return 0 if report["all_cameras"]["passed"] and speeds_pass else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--nuscenes-root", type=Path, default=Path("data/nuscenes/raw"))
@@ -146,7 +182,7 @@ def main(argv: list[str] | None = None) -> int:
     tuned_detections: dict[int, list[Detection]] = {}
     zero_detections: list[list[Detection]] = []
     for scene in scenes:
-        model = load_finetuned(args.run_dir / scene, device)
+        model = load_finetuned(args.run_dir / scene, device, scene=scene, scenes=scenes, cfg=cfg)
         for index, frame in enumerate(frames):
             if frame.scene == scene:
                 tuned_detections[index] = predict(model, _rgb(frame.path), device, finetuned=True)
@@ -165,7 +201,9 @@ def main(argv: list[str] | None = None) -> int:
             OLD_CLASSES,
         )
     if args.timing_frames > 0:
-        cpu_model = load_finetuned(args.run_dir / scenes[0], "cpu")
+        cpu_model = load_finetuned(
+            args.run_dir / scenes[0], "cpu", scene=scenes[0], scenes=scenes, cfg=cfg
+        )
         front = [f.path for f in frames if f.camera == FRONT]
         step = max(1, len(front) // args.timing_frames)
         paths = front[::step][: args.timing_frames]
@@ -196,7 +234,11 @@ def main(argv: list[str] | None = None) -> int:
         for view in ("all_cameras", "front_camera")
     }
     print(json.dumps(verdicts, indent=2))
-    return 0 if report["all_cameras"]["passed"] else 1
+    print(
+        "detection checks and measured speeds only; the sanity check outside nuScenes is manual",
+        file=sys.stderr,
+    )
+    return exit_status(report)
 
 
 if __name__ == "__main__":
