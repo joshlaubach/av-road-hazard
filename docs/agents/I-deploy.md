@@ -6,7 +6,7 @@ Purpose: self-contained brief for the I Deploy and polish (Phase 3) workstream o
 Claude
 
 ## Sprint and dependencies
-Sprint 5 (days 11-14). Depends on integration (H). Gated by the proposed core-first gate: beyond stubs only after A, B, C and the synthetic fusion evaluation produce reportable numbers, or the owner overrides.
+Sprint 5 (days 11-14). Depends on integration (H). Gated by the core-first gate: beyond stubs only after A, B, C and the synthetic fusion evaluation produce reportable numbers, or the owner overrides.
 
 ## Goal
 Deploy the CPU demo to a Hugging Face Space with Qdrant Cloud, finish the README with measured numbers and limitations, and record the walkthrough.

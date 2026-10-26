@@ -6,7 +6,7 @@ Purpose: self-contained brief for the F Web UI workstream of av-road-hazard; rea
 Codex
 
 ## Sprint and dependencies
-Sprint 3 (days 7-9). Depends on the scaffold and the stub API with its generated TypeScript client. Gated by the proposed core-first gate: beyond stubs only after A, B, C and the synthetic fusion evaluation produce reportable numbers, or the owner overrides. React polish is first in the scope-cut order; fallback if the timeline slips is Streamlit on the same API.
+Sprint 3 (days 7-9). Depends on the scaffold and the stub API with its generated TypeScript client. Gated by the core-first gate: beyond stubs only after A, B, C and the synthetic fusion evaluation produce reportable numbers, or the owner overrides. React polish is first in the scope-cut order; fallback if the timeline slips is Streamlit on the same API.
 
 ## Goal
 Build the Next.js + TypeScript UI against the stub API with a typed client generated from OpenAPI.
