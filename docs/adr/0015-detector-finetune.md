@@ -31,7 +31,7 @@ Option 1, with a deliberately small scope and strict tests, so a thin result can
 
 **Scope.** Eight classes: the six existing (pedestrian, cyclist, motorcycle, car, truck, bus) plus `barrier` and `traffic_cone`. Construction worker, construction vehicle and debris stay as they are (family labels), because there are too few examples. Revisit with more data.
 
-**Model.** Same MobileNetV3 Faster R-CNN. Replace only the last classification and box layers. The six old classes start from their COCO rows, so the model begins by knowing what it knew; the two new rows start at random. Train all layers at a small learning rate, with horizontal flips and mild color jitter. A fixed schedule chosen before looking at any held-out result (about 12 epochs, cosine learning rate), not tuned on the test scenes.
+**Model.** Same MobileNetV3 Faster R-CNN. Replace only the last classification and box layers. The six old classes start from their COCO rows, so the model begins by knowing what it knew; the two new rows start at random. Train all layers at a small learning rate, with horizontal flips and mild color jitter. A fixed schedule chosen before looking at any held-out result (about 12 epochs, cosine learning rate), not tuned on the test scenes. The two new classes get their own score cutoff, chosen on the training scenes only (the same way as the crack classifier's thresholds), so the balance between false and missed objects is set without looking at the held-out scenes. The six old classes keep 0.5.
 
 **Data.** All six cameras for training (2,424 images), ground truth from the projected 3D boxes exactly as `tools/eval_detector.py` does today (same visibility and size rules, so numbers stay comparable).
 
@@ -40,7 +40,7 @@ Option 1, with a deliberately small scope and strict tests, so a thin result can
 ## What it must pass (provisional, set in `configs/detector_finetune.yaml`)
 Measured at the shipped score 0.5 on the held-out scenes, front camera first (to match the Done numbers), all cameras second, with 90% ranges.
 
-1. **New labels:** recall of at least 50% for traffic cones and for barriers, with precision of at least 50%. Counted only over scenes that contain at least 20 clearly visible boxes of that class. Barriers pass only if at least two held-out scenes do so on their own.
+1. **New labels:** for traffic cones and for barriers, precision of at least 70% and recall of at least 40%. Precision is the stricter limit on purpose: a missed cone leaves us where the zero-shot detector is today (it finds none), but a false one raises a hazard score for no reason (barrier and cone weights are 0.5, above a car's 0.3). Counted only over scenes that contain at least 20 clearly visible boxes of that class. Barriers pass only if at least two held-out scenes do so on their own. A number that passes but whose 90% range reaches below its limit is reported as a pass with a caveat, not a clean pass.
 2. **No regression:** for each of the six old classes, recall no more than 3 points below the zero-shot detector on the same scenes and precision no more than 5 points below.
 3. **Speed:** the CPU p95 stays at or below 2 s per image at 24, 4 and 2 threads.
 4. **Sanity outside nuScenes:** on the 20 local images from `smoke_analyze` (nuScenes and RDD2022 frames) and the Stellenbosch photos, the fine-tuned model must not invent objects on empty road. Counted, shown to the owner side by side, not scored.
@@ -62,4 +62,4 @@ If any item fails, the zero-shot detector stays, the numbers are recorded in the
 - **Small objects** (under 32 x 32 px) are almost never found by the zero-shot model; fine-tuning may not change that. We report by size.
 
 ## What the owner decides
-Approve or change: the scope (two new classes only), the pass limits above, and whether a thin pass should still be shipped behind a flag. The recommendation is no flag: a detector that passed on two scenes should not change hazard scores for users.
+Decided 2026-10-26: the scope (two new classes only) and the pass limits above (precision 70%, recall 40%, own cutoffs for the new classes). Still open: whether a thin pass should be shipped behind a flag. The recommendation is no flag: a detector that passed on two scenes should not change hazard scores for users.
