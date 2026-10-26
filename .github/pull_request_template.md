@@ -10,6 +10,7 @@
 - [ ] Lint and type checks clean
 - [ ] Config values in `configs/*.yaml`, not code (paths, thresholds, seeds)
 - [ ] Docs and changelog updated if behavior or contract changed
+- [ ] `docs/ROADMAP.md` updated: this task moved to Done with its result, and the next task set as Now
 - [ ] No secrets, data, or weights committed
 - [ ] Reviewer from outside the author checked it
 
