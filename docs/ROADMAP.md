@@ -28,7 +28,7 @@ Not started: RAG (`rag/` is empty), `web/`, the retrieval evaluation, the synthe
 ## Now
 
 - Review the 13 nuScenes alerts the chosen classifier raised that nobody has judged (exported as an annotation batch by `tools/eval_classifier.py`). They show whether the real false-alarm drop is bigger or smaller than the Done table says.
-- Start Next, row 1: write a short plan for the detector fine-tune (data split, what to train, how to measure it against the Done numbers) and agree it before training.
+- Next, row 1 is under way: the plan is [ADR 0015](adr/0015-detector-finetune.md) (accepted) and the training and scoring code is merged (PR 65). The 10 leave-one-scene-out models are training locally (run `detector-ft-v1`, about 16 minutes each). When they finish, run `python -m tools.eval_finetune` and record the verdict here and in the ADR.
 
 ## Next
 
@@ -36,7 +36,7 @@ Do these in order. A row should not start until the one above it has met its exi
 
 | # | What to build | Finished when | Suggested branch |
 |---|---|---|---|
-| 1 | Fine-tune the detector on nuScenes for the work-zone labels | The detector is fine-tuned to name barrier, traffic cone, debris, construction worker and construction vehicle, and its recall on the held-out scenes is reported per label with 90% ranges and compared with the numbers in Done (nuScenes mini has only 10 scenes, so the plan must say how the train and held-out scenes are split and what 285 visible cones can support). Weights stay out of the repo and carry the nuScenes terms. Fusion starts using the new labels only if the held-out recall beats the zero-shot detector on the labels it could already name, so no existing number gets worse. | `agent/detector-finetune` |
+| 1 | Fine-tune the detector on nuScenes for the work-zone labels | The detector is fine-tuned to name barrier, traffic cone, debris, construction worker and construction vehicle, and its recall on the held-out scenes is reported per label with 90% ranges and compared with the numbers in Done (the split and limits are in [ADR 0015](adr/0015-detector-finetune.md)). Weights stay out of the repo and carry the nuScenes terms. Fusion starts using the new labels only if the held-out recall beats the zero-shot detector on the labels it could already name, so no existing number gets worse. | `agent/detector-finetune` |
 | 2 | Merge neighboring flagged tiles, then turn on severity | First, neighboring flagged tiles become one defect box instead of many overlapping ones (one Norwegian frame gave 15). Then map each class name (D00 longitudinal crack, D10 transverse crack, D20 alligator crack, D40 pothole) to a severity in config and feed `hazard_score`. The contract does not change. | `agent/fusion-severity` |
 | 3 | Write up the core results | `eval/results.json` holds the per-model and synthetic results, including the false-positive rate on non-road tiles. The README states those numbers, the limitations and the effective range, and the gate in ADR 0011 is met. | `agent/docs-core-report` |
 | 4 | Clear the licenses | D1, R1, R2 and the RDD2022 license question (partly done: working rule recorded 2026-10-26, authors still to be asked) are closed, and the hosted corpus is chosen (open question 10) | none, this is a decision |
