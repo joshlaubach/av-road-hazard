@@ -52,7 +52,7 @@ See [ENVIRONMENT.md](ENVIRONMENT.md): RDD2022 about 13.3 GB download / about 15 
 
 | License | Status |
 |---|---|
-| nuScenes | Terms read 2026-10-26 (CC BY-NC-SA 4.0 plus extra terms); whether a portfolio counts as non-commercial and the treatment of fine-tuned weights are unverified; Motional not yet asked |
+| nuScenes | Terms read 2026-10-26 (CC BY-NC-SA 4.0 plus extra terms); Motional (nuScenes@motional.com) confirmed by email, recorded 2026-10-26 from the owner's report (not verbatim; paste the reply here): a portfolio project counts as non-commercial as long as it is not used in actual production, and a public demo may serve a model fine-tuned on nuScenes. This holds only while the project stays non-commercial. Weights stay out of the repo and carry the nuScenes terms. |
 | RDD2022 | Partly verified: sources disagree; working rule is non-commercial, attribution, share-alike; US subset excluded; authors not yet asked |
 | comma10k U-Net weights and data | Code, weights and data MIT (verified); encoder pre-training and timm unverified; counsel review open |
 | torchvision COCO detector weights | BSD-3 code; COCO training-data terms not verified by counsel (OPEN_QUESTIONS D1) |
