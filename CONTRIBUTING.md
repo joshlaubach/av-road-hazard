@@ -40,4 +40,4 @@ Contracts are defined in [CONTRACT_CHANGELOG.md](CONTRACT_CHANGELOG.md). A chang
 
 Source: ENGINEERING.md section 10.
 
-Tests added or updated and passing; lint/type checks clean; config not code for tunables; docs and changelog updated if behavior or contract changed; no secrets, data, or weights committed; reviewer from outside the author checked it.
+Tests added or updated and passing; lint/type checks clean; config not code for tunables; docs and changelog updated if behavior or contract changed; `docs/ROADMAP.md` updated for the task (move it from Now or Next to Done, record the result, and set the next Now); no secrets, data, or weights committed; reviewer from outside the author checked it.
