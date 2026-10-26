@@ -5,7 +5,14 @@ from __future__ import annotations
 import pytest
 
 from fusion.config import load_fusion_config
-from perception.labels import COCO_TO_LABEL, FUSION_LABELS, coco_label, nuscenes_label
+from perception.labels import (
+    COCO_TO_LABEL,
+    COCO_VOCABULARY,
+    FUSION_LABELS,
+    coco_label,
+    nuscenes_label,
+    to_vocabulary,
+)
 
 
 def test_fusion_labels_are_the_ones_fusion_weights() -> None:
@@ -51,18 +58,25 @@ def test_coco_ids_name_the_expected_classes_in_torchvision() -> None:
     ("category", "label"),
     [
         ("human.pedestrian.adult", "pedestrian"),
-        ("human.pedestrian.child", "pedestrian"),
-        ("human.pedestrian.construction_worker", "pedestrian"),
+        ("human.pedestrian.wheelchair", "pedestrian"),
+        ("human.pedestrian.stroller", "pedestrian"),
+        ("human.pedestrian.child", "child"),
+        ("human.pedestrian.construction_worker", "construction_worker"),
+        ("human.pedestrian.police_officer", "police_officer"),
+        ("human.pedestrian.personal_mobility", "personal_mobility"),
         ("vehicle.bicycle", "cyclist"),
         ("vehicle.motorcycle", "motorcycle"),
         ("vehicle.bus.bendy", "bus"),
         ("vehicle.bus.rigid", "bus"),
         ("vehicle.truck", "truck"),
         ("vehicle.trailer", "truck"),
-        ("vehicle.construction", "truck"),
+        ("vehicle.construction", "construction_vehicle"),
         ("vehicle.car", "car"),
         ("vehicle.emergency.police", "car"),
         ("vehicle.emergency.ambulance", "car"),
+        ("movable_object.barrier", "barrier"),
+        ("movable_object.trafficcone", "traffic_cone"),
+        ("movable_object.debris", "debris"),
     ],
 )
 def test_nuscenes_categories_map_to_fusion_labels(category: str, label: str) -> None:
@@ -70,8 +84,39 @@ def test_nuscenes_categories_map_to_fusion_labels(category: str, label: str) -> 
 
 
 @pytest.mark.parametrize(
-    "category",
-    ["movable_object.barrier", "movable_object.trafficcone", "static_object.bicycle_rack", ""],
+    "category", ["movable_object.pushable_pullable", "static_object.bicycle_rack", "animal", ""]
 )
 def test_other_nuscenes_categories_are_dropped(category: str) -> None:
     assert nuscenes_label(category) is None
+
+
+def test_the_coco_vocabulary_is_what_coco_can_emit() -> None:
+    assert set(COCO_TO_LABEL.values()) == COCO_VOCABULARY
+
+
+@pytest.mark.parametrize(
+    ("label", "expected"),
+    [
+        ("pedestrian", "pedestrian"),
+        ("child", "pedestrian"),
+        ("construction_worker", "pedestrian"),
+        ("police_officer", "pedestrian"),
+        ("personal_mobility", "pedestrian"),
+        ("construction_vehicle", "truck"),
+        ("car", "car"),
+        ("barrier", None),
+        ("traffic_cone", None),
+        ("debris", None),
+    ],
+)
+def test_a_label_the_detector_cannot_emit_falls_back_to_its_family_or_none(
+    label: str, expected: str | None
+) -> None:
+    assert to_vocabulary(label, COCO_VOCABULARY) == expected
+
+
+def test_a_detector_that_emits_the_fine_label_keeps_it() -> None:
+    vocabulary = COCO_VOCABULARY | {"child", "barrier"}
+    assert to_vocabulary("child", vocabulary) == "child"
+    assert to_vocabulary("barrier", vocabulary) == "barrier"
+    assert to_vocabulary("construction_worker", vocabulary) == "pedestrian"
