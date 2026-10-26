@@ -28,6 +28,11 @@ dev = [
   "types-PyYAML",
   "pre-commit>=3.7",
 ]
+notebook = [
+  "jupyterlab>=4",
+  "nbformat>=5.9",
+  "matplotlib>=3.8",
+]
 ml = [
   "torch>=2.3",
   "torchvision>=0.18",

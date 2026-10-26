@@ -30,6 +30,10 @@ Validation split: the official RDD2022 test split has no annotations, so metrics
 
 Baselines live in `eval/baselines.json` (placeholder in Sprint 0). A metric regression fails if it falls below baseline minus tolerance. Reproduction is exact only on the same hardware and library versions (`ROIAlign` is non-deterministic).
 
+### Eval notebooks
+
+`notebooks/03_eval_classifier.ipynb` compares tile-classifier checkpoints (validation precision and recall at the shipped thresholds, false alarms on held-out confirmed-clean tiles, and the human review of the nuScenes alerts). `notebooks/04_eval_detector.ipynb` runs and displays `tools/eval_detector.py` (accuracy, slices, threshold sweep, CPU speed). They hold no logic: it lives in `eval/classifier.py`, `eval/detector.py` and the two `tools/eval_*.py` files, which have tests. They need the `notebook` extra (`pip install -e ".[notebook,ml]"`) and local data. Only these two notebooks are tracked, with outputs cleared, because outputs can embed nuScenes and RDD2022 images; `tests/notebooks/test_eval_notebooks.py` fails on outputs, machine-specific paths or function definitions. The other files in `notebooks/` stay git-ignored.
+
 ### Metric definitions (confirmed)
 
 Implemented in `eval/models.py` as pure functions; the detector scene split, ground-truth filtering, thresholds and scoring are in `eval/detector.py` (used by `tools/eval_detector.py`). Synthetic-case tests in `tests/eval/`.
