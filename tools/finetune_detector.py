@@ -16,6 +16,7 @@ import argparse
 import json
 import math
 import random
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -78,6 +79,25 @@ def items_for(frames: list[SceneFrame]) -> list[TrainItem]:
         training_item(str(f.path), [(g.label, g.box, g.visibility) for g in f.ground_truth])
         for f in frames
     ]
+
+
+RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+WINDOWS_RESERVED = {
+    "con",
+    "prn",
+    "aux",
+    "nul",
+    *(f"com{i}" for i in range(1, 10)),
+    *(f"lpt{i}" for i in range(1, 10)),
+}
+
+
+def check_run_id(run_id: str) -> str:
+    """The run id, if it is one plain folder name (no separators, no '..'): it names a folder."""
+    reserved = run_id.split(".")[0].lower() in WINDOWS_RESERVED  # CON, nul.txt: not real folders
+    if not RUN_ID.fullmatch(run_id) or ".." in run_id or run_id.endswith(".") or reserved:
+        raise ValueError(f"run id must be a plain folder name, got {run_id!r}")
+    return run_id
 
 
 def check_outside_repo(path: Path) -> Path:
@@ -203,10 +223,10 @@ def train(
     return losses
 
 
-def build_start_model(device: str) -> Any:
-    """The pinned COCO detector with the 8-class head, ready to train."""
+def build_start_model(device: str, model_name: str) -> Any:
+    """The pinned COCO detector named by the run's config, with the 8-class head, ready to train."""
     cfg = get_config()
-    spec = DETECTORS[load_config()["model"]]
+    spec = DETECTORS[model_name]
     path = Path(cfg["paths"]["checkpoint_dir"]) / DETECTOR_SUBDIR / spec.filename
     return swap_head(load_detector_model(path, spec, device=device), seed=0)
 
@@ -254,7 +274,7 @@ def main(argv: list[str] | None = None) -> int:
     from common.device import select_device
 
     cfg = load_config(args.config)
-    out_root = check_outside_repo(args.out_dir) / args.run_id
+    out_root = check_outside_repo(check_outside_repo(args.out_dir) / check_run_id(args.run_id))
     device = select_device()
     frames = load_scene_frames(args.nuscenes_root, args.version, cfg["cameras"])
     scenes = sorted({f.scene for f in frames})
@@ -276,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
         items = items_for(chosen)
         started = time.time()
         print(f"[{name}] {len(items)} images, {class_box_counts(items)}", file=sys.stderr)
-        model = build_start_model(device)
+        model = build_start_model(device, cfg["model"])
         losses = train(model, items, cfg["train"], device=device, epochs=epochs)
         save_model(
             model,

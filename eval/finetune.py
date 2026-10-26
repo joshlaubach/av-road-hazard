@@ -4,7 +4,9 @@ Pure helpers for tools/eval_finetune.py. Every scene is scored only with a model
 on it (leave-one-scene-out). The score cutoff of a new class is chosen for each scene from the
 other scenes' held-out detections, never from the scene being scored. Counting follows
 eval/detector.py: a prediction matches an evaluable ground-truth box of the same label at
-IoU 0.5 or more, greedily by score, and a prediction with no match is a false positive.
+IoU 0.5 or more, greedily by score, and a prediction with no match is a false positive. A
+prediction that finds a real but not clearly visible box (too hidden or too small to be expected)
+is set aside, neither right nor wrong, so finding it never lowers precision.
 """
 
 from __future__ import annotations
@@ -24,13 +26,13 @@ def class_counts(data: Sequence[FrameData], label: str, cutoff: float) -> Counts
     tp = fp = fn = 0
     for frame in data:
         preds = [d for d in frame.detections if d.label == label and d.score >= cutoff]
-        truth = [
-            GroundTruth(g.label, g.box)
-            for g in frame.ground_truth
-            if g.label == label and evaluable(g)
-        ]
+        same = [g for g in frame.ground_truth if g.label == label]
+        truth = [GroundTruth(g.label, g.box) for g in same if evaluable(g)]
+        set_aside = [GroundTruth(g.label, g.box) for g in same if not evaluable(g)]
         matched = match_detections(preds, truth)
-        tp, fp, fn = tp + len(matched.tp), fp + len(matched.fp), fn + len(matched.fn)
+        strays = [preds[i] for i in matched.fp]
+        unmatched = match_detections(strays, set_aside)
+        tp, fp, fn = tp + len(matched.tp), fp + len(unmatched.fp), fn + len(matched.fn)
     return {"tp": tp, "fp": fp, "fn": fn}
 
 
@@ -124,10 +126,16 @@ def new_label_verdict(
     if len(passing) < needed:
         reasons.append(f"{len(passing)} scene(s) pass on their own, {needed} needed")
     passed = not reasons
-    caveat = passed and (
-        pooled["precision_range90"][0] < limits["min_precision"]
-        or pooled["recall_range90"][0] < limits["min_recall"]
-    )
+
+    def range_dips(r: Mapping[str, Any]) -> bool:
+        return bool(
+            r["precision_range90"][0] < limits["min_precision"]
+            or r["recall_range90"][0] < limits["min_recall"]
+        )
+
+    # A pooled range can look safe only because one big scene outweighs a thin passing scene.
+    caveat_scenes = [r["scene"] for r in qualifying if r["scene"] in passing and range_dips(r)]
+    caveat = passed and (range_dips(pooled) or bool(caveat_scenes))
     return {
         "label": label,
         "qualifying_scenes": [r["scene"] for r in qualifying],
@@ -135,6 +143,7 @@ def new_label_verdict(
         "pooled": pooled,
         "passed": passed,
         "caveat": caveat,
+        "caveat_scenes": caveat_scenes,
         "reasons": reasons,
     }
 
