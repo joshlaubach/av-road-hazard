@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,10 @@ from tools.finetune_detector import (
     load_config,
     save_model,
     train,
+)
+
+needs_torch = pytest.mark.skipif(
+    importlib.util.find_spec("torchvision") is None, reason="torch and torchvision not installed"
 )
 
 
@@ -57,6 +62,7 @@ def test_the_learning_rate_warms_up_then_follows_a_cosine_to_zero() -> None:
     assert learning_rate_factor(500, 10, 100) == pytest.approx(0.0, abs=1e-9)  # never negative
 
 
+@needs_torch
 def test_the_dataset_returns_a_float_image_and_matching_targets(tmp_path: Path) -> None:
     item = TrainItem(_image(tmp_path, "a.png"), ((10.0, 10.0, 40.0, 50.0),), (class_index("car"),))
     image, target = DetectionDataset([item], flip=0.0, jitter=0.0)[0]
@@ -67,6 +73,7 @@ def test_the_dataset_returns_a_float_image_and_matching_targets(tmp_path: Path) 
     assert target["labels"].tolist() == [class_index("car")]
 
 
+@needs_torch
 def test_a_flip_mirrors_the_boxes_with_the_image(tmp_path: Path) -> None:
     path = _image(tmp_path, "a.png")
     item = TrainItem(path, ((10.0, 10.0, 40.0, 50.0),), (class_index("car"),))
@@ -76,6 +83,7 @@ def test_a_flip_mirrors_the_boxes_with_the_image(tmp_path: Path) -> None:
     assert flipped.flip(-1).sub(plain).abs().max() < 1e-5
 
 
+@needs_torch
 def test_an_image_with_no_boxes_gives_an_empty_target(tmp_path: Path) -> None:
     item = TrainItem(_image(tmp_path, "a.png"), (), ())
     _, target = DetectionDataset([item], flip=0.0, jitter=0.0)[0]
@@ -103,6 +111,7 @@ def _tiny_model() -> Any:
     return swap_head(model, seed=0)
 
 
+@needs_torch
 def test_a_short_training_run_gives_finite_losses_and_changes_the_weights(tmp_path: Path) -> None:
     items = [
         TrainItem(
@@ -124,6 +133,7 @@ def test_a_short_training_run_gives_finite_losses_and_changes_the_weights(tmp_pa
     assert not before.equal(model.roi_heads.box_predictor.cls_score.weight.detach())
 
 
+@needs_torch
 def test_a_saved_model_comes_with_its_hash_and_notes(tmp_path: Path) -> None:
     save_model(_tiny_model(), tmp_path / "fold", {"held_out_scene": "scene-1"})
     meta = json.loads((tmp_path / "fold" / "meta.json").read_text())
