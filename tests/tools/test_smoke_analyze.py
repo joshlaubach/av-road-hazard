@@ -82,9 +82,9 @@ def test_counts_each_outcome_separately_and_writes_overlays(tmp_path: Path) -> N
     assert summary["defects_unavailable"] == 1
     assert summary["invalid_image"] == 1
     assert summary["failures"] == 3
-    assert (out / "a.overlay.png").is_file()
-    assert (out / "a.record.json").is_file()
-    assert not (out / "c.overlay.png").exists()
+    assert (out / "a.png.overlay.png").is_file()
+    assert (out / "a.png.record.json").is_file()
+    assert not (out / "c.png.overlay.png").exists()
     saved = json.loads((out / "summary.json").read_text(encoding="utf-8"))
     assert saved["valid"] == 2
     assert saved["per_image"]["b.png"] == "road_unknown"
@@ -103,3 +103,18 @@ def test_a_pipeline_with_stubs_on_is_refused(
         assert main([str(tmp_path), "--out", str(tmp_path / "o")]) == 2
     finally:
         config.get_config.cache_clear()
+
+
+def test_images_that_share_a_stem_keep_separate_outputs(tmp_path: Path) -> None:
+    folder = tmp_path / "in"
+    folder.mkdir()
+    size = _write(folder, "frame.png", 0)
+    Image.open(folder / "frame.png").convert("RGB").save(folder / "frame.jpg")
+    jpg_size = (folder / "frame.jpg").stat().st_size
+    script = {str(size): "ok", str(jpg_size): "ok"}
+    out = tmp_path / "out"
+    images = sorted(folder.iterdir())
+    run_smoke(FakePipeline(script), images, out)
+    for name in ("frame.png", "frame.jpg"):
+        assert (out / f"{name}.overlay.png").is_file()
+        assert (out / f"{name}.record.json").is_file()

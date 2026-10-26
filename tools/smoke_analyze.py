@@ -2,7 +2,8 @@
 
 Usage: python -m tools.smoke_analyze IMAGE_FOLDER --out DIR
 Needs USE_STUBS=0 and the models (detector, classifier checkpoint, road model). Writes, per image,
-an overlay PNG and the record JSON, plus summary.json. Counts are kept apart on purpose: a record
+an overlay PNG and the record JSON, named after the full file name (so frame.jpg and frame.png
+do not collide), plus summary.json. Counts are kept apart on purpose: a record
 can be valid while the road model failed (every in_road is then unknown), and a missing model is a
 failure, not an empty result. Exit code 0 only if every image gave a record with a road mask.
 """
@@ -44,11 +45,11 @@ def run_smoke(pipeline: Pipeline, images: list[Path], out: Path) -> dict[str, An
             outcome[path.name] = "defects_unavailable"
             continue
         outcome[path.name] = "ok" if analysis.road_mask_used else "road_unknown"
-        (out / f"{path.stem}.record.json").write_text(
+        (out / f"{path.name}.record.json").write_text(
             analysis.record.model_dump_json(indent=2), encoding="utf-8"
         )
         with Image.open(path) as image:
-            draw(image, analysis.record).save(out / f"{path.stem}.overlay.png")
+            draw(image, analysis.record).save(out / f"{path.name}.overlay.png")
     counts = Counter(outcome.values())
     summary: dict[str, Any] = {
         "images": len(images),
