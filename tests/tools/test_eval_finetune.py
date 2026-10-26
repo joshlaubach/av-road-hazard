@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,10 @@ from perception.finetune import swap_head
 from tools.eval_finetune import group_by_scene, load_finetuned, predict
 from tools.finetune_detector import SceneFrame, save_model
 
+needs_torch = pytest.mark.skipif(
+    importlib.util.find_spec("torchvision") is None, reason="torch and torchvision not installed"
+)
+
 META = {"config": {"model": "fasterrcnn_mobilenet_v3_large_fpn"}}
 
 
@@ -23,6 +28,7 @@ def _save(folder: Path) -> None:
     save_model(swap_head(build_model(META["config"]["model"]), seed=0), folder, META)
 
 
+@needs_torch
 def test_a_saved_fold_model_loads_and_predicts_with_fusion_labels(tmp_path: Path) -> None:
     _save(tmp_path / "scene-1")
     model = load_finetuned(tmp_path / "scene-1", "cpu")
@@ -41,6 +47,7 @@ def test_a_saved_fold_model_loads_and_predicts_with_fusion_labels(tmp_path: Path
     assert all(d.label in allowed and 0.05 <= d.score <= 1.0 for d in found)
 
 
+@needs_torch
 def test_a_model_file_that_changed_is_refused(tmp_path: Path) -> None:
     _save(tmp_path / "scene-1")
     weights = tmp_path / "scene-1" / "model.safetensors"
@@ -49,6 +56,7 @@ def test_a_model_file_that_changed_is_refused(tmp_path: Path) -> None:
         load_finetuned(tmp_path / "scene-1", "cpu")
 
 
+@needs_torch
 def test_the_meta_records_the_hash_of_the_saved_file(tmp_path: Path) -> None:
     _save(tmp_path / "scene-1")
     meta = json.loads((tmp_path / "scene-1" / "meta.json").read_text())

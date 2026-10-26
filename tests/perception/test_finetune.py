@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 from typing import Any
 
 import pytest
@@ -20,6 +21,10 @@ from perception.finetune import (
     training_item,
 )
 from perception.labels import COCO_VOCABULARY, FUSION_LABELS
+
+needs_torch = pytest.mark.skipif(
+    importlib.util.find_spec("torchvision") is None, reason="torch and torchvision not installed"
+)
 
 BOX = (10.0, 10.0, 60.0, 80.0)
 
@@ -95,6 +100,7 @@ def _small_model() -> Any:
     return model
 
 
+@needs_torch
 def test_the_swapped_head_has_nine_outputs_and_keeps_the_coco_rows_of_the_old_classes() -> None:
     import torch
 
@@ -113,6 +119,7 @@ def test_the_swapped_head_has_nine_outputs_and_keeps_the_coco_rows_of_the_old_cl
         ), label
 
 
+@needs_torch
 def test_the_two_new_classes_start_small_and_random_not_copied() -> None:
     model = _small_model()
     old_rows = model.roi_heads.box_predictor.cls_score.weight.clone()
@@ -124,6 +131,7 @@ def test_the_two_new_classes_start_small_and_random_not_copied() -> None:
         assert not any(row.equal(old_rows[i]) for i in range(old_rows.shape[0]))
 
 
+@needs_torch
 def test_the_same_seed_gives_the_same_new_rows() -> None:
     import torch
 
@@ -135,6 +143,7 @@ def test_the_same_seed_gives_the_same_new_rows() -> None:
     assert torch.equal(a, b)
 
 
+@needs_torch
 def test_a_swapped_model_still_runs_and_predicts_with_eight_classes() -> None:
     import torch
 
@@ -145,6 +154,7 @@ def test_a_swapped_model_still_runs_and_predicts_with_eight_classes() -> None:
     assert all(0 < int(v) <= 8 for v in out["labels"])
 
 
+@needs_torch
 def test_freezing_batchnorm_keeps_it_in_eval_mode_after_train() -> None:
     from torch import nn
 
