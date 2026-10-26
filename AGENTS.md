@@ -15,12 +15,12 @@ Read this first. Then read your brief in `docs/agents/`. Details live in [BUILD_
 Repo map (current; see SPEC section 4 for the intended system):
 
 ```
-perception/   stub detect() entry point; real detector pending
-defects/      RDD2022 validation, datasets, splits, tiles, training, evaluation; inference stub
+perception/   COCO object detector (zero-shot, pinned weights) behind detect(); stub when USE_STUBS=1
+defects/      RDD2022 validation, datasets, splits, tiles, training, evaluation, find_defects inference (stub when USE_STUBS=1)
 fusion/       HazardRecord schema, configuration, and implemented fuse() logic
 rag/          package placeholder; indexing and retrieval pending
-api/          FastAPI routes and pipeline using stub detectors and an in-memory record store
-eval/         per-model metric functions; full evaluation pipeline pending
+api/          FastAPI routes and pipeline (stub detectors by default, real models with USE_STUBS=0) and an in-memory record store
+eval/         per-model metric functions (models.py) and detector evaluation helpers (detector.py); full evaluation pipeline pending
 data/         local datasets and metadata; do not commit raw images or weights
 docker/       API Dockerfile and Compose files
 configs/      YAML configuration for pipeline, fusion, and defect training
