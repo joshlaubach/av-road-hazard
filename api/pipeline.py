@@ -133,7 +133,7 @@ class Pipeline:
 
         Decode, call the two detectors, dump intermediates for debugging when DEBUG_DUMP_DIR is
         set, then fuse them with the road mask (if any) into the record. Severity stays "unknown"
-        inside fuse() until severity is turned on (docs/ROADMAP.md, Next row 3).
+        inside fuse() until severity is turned on (docs/ROADMAP.md, Next row 2).
         """
         frame = decode_image(data)
         h, w = frame.shape[:2]  # numpy arrays are (height, width, channels)
