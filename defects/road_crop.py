@@ -41,7 +41,7 @@ INPUT_HEIGHT = 384
 ROAD_CLASSES = (0, 1)
 
 # load_road_model needs both of these, and each must come with an expected hash.
-_REQUIRED_FILES = ("config.json", "model.safetensors")
+REQUIRED_FILES = ("config.json", "model.safetensors")
 
 
 class ModelIntegrityError(ValueError):
@@ -95,7 +95,7 @@ def load_road_model(
     nothing is interpreted before it is verified and the bytes cannot change in between. Weights
     come from safetensors, which holds plain tensors and cannot run code (unlike torch.load).
     """
-    for name in _REQUIRED_FILES:
+    for name in REQUIRED_FILES:
         if name not in expected:
             raise ModelIntegrityError(
                 f"{name}: no expected sha256 given, refusing to load it unverified"
@@ -106,7 +106,7 @@ def load_road_model(
     weights_bytes = _read_verified(
         weights_dir / "model.safetensors", "model.safetensors", expected["model.safetensors"]
     )
-    verify_model_files(weights_dir, {k: v for k, v in expected.items() if k not in _REQUIRED_FILES})
+    verify_model_files(weights_dir, {k: v for k, v in expected.items() if k not in REQUIRED_FILES})
     from safetensors.torch import load as load_safetensors
 
     model = _build_unet(config_bytes)

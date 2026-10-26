@@ -13,9 +13,10 @@ from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import JSONResponse
 
 from api.models import HealthResponse, IndexResponse, QueryRequest, QueryResponse
-from api.pipeline import InvalidImage, Pipeline
+from api.pipeline import InvalidImage, Pipeline, model_status
 from common.config import get_config
 from common.logging import configure_logging, request_id_var
+from defects.infer import DefectsUnavailable
 from fusion.schema import HazardRecord
 from perception.detector import DetectorUnavailable
 
@@ -109,6 +110,12 @@ def create_app() -> FastAPI:
         log.error("object detector unavailable: %s", exc)
         return JSONResponse({"detail": "object detector unavailable"}, status_code=503)
 
+    @app.exception_handler(DefectsUnavailable)
+    async def defects_unavailable(_: Request, exc: DefectsUnavailable) -> JSONResponse:
+        """Same rule as the detector: no defects found is not the same as no classifier."""
+        log.error("defect classifier unavailable: %s", exc)
+        return JSONResponse({"detail": "defect classifier unavailable"}, status_code=503)
+
     # POST /analyze: one image in, one HazardRecord out. The record is also kept in the store so it
     # can be fetched later with GET /records/{id}. (Comments, not docstrings, on the routes below:
     # FastAPI copies docstrings into openapi.json, which is a frozen contract.)
@@ -151,16 +158,15 @@ def create_app() -> FastAPI:
             raise HTTPException(404, "record not found")
         return store[record_id]
 
-    # GET /health: what is running. While stubs are on, status is "ok"; with stubs off the real
-    # models do not exist yet, so status is "degraded" and each model reports "not_implemented".
+    # GET /health: what is running. Each model is "stub", "ready" or "available" (its files are
+    # there), or "unavailable"; the status is "degraded" if any model is unavailable.
     @app.get("/health", response_model=HealthResponse)
     def health() -> HealthResponse:
-        stubs = bool(cfg["pipeline"]["use_stubs"])
-        state = "stub" if stubs else "not_implemented"
+        models = model_status(cfg)
         return HealthResponse(
-            status="ok" if stubs else "degraded",
-            stubs=stubs,
-            models={"perception": state, "defects": state, "fusion": "stub", "rag": "stub"},
+            status="degraded" if "unavailable" in models.values() else "ok",
+            stubs=bool(cfg["pipeline"]["use_stubs"]),
+            models=models,
             llm_backend=str(cfg["llm"]["backend"]),
             qdrant="not_configured",
             versions={"av-road-hazard": _version("av-road-hazard"), "fastapi": _version("fastapi")},
