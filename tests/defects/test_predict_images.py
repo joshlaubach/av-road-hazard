@@ -64,6 +64,7 @@ def trained(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
         )
 
     monkeypatch.setattr("defects.train.build_model", tiny_model)
+    monkeypatch.setattr("defects.model.build_model", tiny_model)
     checkpoint = fit(samples, splits_file, 0, cfg, run_id="t").checkpoint
     return {
         "argv": [
