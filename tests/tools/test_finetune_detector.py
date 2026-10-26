@@ -16,6 +16,7 @@ from tools.finetune_detector import (
     REPO,
     DetectionDataset,
     check_outside_repo,
+    check_run_id,
     class_box_counts,
     learning_rate_factor,
     load_config,
@@ -42,6 +43,22 @@ def test_the_output_folder_must_be_outside_the_repository(tmp_path: Path) -> Non
         check_outside_repo(REPO / "data" / "weights")
     with pytest.raises(ValueError):
         check_outside_repo(REPO)
+
+
+BAD_RUN_IDS = [
+    "", "..", "../x", "a/b", "a" + chr(92) + "b", "C:/x", "/abs", ".hidden", "a b",
+    "CON", "nul.txt", "run.", "com1",
+]  # fmt: skip
+
+
+@pytest.mark.parametrize("bad", BAD_RUN_IDS)
+def test_a_run_id_must_be_a_single_plain_folder_name(bad: str) -> None:
+    with pytest.raises(ValueError, match="run id"):
+        check_run_id(bad)
+
+
+def test_a_plain_run_id_is_accepted() -> None:
+    assert check_run_id("detector-ft-v1") == "detector-ft-v1"
 
 
 def test_the_shipped_config_names_the_eight_classes_and_the_adr_limits() -> None:
