@@ -90,6 +90,16 @@ def latency_summary(seconds: Sequence[float]) -> dict[str, float]:
     }
 
 
+CPU_P95_LIMIT_S = 2.0  # ADR 0014: p95 per image on the intended host
+
+
+def speed_verdict(
+    rungs: Sequence[dict[str, Any]], limit_s: float = CPU_P95_LIMIT_S
+) -> list[dict[str, Any]]:
+    """Each timing (a thread count with its latency summary) with passed = p95 within limit_s."""
+    return [{**rung, "passed": rung["p95_s"] <= limit_s} for rung in rungs]
+
+
 # ------------------------------------------------------------------- scoring
 
 
