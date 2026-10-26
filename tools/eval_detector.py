@@ -39,6 +39,7 @@ from eval.detector import (
     GtBox,
     is_night,
     latency_summary,
+    restrict_to_vocabulary,
     score_model,
     speed_verdict,
     split_scenes,
@@ -47,7 +48,7 @@ from eval.models import Detection
 from eval.provenance import provenance
 from perception.detector import DETECTOR_SUBDIR, DETECTORS, detect_objects, load_detector_model
 from perception.infer import detector_settings
-from perception.labels import FUSION_LABELS, nuscenes_label
+from perception.labels import COCO_VOCABULARY, FUSION_LABELS, nuscenes_label, to_vocabulary
 
 # (scene token, is night, image path, ground truth)
 LoadedFrame = tuple[str, bool, Path, list[GtBox]]
@@ -73,8 +74,12 @@ def _project(nusc: Any, sample: dict[str, Any]) -> tuple[Path, list[GtBox]]:
         x1, y1 = max(0.0, float(pts[0].min())), max(0.0, float(pts[1].min()))
         x2, y2 = min(float(width), float(pts[0].max())), min(float(height), float(pts[1].max()))
         if x2 > x1 and y2 > y1:
-            visibility = int(nusc.get("sample_annotation", box.token)["visibility_token"])
-            out.append(GtBox(label, (x1, y1, x2, y2), visibility))
+            annotation = nusc.get("sample_annotation", box.token)
+            attributes = [nusc.get("attribute", t)["name"] for t in annotation["attribute_tokens"]]
+            attribute = attributes[0] if attributes else None
+            out.append(
+                GtBox(label, (x1, y1, x2, y2), int(annotation["visibility_token"]), attribute)
+            )
     return Path(path), out
 
 
@@ -104,22 +109,28 @@ def run_model(
     ladder: list[int] | None = None,
 ) -> dict[str, Any]:
     spec = DETECTORS[name]
+
+    def vocabulary_label(label: str) -> str | None:
+        return to_vocabulary(label, COCO_VOCABULARY)
+
     weights = checkpoint_dir / DETECTOR_SUBDIR / spec.filename
     model = load_detector_model(weights, spec)
-    data = [
-        FrameData(
-            scene,
-            night,
-            [
-                Detection(o.label, o.score, o.box)
-                for o in detect_objects(model, _rgb(path), score_threshold=COLLECT_THRESHOLD)
-            ],
-            boxes,
-        )
-        for scene, night, path, boxes in frames
-    ]
+    outside: dict[str, int] = {}
+    data = []
+    for scene, night, path, boxes in frames:
+        scored, blind = restrict_to_vocabulary(boxes, vocabulary_label)
+        for label, count in blind.items():
+            outside[label] = outside.get(label, 0) + count
+        detections = [
+            Detection(o.label, o.score, o.box)
+            for o in detect_objects(model, _rgb(path), score_threshold=COLLECT_THRESHOLD)
+        ]
+        data.append(FrameData(scene, night, detections, scored))
     train, _ = split_scenes(sorted({f[0] for f in frames}))
-    result = score_model(data, set(train), FUSION_LABELS)
+    reported = [label for label in FUSION_LABELS if label in COCO_VOCABULARY]
+    result = score_model(data, set(train), reported)
+    # Labels this model cannot say: counted, not scored (restrict_to_vocabulary).
+    result["outside_vocabulary"] = dict(sorted(outside.items()))
     if timing_frames > 0:
         if ladder:
             rungs = [
