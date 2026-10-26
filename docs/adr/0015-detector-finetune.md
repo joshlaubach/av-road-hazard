@@ -63,3 +63,8 @@ If any item fails, the zero-shot detector stays, the numbers are recorded in the
 
 ## What the owner decides
 Decided 2026-10-26: the scope (two new classes only) and the pass limits above (precision 70%, recall 40%, own cutoffs for the new classes). Still open: whether a thin pass should be shipped behind a flag. The recommendation is no flag: a detector that passed on two scenes should not change hazard scores for users.
+
+## Updates
+- 2026-10-26, time: training runs at about 24 images per second, so one fold (about 2,200 images, 12 epochs) takes about 22 minutes and the 10 folds about 3.7 hours, not "about an hour" as first written.
+- 2026-10-26, new-class cutoffs: "chosen on the training scenes only" is done as leave-one-scene-out on the held-out detections. For each scene, the cutoff is the lowest score on the grid at which precision on the OTHER nine scenes' held-out detections reaches 70% (the model that scored each of those scenes never saw it). A scene's own detections never influence its own cutoff, and no model is scored on images it trained on. Choosing the cutoff from the training scenes themselves would have used detections from images the model had already fit.
+- 2026-10-26, verdict data: the pass or fail uses all six cameras (more boxes, more scenes that reach 20 boxes). The front camera alone is reported next to it so the numbers can be compared with the earlier ones, and if the two disagree the report says so.
