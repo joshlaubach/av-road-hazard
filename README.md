@@ -2,7 +2,7 @@ Purpose: entry point for av-road-hazard, a planned system that fuses road-object
 
 # av-road-hazard
 
-> **Status: Sprint 0 scaffold.** Contracts, a stub API, tests, CI and a Docker skeleton exist; the models, fusion logic, RAG layer and UI do not. Stub outputs are fixed fake values. This documentation was drafted on 2026-10-21 from the READMEs and part of the code of the source repositories (shallow clones); none of that code was run. <!-- F:P-07 -->
+> **Status: core under evaluation.** The object detector, road mask, defect classifier, fusion and evaluation notebooks exist and run on real models; RAG and the web UI do not. See [docs/ROADMAP.md](docs/ROADMAP.md) for what is done and what to build next. Parts of this documentation were drafted on 2026-10-21 from the source repositories and have not all been re-checked. <!-- F:P-07 -->
 
 ## What it is
 
@@ -79,6 +79,7 @@ Per the proposed core-first gate, items 4, 6 and 8 stay at stub level until item
 | [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md) | Lanes, sprints, handoffs, review, token rules |
 | [docs/GLOSSARY.md](docs/GLOSSARY.md) | Terms |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Known failures and causes |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Where the project stands, what is next, and what production-ready means |
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) | Open questions, assumptions, blockers |
 | [docs/TRACEABILITY.md](docs/TRACEABILITY.md) | Fact-to-file matrix |
 | [docs/PROMPT_HISTORY.md](docs/PROMPT_HISTORY.md) | How this commit was produced |
