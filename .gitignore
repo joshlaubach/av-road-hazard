@@ -63,8 +63,10 @@ desktop.ini
 # graphify knowledge-graph output (local, regenerable)
 /graphify-out/
 
-# Scratch notebooks (outputs can embed nuScenes images; keep local)
-notebooks/
+# Scratch notebooks (outputs can embed nuScenes images; keep local). Only the eval notebooks are
+# tracked, with outputs cleared (tests/notebooks/test_eval_notebooks.py enforces it).
+notebooks/*
+!notebooks/0[34]_eval_*.ipynb
 
 # Git worktrees that Claude Code creates for parallel agents (local, disposable)
 .claude/worktrees/

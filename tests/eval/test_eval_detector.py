@@ -193,3 +193,38 @@ def test_the_evaluation_module_does_not_import_perception() -> None:
         "assert not [m for m in sys.modules if m == 'perception' or m.startswith('perception.')]"
     )
     subprocess.run([sys.executable, "-I", "-c", code, str(root)], check=True)
+
+
+# ------------------------------------------------------------- speed verdicts
+
+
+def test_speed_verdict_marks_each_rung_against_the_p95_limit() -> None:
+    from eval.detector import speed_verdict
+
+    rungs = [
+        {"threads": 24, "n": 97, "p50_s": 0.9, "p95_s": 1.2},
+        {"threads": 4, "n": 97, "p50_s": 1.8, "p95_s": 2.65},
+    ]
+
+    got = speed_verdict(rungs, limit_s=2.0)
+
+    assert [r["passed"] for r in got] == [True, False]
+    assert got[1]["threads"] == 4  # the measurements are kept
+
+
+def test_speed_verdict_does_not_change_its_input() -> None:
+    from eval.detector import speed_verdict
+
+    rungs = [{"threads": 2, "n": 1, "p50_s": 1.0, "p95_s": 1.5}]
+
+    speed_verdict(rungs, limit_s=2.0)
+
+    assert "passed" not in rungs[0]
+
+
+def test_speed_verdict_limit_is_inclusive() -> None:
+    from eval.detector import speed_verdict
+
+    assert speed_verdict([{"threads": 1, "n": 1, "p50_s": 1.0, "p95_s": 2.0}], limit_s=2.0)[0][
+        "passed"
+    ]
