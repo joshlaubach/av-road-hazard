@@ -11,6 +11,8 @@ from eval.detector import (
     evaluable,
     is_night,
     latency_summary,
+    recall_by_attribute,
+    restrict_to_vocabulary,
     score_model,
     split_scenes,
     threshold_sweep,
@@ -228,3 +230,72 @@ def test_speed_verdict_limit_is_inclusive() -> None:
     assert speed_verdict([{"threads": 1, "n": 1, "p50_s": 1.0, "p95_s": 2.0}], limit_s=2.0)[0][
         "passed"
     ]
+
+
+# ------------------------------------------------------- vocabulary and attributes
+
+_FAMILY = {"child": "pedestrian", "construction_vehicle": "truck"}
+
+
+def to_label(label: str) -> str | None:
+    """A detector that can say pedestrian, car and truck."""
+    label = _FAMILY.get(label, label)
+    return label if label in {"pedestrian", "car", "truck"} else None
+
+
+def test_labels_the_model_cannot_emit_fall_back_to_their_family() -> None:
+    boxes = [
+        GtBox("child", (0.0, 0.0, 40.0, 40.0), 4),
+        GtBox("construction_vehicle", (0.0, 0.0, 40.0, 40.0), 4),
+        GtBox("car", (0.0, 0.0, 40.0, 40.0), 4),
+    ]
+    kept, outside = restrict_to_vocabulary(boxes, to_label)
+    assert [b.label for b in kept] == ["pedestrian", "truck", "car"]
+    assert outside == {}
+
+
+def test_labels_with_no_family_are_counted_apart_and_not_scored() -> None:
+    boxes = [
+        GtBox("barrier", (0.0, 0.0, 40.0, 40.0), 4),
+        GtBox("barrier", (0.0, 0.0, 40.0, 40.0), 4),
+        GtBox("traffic_cone", (0.0, 0.0, 40.0, 40.0), 4),
+        GtBox("traffic_cone", (0.0, 0.0, 10.0, 10.0), 4),  # too small to be evaluable
+        GtBox("debris", (0.0, 0.0, 40.0, 40.0), 1),  # too hidden to be evaluable
+    ]
+    kept, outside = restrict_to_vocabulary(boxes, to_label)
+    assert kept == []
+    assert outside == {"barrier": 2, "traffic_cone": 1}
+
+
+def test_the_attribute_is_carried_with_the_ground_truth() -> None:
+    assert GtBox("car", (0.0, 0.0, 1.0, 1.0), 4).attribute is None
+    assert GtBox("car", (0.0, 0.0, 1.0, 1.0), 4, "vehicle.parked").attribute == "vehicle.parked"
+
+
+def test_recall_by_attribute_splits_parked_from_moving() -> None:
+    parked, moving, ignored = (
+        (0.0, 0.0, 40.0, 40.0),
+        (100.0, 0.0, 140.0, 40.0),
+        (200.0, 0.0, 240.0, 40.0),
+    )
+    frame_data = FrameData(
+        "s",
+        False,
+        [Detection("car", 0.9, parked)],  # finds the parked car only
+        [
+            GtBox("car", parked, 4, "vehicle.parked"),
+            GtBox("car", moving, 4, "vehicle.moving"),
+            GtBox("car", ignored, 4, None),  # no attribute: not reported
+        ],
+    )
+    result = recall_by_attribute([frame_data], threshold=0.5)
+    assert result == {
+        "vehicle.moving": {"n": 1, "recall": 0.0},
+        "vehicle.parked": {"n": 1, "recall": 1.0},
+    }
+
+
+def test_recall_by_attribute_ignores_detections_below_the_threshold() -> None:
+    box = (0.0, 0.0, 40.0, 40.0)
+    frame_data = FrameData("s", False, [Detection("car", 0.4, box)], [GtBox("car", box, 4, "x")])
+    assert recall_by_attribute([frame_data], threshold=0.5)["x"]["recall"] == 0.0
