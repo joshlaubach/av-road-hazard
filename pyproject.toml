@@ -27,6 +27,7 @@ dev = [
   "mypy>=1.10",
   "types-PyYAML",
   "pre-commit>=3.7",
+  "qdrant-client>=1.9",  # the search tests run in CI; the models (open_clip, torch) do not
 ]
 notebook = [
   "jupyterlab>=4",
