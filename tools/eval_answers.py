@@ -70,6 +70,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--nuscenes-root", type=Path, required=True)
     parser.add_argument("--version", default="v1.0-mini")
     parser.add_argument("--records", type=Path, default=None)
+    parser.add_argument(
+        "--no-rebuild",
+        action="store_true",
+        help="stop instead of re-running the pipeline when the cached records do not match",
+    )
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--small", default="claude-haiku-5-5")
     parser.add_argument("--big", default="claude-sonnet-5-5")
@@ -82,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     nusc = NuScenes(version=args.version, dataroot=str(args.nuscenes_root), verbose=False)
     frames = _load_frames(nusc)
     config = {"files": prov["files"], "thresholds": prov["thresholds"]}
-    records = build_records(frames, args.version, config, args.records)
+    records = build_records(frames, args.version, config, args.records, rebuild=not args.no_rebuild)
     embedder = ClipEmbedder(args.device)
     images = embedder.embed_images([_rgb(path) for _, _, path, _ in frames])
     texts = embedder.embed_texts([describe(r) for r in records])

@@ -64,3 +64,13 @@ def test_changes_under_notebooks_do_not_make_the_tree_dirty(tmp_path: Path) -> N
     (tmp_path / "notebooks" / "run.ipynb").write_text("{}")
 
     assert provenance({}, thresholds={}, repo=tmp_path)["git_dirty"] is False
+
+
+def test_text_files_hash_the_same_with_windows_or_unix_line_endings(tmp_path: Path) -> None:
+    windows, unix = tmp_path / "w.yaml", tmp_path / "u.yaml"
+    windows.write_bytes(b"a: 1\r\nb: 2\r\n")
+    unix.write_bytes(b"a: 1\nb: 2\n")
+    block = provenance({}, thresholds={}, repo=tmp_path, text_files={"w": windows, "u": unix})
+    assert block["files"]["w"] == block["files"]["u"]
+    raw = provenance({"w": windows, "u": unix}, thresholds={}, repo=tmp_path)
+    assert raw["files"]["w"] != raw["files"]["u"]  # weights and the like are still hashed as is
