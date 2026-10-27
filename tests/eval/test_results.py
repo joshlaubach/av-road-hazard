@@ -14,6 +14,7 @@ from eval.results import (
     README_START,
     build_results,
     effective_range,
+    keep_measured_retrieval,
     render_readme_table,
     retrieval_section,
     update_readme,
@@ -267,3 +268,13 @@ def test_measured_search_numbers_replace_the_placeholder_and_reach_the_table() -
     assert "annotations" in results["retrieval"]["caveat"]
     assert results["retrieval"]["pipeline"] == {"use_stubs": False}
     assert results["retrieval"]["provenance"]["files"] == {"detector": "ab" * 32}
+
+
+def test_a_full_rebuild_keeps_the_search_numbers_already_measured() -> None:
+    measured = {"retrieval": retrieval_section(_retrieval_report())}
+    rebuilt = keep_measured_retrieval(_results(), measured)
+    assert rebuilt["retrieval"]["status"] == "measured"
+    fresh = _results()
+    fresh["retrieval"] = {"status": "measured", "frames": 1}
+    assert keep_measured_retrieval(fresh, measured)["retrieval"]["frames"] == 1  # a new report wins
+    assert keep_measured_retrieval(_results(), {})["retrieval"]["status"] == "not measured"

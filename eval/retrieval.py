@@ -9,7 +9,6 @@ numpy only.
 
 from __future__ import annotations
 
-import random
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -28,6 +27,7 @@ PHRASES: dict[str, str] = {
     "traffic_cone": "traffic cones",
 }
 KS = (1, 5, 10)
+SEED = 42  # the seed in configs/default.yaml; the tool passes the configured value
 MIN_RELEVANT = 3  # fewer relevant frames than this makes a noisy query
 MAX_SHARE = 0.5  # a query that half the frames satisfy tests nothing
 
@@ -84,7 +84,7 @@ def cache_matches(
         stored.get("version") == version
         and stored.get("frame_ids") == list(frame_ids)
         and stored.get("config") == dict(config)
-        and len(stored.get("records", ())) == len(frame_ids)
+        and [r.get("frame_id") for r in stored.get("records", ())] == list(frame_ids)
     )
 
 
@@ -111,20 +111,25 @@ def score_ranker(
     return out
 
 
-def random_ranker(frame_ids: Sequence[str], seed: int = 0) -> Ranker:
-    """A search that ignores the query: the floor every real search must beat."""
-    rng = random.Random(seed)
+def random_expectation(
+    queries: Sequence[Query], total_frames: int, ks: Sequence[int] = KS
+) -> dict[int, list[float]]:
+    """Recall at k of a search that ignores the query: the exact average over all orders.
 
-    def rank(_: Query) -> list[str]:
-        order = list(frame_ids)
-        rng.shuffle(order)
-        return order
-
-    return rank
+    The top k of a random order holds k x (relevant / total) relevant frames on average, so recall
+    is that over min(k, relevant). This is the floor every real search must beat.
+    """
+    return {
+        k: [
+            (min(k, total_frames) * len(q.relevant) / total_frames) / min(k, len(q.relevant))
+            for q in queries
+        ]
+        for k in ks
+    }
 
 
 def mean_with_interval(
-    values: Sequence[float], *, resamples: int = 2000, seed: int = 0
+    values: Sequence[float], *, resamples: int = 2000, seed: int = SEED
 ) -> tuple[float, float, float]:
     """Mean over queries and a 90% range from resampling the queries with replacement."""
     if not values:
@@ -137,7 +142,7 @@ def mean_with_interval(
 
 
 def summarize(
-    scores: Mapping[int, Sequence[float]], queries: Sequence[Query]
+    scores: Mapping[int, Sequence[float]], queries: Sequence[Query], seed: int = SEED
 ) -> dict[str, dict[str, dict[str, float]]]:
     """{"all"|kind: {"recall@k": {mean, low, high}}} for the report."""
     groups = {"all": list(range(len(queries)))}
@@ -147,7 +152,7 @@ def summarize(
     for name, rows in groups.items():
         out[name] = {}
         for k, values in scores.items():
-            mean, low, high = mean_with_interval([values[i] for i in rows])
+            mean, low, high = mean_with_interval([values[i] for i in rows], seed=seed)
             out[name][f"recall@{k}"] = {
                 "mean": round(mean, 4),
                 "low": round(low, 4),

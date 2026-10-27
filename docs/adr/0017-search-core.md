@@ -15,12 +15,13 @@ The Search view needs to find frames from words, from a photo, and from plain fi
 5. **Measurement.** `python -m tools.eval_retrieval` runs the real pipeline on all 404 nuScenes CAM_FRONT frames, indexes them, and scores queries such as "a road scene with traffic cones". A frame is relevant if the human annotations have a clearly visible object of that kind (at least 40% visible and at least 1024 square pixels in area, the same rule the detector evaluation uses; a thin box can qualify). Recall at k is hits in the top k over min(k, relevant frames). Queries with fewer than 3 or more than half the frames relevant are dropped, which leaves 21. Ranges are 90% resampling ranges over queries. Random order is the floor.
 
 ## Result (404 frames, 21 queries, recall at 5)
-Description 0.63, photo 0.43, both fused 0.52, random 0.16. The details are in `eval/results.json` under `retrieval`.
+Both vectors fused 0.54, photo 0.43, description 0.41, random order 0.18 (the exact average over all orders). The details, with 90% resampling ranges and the provenance block, are in `eval/results.json` under `retrieval`.
 
 ## What this means
-- Searching the pipeline's own description beats searching the photo for these queries, as expected: the queries are about objects, and the description lists the detector's objects. The photo vector is the only one that can answer appearance words, which these queries do not test.
-- Equal-weight fusion is worse than the description alone here. With 21 queries, tuning weights on them would just fit the test, so the weights stay equal until there are queries about appearance or a separate set to tune on.
+- Fusing the two rankings beats either alone, so equal-weight fusion stays the default. Weights are not tuned: 21 queries would only fit the test.
+- The description search is best for object queries (0.63 at 5, against 0.40 for the photo), because the description lists the detector's objects. The photo search is the only one that can answer light and appearance words.
+- A first measurement gave the description 0.63 and fused 0.52. It was wrong: the records were given the day or night label from the same scene annotations that decide which frames are relevant, so the description "knew" the answer to light queries. A Codex inspection caught it. The pipeline does not know the time of day, so the records are now used as the pipeline makes them, and the numbers above come from that run.
 - The description inherits the detector's misses (it does not see barriers or cones well, ADR 0015), so "traffic cones" queries cannot do well through it.
 
 ## Limits
-Only 1 of the 21 queries is about light (daylight is over half of all frames), 7 are about objects and 13 about objects at night or in daylight. Annotated nuScenes frames only; the hosted corpus is checked separately once it exists.
+Only 1 of the 21 queries is about light (daylight is over half of all frames), 7 are about objects and 13 about objects at night or in daylight. The light label used to judge relevance comes from the scene annotations; the search never sees it. Cached records are reused only for the same frames, dataset version, model files and settings. Annotated nuScenes frames only; the hosted corpus is checked separately once it exists.
