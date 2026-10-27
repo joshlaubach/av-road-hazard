@@ -45,6 +45,7 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
         "LLM_BACKEND": ("llm", "backend"),
         "OLLAMA_HOST": ("llm", "ollama_host"),
         "OLLAMA_MODEL": ("llm", "ollama_model"),
+        "CLAUDE_MODEL": ("llm", "claude_model"),
         "QDRANT_URL": ("qdrant", "url"),
         "LOG_LEVEL": ("logging", "level"),
     }.items():
