@@ -66,7 +66,7 @@ Run from the repo root with Python 3.12 or newer. Setup: `pip install -r require
 | Export OpenAPI | `python -m tools.export_openapi` (the contract test fails if `openapi.json` is stale) |
 | Draw a record on its image | `python -m tools.overlay IMAGE RECORD.json OUT.png` |
 | Run the real pipeline on a folder | `USE_STUBS=0 python -m tools.smoke_analyze FOLDER --out DIR` (counts valid, road-unknown and failed images; writes overlays) |
-| Refresh lockfiles (Python 3.12 target) | `pip install uv`, then `uv pip compile pyproject.toml --python-version 3.12 -o requirements.lock`; for the dev lock add `--extra dev -o requirements-dev.lock` |
+| Refresh lockfiles (Python 3.12 target) | `pip install uv`, then `uv pip compile pyproject.toml --python-version 3.12 --python-platform linux -o requirements.lock`; for the dev lock add `--extra dev -o requirements-dev.lock` |
 | Install git hooks | `pre-commit install` (hooks include a block on committing to `main`) |
 | Defect training | `python -m defects.train MODE --config PATH` (`MODE` is `splits`, `fit`, or `oof`; `splits` also requires `--groups PATH`; configure local paths first) |
 | Evaluation tests | `python -m pytest tests/eval tests/defects/test_evaluation.py` |

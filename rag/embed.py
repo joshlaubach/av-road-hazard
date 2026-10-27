@@ -6,6 +6,7 @@ CLIP puts photos and sentences in one space, so a sentence can be matched agains
 
 from __future__ import annotations
 
+import zlib
 from collections.abc import Sequence
 from typing import Any, Protocol
 
@@ -65,3 +66,48 @@ class ClipEmbedder:
                 tokens = self._tokenize(list(texts[start : start + BATCH])).to(self._device)
                 rows.append(self._unit(self._model.encode_text(tokens)))
         return np.concatenate(rows) if rows else np.zeros((0, DIM), dtype=np.float32)
+
+
+class HashEmbedder:
+    """A stand-in for CLIP that needs no model: words and a tiny thumbnail are hashed into vectors.
+
+    For tests and for running the API with stubs. Texts that share words get similar vectors, and
+    equal images get equal vectors, which is enough to exercise indexing and search; it knows
+    nothing about meaning. Never use it for a measurement.
+    """
+
+    dim = DIM
+
+    def __init__(self) -> None:
+        self._projection = np.random.default_rng(0).standard_normal((64, DIM)).astype(np.float32)
+
+    @staticmethod
+    def _unit(vector: np.ndarray) -> np.ndarray:
+        norm = float(np.linalg.norm(vector))
+        if norm == 0.0:
+            vector = np.zeros(DIM, dtype=np.float32)
+            vector[0] = 1.0
+            return vector
+        unit: np.ndarray = vector / norm
+        return unit
+
+    def embed_texts(self, texts: Sequence[str]) -> np.ndarray:
+        rows = []
+        for text in texts:
+            vector = np.zeros(DIM, dtype=np.float32)
+            for word in text.lower().split():
+                word = word.strip(".,;:!?()[]\"'")
+                if word:
+                    vector[zlib.crc32(word.encode()) % DIM] += 1.0
+            rows.append(self._unit(vector))
+        return np.stack(rows) if rows else np.zeros((0, DIM), dtype=np.float32)
+
+    def embed_images(self, images: Sequence[np.ndarray]) -> np.ndarray:
+        from PIL import Image
+
+        rows = []
+        for image in images:
+            thumb = Image.fromarray(image).convert("L").resize((8, 8))
+            pixels = np.asarray(thumb, dtype=np.float32).reshape(64) - 127.5
+            rows.append(self._unit(pixels @ self._projection))
+        return np.stack(rows) if rows else np.zeros((0, DIM), dtype=np.float32)

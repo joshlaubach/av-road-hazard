@@ -167,6 +167,13 @@ class Index:
         check_session(session, allow_corpus=False)
         self.add(records, image_vectors, text_vectors, session)
 
+    def delete_session(self, session: str) -> None:
+        """Remove everything a visitor stored. The shared corpus cannot be deleted this way."""
+        check_session(session, allow_corpus=False)
+        self.client.delete(
+            COLLECTION, points_selector=models.FilterSelector(filter=build_filter([session], None))
+        )
+
     def count(self, sessions: Collection[str]) -> int:
         """How many photos the given sessions hold; naming at least one session is required."""
         flt = build_filter(sessions, None)
