@@ -40,7 +40,7 @@ api:
 llm:
   backend: ollama         # env LLM_BACKEND: ollama | claude
   ollama_host: http://localhost:11434
-  ollama_model: llama3.2-vision
+  ollama_model: llama3.2   # answers come from the retrieved records only, so a text model is enough
 
 qdrant:
   url: null               # env QDRANT_URL
