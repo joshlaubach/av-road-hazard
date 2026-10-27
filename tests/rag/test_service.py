@@ -181,3 +181,14 @@ def test_an_empty_question_and_a_missing_query_are_errors() -> None:
         svc.search(sid, None, None, None, 5)
     with pytest.raises(ValueError, match="empty"):
         svc.query(sid, "\n\t", None, None, 5, "llama")
+
+
+def test_routes_that_never_search_do_not_need_the_qdrant_server() -> None:
+    cfg = config()
+    cfg["qdrant"] = {"url": "http://127.0.0.1:9", "api_key": None}  # nothing listens here
+    svc = RagService(cfg, HashEmbedder(), tiers_for=lambda kind: [])
+    sid = new_session_id()
+    svc.touch(sid)
+    svc.remember(sid, record("r1"))
+    assert svc.get_record("r1", sid) is not None
+    assert svc.get_record("r1", new_session_id()) is None
