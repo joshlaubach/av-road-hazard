@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 
 from defects.labels import NAMES
 from fusion.schema import HazardRecord
 
+LABEL = re.compile(r"[a-z][a-z _-]{0,31}")  # object labels are short lowercase words
 SEVERITY_RANK = {"unknown": 0, "low": 1, "medium": 2, "high": 3}
 
 
@@ -19,12 +21,17 @@ def describe(record: HazardRecord) -> str:
     parts = []
     if record.meta.time_of_day != "unknown":
         parts.append(f"A {record.meta.time_of_day}time road scene.")
-    counts = Counter(o.label.replace("_", " ") for o in record.objects)
+    # A label that is not a plain short word is called "object", so no free text from a detector
+    # (or a future one) can reach a search index or a language model prompt through here.
+    counts = Counter(
+        (o.label if LABEL.fullmatch(o.label) else "object").replace("_", " ")
+        for o in record.objects
+    )
     if counts:
         listed = ", ".join(f"{n} {label}" for label, n in sorted(counts.items()))
         parts.append(f"Objects: {listed}.")
     if record.defects:
-        names = sorted({NAMES.get(d.name, d.name) for d in record.defects})
+        names = sorted({NAMES.get(d.name, "road damage") for d in record.defects})
         parts.append("Road damage: " + ", ".join(names) + ".")
     else:
         parts.append("No road damage found.")

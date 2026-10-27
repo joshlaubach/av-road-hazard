@@ -65,9 +65,18 @@ def render_record(hit: Hit) -> str:
     return "\n".join(lines)
 
 
+def clean_question(question: str) -> str:
+    """The question as one plain line: control characters and line breaks become spaces, square
+    brackets become parentheses (so a question cannot forge a "[frame_id]" record or citation),
+    and it is cut to MAX_QUESTION_CHARS. Use this text for the search too, not only the prompt."""
+    plain = "".join(" " if ch.isspace() or not ch.isprintable() else ch for ch in question)
+    plain = plain.replace("[", "(").replace("]", ")")
+    return " ".join(plain.split())[:MAX_QUESTION_CHARS]
+
+
 def build_prompt(question: str, hits: Sequence[Hit]) -> str:
     records = "\n".join(render_record(h) for h in hits if SAFE_ID.fullmatch(h.record.frame_id))
-    return f"Records:\n{records}\n\nQuestion: {question.strip()[:MAX_QUESTION_CHARS]}"
+    return f"Records:\n{records}\n\nQuestion: {clean_question(question)}"
 
 
 def check_citations(text: str, allowed: Sequence[str]) -> tuple[tuple[str, ...], tuple[str, ...]]:
@@ -82,7 +91,7 @@ def check_citations(text: str, allowed: Sequence[str]) -> tuple[tuple[str, ...],
 
 def answer_question(llm: LLM, question: str, hits: Sequence[Hit]) -> Answer:
     usable = [h for h in hits if SAFE_ID.fullmatch(h.record.frame_id)]
-    if not question.strip():
+    if not clean_question(question):
         raise ValueError("the question is empty")
     if not usable:
         return Answer(NO_MATCH, llm.name, (), ())
@@ -90,6 +99,8 @@ def answer_question(llm: LLM, question: str, hits: Sequence[Hit]) -> Answer:
     if not text:
         raise LLMUnavailable("the model returned an empty answer")
     cited, unknown = check_citations(text, [h.record.frame_id for h in usable])
+    for bad in unknown:  # never show a source that was not retrieved, or echo an id back
+        text = text.replace(f"[{bad}]", "[unverified source]")
     return Answer(text, llm.name, cited, unknown)
 
 
