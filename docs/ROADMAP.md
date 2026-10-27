@@ -30,7 +30,7 @@ Not started: RAG (`rag/` is empty), `web/`, the retrieval evaluation, the synthe
 
 ## Now
 
-- Painted road markings are the main false alarm of the chosen classifier (D10 on crosswalks, lane dashes and arrows). Decide whether to mine marking tiles as hard negatives, or raise the D10 threshold, before the core results are written up (Next, row 2).
+- Painted road markings are the main false alarm of the chosen classifier (D10 on crosswalks, lane dashes and arrows). Decided 2026-10-26: the D10 threshold stays at 0.75. A higher cutoff was checked on the 109 reviewed tiles: 0.85 would drop 10 of 27 D10 alerts and keep both real D10 cracks, but one of them sits at 0.855 and two cracks cannot tune a threshold (0.90 loses one, 0.95 loses both). Mining paint tiles as hard negatives (about 60 to 100 tiles to label, then a retrain that must pass the recall guard) stays an option after the core results write-up (Next, row 2).
 - Decide what follows the failed detector fine-tune (see Next, row 1): more nuScenes scenes for barriers, a different barrier source, or move on to the next row. Recommendation: a small slice of the full nuScenes release, then repeat the same test.
 
 ## Next
