@@ -2,7 +2,7 @@ Purpose: ADR 0015: the plan for fine-tuning the object detector on nuScenes so i
 
 # ADR 0015: Detector fine-tune for work-zone labels
 
-Status: accepted (2026-10-26). The owner approved the plan and the pass limits; the 10-fold training started the same day.
+Status: accepted (2026-10-26). The owner approved the plan and the pass limits. Result (2026-10-26): FAIL, the zero-shot detector stays (see Results at the end).
 
 ## Context
 The zero-shot COCO detector ([ADR 0014](0014-object-detector.md)) has no word for traffic cones or barriers. On nuScenes mini (404 front-camera frames) that is 20% of all annotated objects, and 457 of the clearly visible ones. The owner chose to fine-tune. Motional confirmed that a portfolio project counts as non-commercial and that a public demo may serve a model fine-tuned on nuScenes ([DATA_AND_LICENSES.md](../DATA_AND_LICENSES.md)). The weights still carry the nuScenes terms and stay out of the repo.
@@ -69,3 +69,44 @@ Decided 2026-10-26: the scope (two new classes only) and the pass limits above (
 - 2026-10-26, new-class cutoffs: "chosen on the training scenes only" is done as leave-one-scene-out on the held-out detections. For each scene, the cutoff is the lowest score on the grid at which precision on the OTHER nine scenes' held-out detections reaches 70% (the model that scored each of those scenes never saw it). A scene's own detections never influence its own cutoff, and no model is scored on images it trained on. Choosing the cutoff from the training scenes themselves would have used detections from images the model had already fit.
 - 2026-10-26, verdict data: the pass or fail uses all six cameras (more boxes, more scenes that reach 20 boxes). The front camera alone is reported next to it so the numbers can be compared with the earlier ones, and if the two disagree the report says so.
 - 2026-10-26, counting rule, set before any held-out result was seen (found by an independent Codex review of the scoring code): a prediction that finds a real box that is too hidden or too small to be counted (visibility under 2 or under 32 x 32 px) is set aside, neither a hit nor a false alarm. Before, such a find counted as a false alarm, which pushed precision down for correct detections. The rule applies equally to the fine-tuned and the zero-shot detector. Also from that review: the scorer refuses a model whose record does not say it left out exactly that scene, was a smoke run or used other settings; a thin passing scene whose 90% range dips below a limit is flagged as a caveat even if the pooled range does not; and the tool's exit status needs every measured CPU speed to pass as well. The outside-nuScenes sanity check stays manual.
+
+## Results (2026-10-26): FAIL, so the zero-shot detector stays
+Run `detector-ft-v1`: 10 models, one per held-out scene, 12 epochs each, scored with `python -m tools.eval_finetune` on the code in main after PR 68 (the independent-review fixes). Each scene was scored only by the model that left it out. The verdict uses all six cameras, as agreed.
+
+**Barriers: fail.** Only 3 scenes have 20 or more clearly visible barriers (scene-0061, scene-0553, scene-1077) and none of them passes. The fine-tuned models almost never find a held-out barrier: 2 of 1511 found at the cutoffs chosen from the other scenes (0.90, because no cutoff reached 70% precision on them). Even at the lowest cutoff (0.30) they find 20 of 1,511 (recall 1%) at 18% precision. This is not a scoring bug: barriers were in the training data of every model (700 to 1,800 boxes) and cones, trained the same way, work. Barriers seen in nine scenes do not carry over to the tenth.
+
+**Cones: pass on the all-camera numbers, with weak support.** Pooled over the 4 scenes with 20 or more cones: precision 74% (90% range 71% to 77%), recall 58%. But only one scene (scene-0061) reaches both limits on its own, which is the minimum the plan asks for. Scene-0103 and scene-0655 find most cones but are only 60% and 65% precise, and scene-0757 is 80% precise but finds 32%. On the front camera alone the cone check fails (precision 60%, recall 41%, no scene passes); the plan says to report when the two views disagree.
+
+| Cones, scene | Boxes | Cutoff | Precision | Recall | Reaches both limits |
+|---|---|---|---|---|---|
+| scene-0061 | 493 | 0.45 | 82% | 56% | yes |
+| scene-0103 | 42 | 0.35 | 60% | 76% | no |
+| scene-0655 | 199 | 0.35 | 65% | 76% | no |
+| scene-0757 | 129 | 0.40 | 80% | 32% | no |
+
+| Barriers, scene | Boxes | Cutoff | Precision | Recall | Reaches both limits |
+|---|---|---|---|---|---|
+| scene-0061 | 975 | 0.90 | 100% | 0% | no |
+| scene-0553 | 492 | 0.90 | n/a | 0% | no |
+| scene-1077 | 44 | 0.90 | n/a | 0% | no |
+
+**Old classes (all cameras): all six pass, and all improved.** Precision and recall at cutoff 0.5, zero-shot to fine-tuned.
+
+| Class | Boxes | Precision | Recall | Check |
+|---|---|---|---|---|
+| pedestrian | 3402 | 42% to 76% | 39% to 49% | pass |
+| cyclist | 182 | 11% to 23% | 13% to 16% | pass |
+| motorcycle | 349 | 37% to 52% | 13% to 24% | pass |
+| car | 5982 | 45% to 78% | 60% to 66% | pass |
+| truck | 876 | 46% to 55% | 39% to 39% | pass |
+| bus | 482 | 54% to 63% | 40% to 50% | pass |
+
+Read this gain with care: the zero-shot detector never saw nuScenes, so part of the gain is learning how nuScenes annotators label things (which parked cars count, and so on). It says the fine-tune did not damage the old classes. It does not say the detector is better in general. On the front camera alone the cyclist check fails (recall fell 5 points and precision 6 points, on 57 boxes), so the all-camera pass for cyclists is the weaker evidence.
+
+**Speed: pass.** CPU p95 per image: 24 threads 0.18 s, 4 threads 0.20 s, 2 threads 0.29 s (limit 2 s). **Outside-nuScenes sanity check: not done**, because it is only worth doing for a model that would ship.
+
+**What the plan says now:** any failed item means the zero-shot detector stays, the numbers are recorded, and the next step is more data. The result is not reinterpreted to ship cones alone: that would be a new decision made after seeing the outcome. If cones alone are wanted, the clean way is a new written limit and a fresh test on scenes not used here.
+
+**Next step options (owner decides):** (1) more nuScenes scenes, free under the non-commercial terms (the full release has 700 scenes; barriers need several more scenes with road work), then repeat this same test; (2) a different source of barrier labels; (3) leave work-zone objects for later and continue with Next row 2. Recommendation: (1), starting with a small slice of the full release, because the same code runs unchanged on more scenes.
+
+Limits of this result: 10 scenes from two cities, one split protocol, and the cutoffs and limits were fixed before any result was seen. The raw report is local only and contains no images; the 10 models stay on the owner's machine under the nuScenes terms.
