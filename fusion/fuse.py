@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable, Sequence
+from typing import cast
 
 import numpy as np
 import numpy.typing as npt
@@ -36,7 +37,7 @@ RoadMask = npt.NDArray[np.bool_]  # shape (height, width), True where the road i
 
 
 def unknown_severity(_: Defect) -> Severity:
-    """Default severity: unknown for every defect until the class mapping is verified."""
+    """A severity function that gives every defect \"unknown\" (for tests and comparisons)."""
     return "unknown"
 
 
@@ -155,14 +156,14 @@ def fuse(
     road_mask: RoadMask | None = None,
     meta: Meta | None = None,
     config: FusionConfig | None = None,
-    severity_fn: SeverityFn = unknown_severity,
+    severity_fn: SeverityFn | None = None,
 ) -> HazardRecord:
     """Build the HazardRecord for one frame.
 
     image_size is (width, height); road_mask, if given, has shape (height, width) and must match.
     Raises ValueError on a size mismatch (a classic width/height mix-up) or a non-finite box.
-    Severity comes from severity_fn, which stays "unknown" until the RDD2022 class mapping is
-    verified.
+    Severity comes from severity_fn if given, otherwise from the damage type through the config's
+    defect_severity table ("unknown" for a type not in it).
     """
     cfg = config or load_fusion_config()
     width, height = image_size
@@ -177,11 +178,12 @@ def fuse(
     for box in boxes:
         if not all(math.isfinite(c) for c in box):
             raise ValueError(f"box has a non-finite coordinate: {box}")
+    pick_severity: SeverityFn = severity_fn or (lambda d: cast(Severity, cfg.severity_for(d.name)))
     records: list[DefectRecord] = []
     scores: list[float] = []
     for defect in defects:
         in_road = in_road_state(defect.box, road_mask, cfg)
-        severity = severity_fn(defect)
+        severity = pick_severity(defect)
         scores.append(
             defect_score(
                 in_road,
