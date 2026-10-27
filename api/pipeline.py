@@ -132,8 +132,8 @@ class Pipeline:
         """Like analyze, but also says whether a road mask was used.
 
         Decode, call the two detectors, dump intermediates for debugging when DEBUG_DUMP_DIR is
-        set, then fuse them with the road mask (if any) into the record. Severity stays "unknown"
-        inside fuse() until severity is turned on (docs/ROADMAP.md, Next row 2).
+        set, then fuse them with the road mask (if any) into the record. Severity comes from the
+        damage type through configs/fusion.yaml (docs/adr/0016-defect-merge-and-severity.md).
         """
         frame = decode_image(data)
         h, w = frame.shape[:2]  # numpy arrays are (height, width, channels)
