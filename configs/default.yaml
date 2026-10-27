@@ -41,6 +41,7 @@ llm:
   backend: ollama         # env LLM_BACKEND: ollama | claude
   ollama_host: http://localhost:11434
   ollama_model: llama3.2   # answers come from the retrieved records only, so a text model is enough
+  claude_model: claude-opus-5-5   # env CLAUDE_MODEL; the key is ANTHROPIC_API_KEY, read by the SDK
 
 qdrant:
   url: null               # env QDRANT_URL
