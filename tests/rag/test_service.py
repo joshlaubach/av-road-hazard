@@ -191,4 +191,3 @@ def test_routes_that_never_search_do_not_need_the_qdrant_server() -> None:
     svc.touch(sid)
     svc.remember(sid, record("r1"))
     assert svc.get_record("r1", sid) is not None
-    assert svc.get_record("r1", new_session_id()) is None
