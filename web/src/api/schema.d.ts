@@ -289,12 +289,24 @@ export interface components {
             /** Score */
             score: number;
         };
+        /** QueryFilters */
+        QueryFilters: {
+            /** Has Defect */
+            has_defect?: ("D00" | "D10" | "D20" | "D40") | null;
+            /** Has Object */
+            has_object?: string | null;
+            /** Min Hazard Score */
+            min_hazard_score?: number | null;
+            /** Min Severity */
+            min_severity?: ("low" | "medium" | "high") | null;
+            /** Source */
+            source?: ("rdd2022" | "upload" | "nuscenes") | null;
+            /** Time Of Day */
+            time_of_day?: ("day" | "night" | "unknown") | null;
+        };
         /** QueryRequest */
         QueryRequest: {
-            /** Filters */
-            filters?: {
-                [key: string]: unknown;
-            } | null;
+            filters?: components["schemas"]["QueryFilters"] | null;
             /**
              * Image B64
              * @description Base64-encoded image query
@@ -318,11 +330,17 @@ export interface components {
         QueryResponse: {
             /** Answer */
             answer: string;
+            /** Cited */
+            cited?: string[];
             /**
              * Llm
              * @enum {string}
              */
             llm: "llama" | "claude";
+            /** Model */
+            model?: string | null;
+            /** Notice */
+            notice?: string | null;
             /** Records */
             records: components["schemas"]["HazardRecord"][];
         };
