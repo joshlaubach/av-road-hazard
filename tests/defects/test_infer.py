@@ -21,6 +21,7 @@ from defects.infer import (  # noqa: E402
     DefectsUnavailable,
     defect_settings,
     find_defects,
+    find_tile_defects,
 )
 
 SIDE = 16
@@ -164,3 +165,13 @@ def test_neighboring_flagged_tiles_come_back_as_one_defect(classifier: Classifie
     all_white = np.full((FRAME_H, FRAME_W, 3), 255, dtype=np.uint8)  # both 100 px tiles fire
     defects = find_defects(all_white, classifier=classifier)
     assert [(d.name, d.box) for d in defects] == [("D00", (0.0, 0.0, 200.0, 100.0))]
+
+
+@pytest.mark.usefixtures("real_path")
+def test_the_per_tile_finder_keeps_every_flagged_tile_that_find_defects_merges(
+    classifier: Classifier,
+) -> None:
+    all_white = np.full((FRAME_H, FRAME_W, 3), 255, dtype=np.uint8)
+    tiles = find_tile_defects(all_white, classifier=classifier)
+    assert [d.box for d in tiles] == [(0.0, 0.0, 100.0, 100.0), (100.0, 0.0, 200.0, 100.0)]
+    assert len(find_defects(all_white, classifier=classifier)) == 1

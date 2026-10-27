@@ -1,12 +1,14 @@
 """Frame-level alert collection and the export of never-reviewed alerts."""
 
 import csv
+import inspect
 import json
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
+from defects.infer import find_tile_defects
 from eval.classifier import Alert
 from fusion.schema import Defect, Object
 from tools.eval_frames import FrameContext, collect_alerts, export_unreviewed, pack_mask
@@ -76,3 +78,8 @@ def test_export_writes_each_unreviewed_tile_once_with_a_blank_sheet_and_a_key(
     key = json.loads((tmp_path / "key" / "key.json").read_text())
     assert key["n2_001"]["frame"] == "s/a.jpg"
     assert key["n2_001"]["classes"] == {"D00": 0.95, "D10": 0.8}
+
+
+def test_alerts_are_counted_per_tile_so_they_match_the_reviewed_tile_boxes() -> None:
+    """Reviews are keyed by tile box: the default finder must not merge tiles into bigger boxes."""
+    assert inspect.signature(collect_alerts).parameters["finder"].default is find_tile_defects
