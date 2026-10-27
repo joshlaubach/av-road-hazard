@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from common.hashing import file_sha256
+from common.hashing import file_sha256, text_sha256
 
 
 def _git(repo: Path, *args: str) -> str | None:
@@ -27,13 +27,23 @@ def _git(repo: Path, *args: str) -> str | None:
 
 
 def provenance(
-    files: Mapping[str, Path], *, thresholds: Mapping[str, float], repo: Path
+    files: Mapping[str, Path],
+    *,
+    thresholds: Mapping[str, float],
+    repo: Path,
+    text_files: Mapping[str, Path] | None = None,
 ) -> dict[str, Any]:
-    """The provenance block; a file that does not exist is an error, not a blank hash."""
+    """The provenance block; a file that does not exist is an error, not a blank hash.
+
+    `text_files` are hashed with line endings normalized (configs, which a Windows checkout
+    stores with CRLF); `files` are hashed byte for byte (weights, review files)."""
     commit = _git(repo, "rev-parse", "HEAD")
     status = _git(repo, "status", "--porcelain", "--", ".", ":!notebooks") if commit else None
     return {
-        "files": {name: file_sha256(path) for name, path in files.items()},
+        "files": {
+            **{name: file_sha256(path) for name, path in files.items()},
+            **{name: text_sha256(path) for name, path in (text_files or {}).items()},
+        },
         "thresholds": dict(thresholds),
         "git_commit": commit or "unknown",
         "git_dirty": None if status is None else bool(status),

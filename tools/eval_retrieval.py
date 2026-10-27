@@ -62,8 +62,6 @@ def pipeline_provenance() -> dict[str, Any]:
     name, score = detector_settings(cfg)
     files = {
         "checkpoint/defects": Path(checkpoint),
-        "config/default": REPO / "configs" / "default.yaml",
-        "config/fusion": REPO / "configs" / "fusion.yaml",
         "detector": root / DETECTOR_SUBDIR / DETECTORS[name].filename,
         "road_model": root / MODEL_SUBDIR / "model.safetensors",
     }
@@ -72,11 +70,20 @@ def pipeline_provenance() -> dict[str, Any]:
         **{k: v for k, v in cfg["defects"].items() if _number(v)},
         **{f"cutoff_{code}": v for code, v in cfg["defects"]["thresholds"].items()},
     }
-    return provenance(files, thresholds=settings, repo=REPO)
+    configs = {
+        "config/default": REPO / "configs" / "default.yaml",
+        "config/fusion": REPO / "configs" / "fusion.yaml",
+    }
+    return provenance(files, thresholds=settings, repo=REPO, text_files=configs)
 
 
 def build_records(
-    frames: list[Any], version: str, config: dict[str, Any], cache: Path | None
+    frames: list[Any],
+    version: str,
+    config: dict[str, Any],
+    cache: Path | None,
+    *,
+    rebuild: bool = True,
 ) -> list[HazardRecord]:
     """One record per frame from the real pipeline; frame_id is the image file name."""
     frame_ids = [path.stem for _, _, path, _ in frames]
@@ -84,6 +91,11 @@ def build_records(
         stored = json.loads(cache.read_text("utf-8"))
         if cache_matches(stored, version, frame_ids, config):
             return [HazardRecord.model_validate(r) for r in stored["records"]]
+        if not rebuild:
+            raise SystemExit(
+                "the cached records were made for other frames, model files or settings; "
+                "refusing to rebuild them (--no-rebuild)"
+            )
         print("record cache does not match these frames or models; rebuilding it")
     from api.pipeline import Pipeline
 
@@ -131,6 +143,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--nuscenes-root", type=Path, required=True)
     parser.add_argument("--version", default="v1.0-mini")
     parser.add_argument("--records", type=Path, default=None)
+    parser.add_argument(
+        "--no-rebuild",
+        action="store_true",
+        help="stop instead of re-running the pipeline when the cached records do not match",
+    )
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args(argv)
@@ -140,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     nusc = NuScenes(version=args.version, dataroot=str(args.nuscenes_root), verbose=False)
     frames = _load_frames(nusc)
     config = {"files": prov["files"], "thresholds": prov["thresholds"]}
-    records = build_records(frames, args.version, config, args.records)
+    records = build_records(frames, args.version, config, args.records, rebuild=not args.no_rebuild)
     embedder = ClipEmbedder(args.device)
     images = embedder.embed_images([_rgb(path) for _, _, path, _ in frames])
     texts = embedder.embed_texts([describe(r) for r in records])
