@@ -107,6 +107,14 @@ def test_the_same_frame_id_in_two_sessions_is_two_points() -> None:
     assert index.count(["s1", "s2"]) == 2 and index.count(["s1"]) == 1
 
 
+def test_top_k_larger_than_the_candidate_pool_still_returns_that_many() -> None:
+    index = Index(DIM)
+    records = [record(f"f{i}") for i in range(150)]
+    vectors = np.stack([unit(i % DIM) for i in range(150)])
+    index.add(records, vectors, vectors)
+    assert len(index.search({"image": unit(0)}, [CORPUS], top_k=150)) == 150
+
+
 def test_a_search_must_name_a_session() -> None:
     with pytest.raises(ValueError):
         build_filter([], None)

@@ -8,7 +8,7 @@ from eval.retrieval import (
     cache_matches,
     make_queries,
     mean_with_interval,
-    random_ranker,
+    random_expectation,
     recall_at_k,
     score_ranker,
     summarize,
@@ -52,11 +52,12 @@ def test_queries_come_from_the_annotations_and_skip_rare_and_trivial_ones() -> N
     assert "a road scene with traffic cones at night" not in queries  # only one frame
 
 
-def test_random_search_scores_near_the_share_of_relevant_frames() -> None:
+def test_the_random_floor_is_the_exact_average_over_all_orders() -> None:
     queries = [Query("q", "object", frozenset(f"f{i}" for i in range(10)))]
-    ranker = random_ranker([f"f{i}" for i in range(100)], seed=1)
-    scores = [score_ranker(ranker, queries, (10,))[10][0] for _ in range(200)]
-    assert 0.05 < sum(scores) / len(scores) < 0.15
+    # 100 frames, 10 relevant: the top 10 holds 1 relevant frame on average, out of at most 10.
+    assert random_expectation(queries, 100, (1, 10)) == {1: [0.1], 10: [0.1]}
+    few = [Query("q", "object", frozenset({"a", "b", "c"}))]
+    assert random_expectation(few, 30, (5,))[5] == [pytest.approx(0.5 / 3)]
 
 
 def test_interval_contains_the_mean_and_summary_groups_by_kind() -> None:
@@ -70,11 +71,14 @@ def test_interval_contains_the_mean_and_summary_groups_by_kind() -> None:
 
 def test_cached_records_are_used_only_for_the_same_frames_dataset_and_models() -> None:
     config = {"files": {"detector": "aaa"}, "thresholds": {"x": 1}}
-    stored = {"version": "v1", "frame_ids": ["a", "b"], "config": config, "records": [{}, {}]}
+    records = [{"frame_id": "a"}, {"frame_id": "b"}]
+    stored = {"version": "v1", "frame_ids": ["a", "b"], "config": config, "records": records}
     assert cache_matches(stored, "v1", ["a", "b"], config)
     assert not cache_matches(stored, "v1", ["b", "a"], config)  # same frames, different order
     assert not cache_matches(stored, "v1", ["a", "c"], config)
     assert not cache_matches(stored, "v2", ["a", "b"], config)
     assert not cache_matches(stored, "v1", ["a", "b"], {**config, "files": {"detector": "bbb"}})
-    assert not cache_matches({**stored, "records": [{}]}, "v1", ["a", "b"], config)
+    assert not cache_matches({**stored, "records": records[:1]}, "v1", ["a", "b"], config)
+    swapped = [{"frame_id": "b"}, {"frame_id": "a"}]  # right frames, records in the wrong places
+    assert not cache_matches({**stored, "records": swapped}, "v1", ["a", "b"], config)
     assert not cache_matches({}, "v1", ["a", "b"], config)

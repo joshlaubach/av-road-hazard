@@ -169,7 +169,11 @@ class Index:
         payloads: dict[str, dict[str, object]] = {}
         for name, vector in queries.items():
             result = self.client.query_points(
-                COLLECTION, query=vector.tolist(), using=name, query_filter=flt, limit=POOL
+                COLLECTION,
+                query=vector.tolist(),
+                using=name,
+                query_filter=flt,
+                limit=max(POOL, top_k),
             )
             for rank, point in enumerate(result.points, start=1):
                 key = str(point.id)

@@ -31,11 +31,11 @@ from eval.retrieval import (
     Ranker,
     cache_matches,
     make_queries,
-    random_ranker,
+    random_expectation,
     score_ranker,
     summarize,
 )
-from fusion.schema import HazardRecord, Meta
+from fusion.schema import HazardRecord
 from perception.detector import DETECTOR_SUBDIR, DETECTORS
 from perception.infer import detector_settings
 from rag.embed import MODEL, PRETRAINED, ClipEmbedder, Embedder
@@ -62,6 +62,8 @@ def pipeline_provenance() -> dict[str, Any]:
     name, score = detector_settings(cfg)
     files = {
         "checkpoint/defects": Path(checkpoint),
+        "config/default": REPO / "configs" / "default.yaml",
+        "config/fusion": REPO / "configs" / "fusion.yaml",
         "detector": root / DETECTOR_SUBDIR / DETECTORS[name].filename,
         "road_model": root / MODEL_SUBDIR / "model.safetensors",
     }
@@ -87,10 +89,9 @@ def build_records(
 
     pipeline = Pipeline()
     records = []
-    for _, night, path, _ in frames:
+    for _, _, path, _ in frames:
         record = pipeline.analyze(path.read_bytes(), "nuscenes")
-        meta = Meta(time_of_day="night" if night else "day")
-        records.append(record.model_copy(update={"frame_id": path.stem, "meta": meta}))
+        records.append(record.model_copy(update={"frame_id": path.stem}))
     if cache is not None:
         stored = {
             "version": version,
@@ -122,7 +123,6 @@ def rankers(index: Index, embedder: Embedder, frame_ids: list[str]) -> dict[str,
         "photo_vector": search((IMAGE_VECTOR,)),
         "description_vector": search((TEXT_VECTOR,)),
         "fused": search((IMAGE_VECTOR, TEXT_VECTOR)),
-        "random": random_ranker(frame_ids),
     }
 
 
@@ -148,6 +148,7 @@ def main(argv: list[str] | None = None) -> int:
     index.add(records, images, texts)
     frame_ids = [r.frame_id for r in records]
     queries = make_queries(frame_facts(frames))
+    seed = int(get_config()["seed"])
     report: dict[str, Any] = {
         "version": args.version,
         "frames": len(frames),
@@ -155,9 +156,16 @@ def main(argv: list[str] | None = None) -> int:
         "embedder": {"model": MODEL, "pretrained": PRETRAINED},
         "pipeline": {"use_stubs": False},
         "methods": {
-            name: summarize(score_ranker(ranker, queries), queries)
-            for name, ranker in rankers(index, embedder, frame_ids).items()
+            **{
+                name: summarize(score_ranker(ranker, queries), queries, seed)
+                for name, ranker in rankers(index, embedder, frame_ids).items()
+            },
+            "random": summarize(random_expectation(queries, len(frame_ids)), queries, seed),
         },
+        "light_note": (
+            "Records come straight from the pipeline, which does not know the time of day, so "
+            "light queries are answered by the photo vector alone."
+        ),
         "provenance": prov,
     }
     text = json.dumps(report, indent=2)

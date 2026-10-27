@@ -19,6 +19,7 @@ from typing import Any
 from eval.provenance import provenance
 from eval.results import (
     build_results,
+    keep_measured_retrieval,
     render_readme_table,
     retrieval_section,
     update_readme,
@@ -74,6 +75,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     if args.retrieval is not None:
         results["retrieval"] = retrieval_section(_load(args.retrieval))
+    elif args.out.exists():
+        results = keep_measured_retrieval(results, _load(args.out))
     return _write(results, args)
 
 

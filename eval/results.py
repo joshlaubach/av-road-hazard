@@ -130,6 +130,14 @@ def retrieval_section(report: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def keep_measured_retrieval(results: dict[str, Any], existing: Mapping[str, Any]) -> dict[str, Any]:
+    """A full rebuild without a new search report keeps the search numbers already measured."""
+    old = existing.get("retrieval")
+    if results["retrieval"]["status"] != "measured" and old and old.get("status") == "measured":
+        return {**results, "retrieval": old}
+    return results
+
+
 def build_results(
     *,
     classifier: Mapping[str, Any],
