@@ -102,7 +102,7 @@ Few tries means a wide range, so a range is more honest than a single number.
 | Zero-shot COCO detector on nuScenes (six cameras, cutoff 0.5), precision / recall | pedestrian 42% / 39% · cyclist 11% / 13% · motorcycle 37% / 13% · car 45% / 60% · truck 46% / 39% · bus 54% / 40% | `detector.fine_tune.old_classes` |
 | Fine-tune for cones and barriers, held-out nuScenes scenes | cones: precision 74%, recall 58% over 4 scenes, but only 1 scene reaches both limits alone; barriers: 2 of 1511 found. FAIL: the zero-shot detector stays | `detector.fine_tune` |
 | Real dashboard photos (14 dashboard photos, Stellenbosch pothole dataset, South Africa) | 10 of 44 marked potholes found; 15 other boxes (not necessarily mistakes). Run by hand, not reproducible from this repo | `real_photo_check` |
-| Retrieval (RAG) | not measured | `retrieval` |
+| Retrieval (RAG) | Recall at 5 on 404 nuScenes frames and 21 queries made from the annotations: description 0.63, photo 0.43, both fused 0.52, random order 0.16 (1.0 is perfect) | `retrieval` |
 <!-- results:end -->
 
 Rows marked *pasted-patch* come from a test that pastes real damage patches onto driving photos. It is easier than real damage, so those numbers are not real-world accuracy.

@@ -825,8 +825,344 @@
     "caveat": "These are pasted patches, not real damage, and the distance is only the pinhole-camera size for one assumed defect width. Real damage will differ."
   },
   "retrieval": {
-    "status": "not measured",
-    "reason": "RAG is not built yet (ADR 0011)"
+    "status": "measured",
+    "frames": 404,
+    "queries": 21,
+    "embedder": {
+      "model": "ViT-B-32",
+      "pretrained": "laion2b_s34b_b79k"
+    },
+    "methods": {
+      "photo_vector": {
+        "all": {
+          "recall@1": {
+            "mean": 0.4286,
+            "low": 0.2381,
+            "high": 0.619,
+            "queries": 21
+          },
+          "recall@5": {
+            "mean": 0.4286,
+            "low": 0.2757,
+            "high": 0.5905,
+            "queries": 21
+          },
+          "recall@10": {
+            "mean": 0.419,
+            "low": 0.281,
+            "high": 0.5621,
+            "queries": 21
+          }
+        },
+        "light": {
+          "recall@1": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          },
+          "recall@5": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          },
+          "recall@10": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          }
+        },
+        "object": {
+          "recall@1": {
+            "mean": 0.4286,
+            "low": 0.1429,
+            "high": 0.7143,
+            "queries": 7
+          },
+          "recall@5": {
+            "mean": 0.4,
+            "low": 0.1429,
+            "high": 0.6857,
+            "queries": 7
+          },
+          "recall@10": {
+            "mean": 0.3714,
+            "low": 0.17,
+            "high": 0.6286,
+            "queries": 7
+          }
+        },
+        "object+light": {
+          "recall@1": {
+            "mean": 0.3846,
+            "low": 0.1538,
+            "high": 0.6154,
+            "queries": 13
+          },
+          "recall@5": {
+            "mean": 0.4,
+            "low": 0.2,
+            "high": 0.5846,
+            "queries": 13
+          },
+          "recall@10": {
+            "mean": 0.4,
+            "low": 0.2231,
+            "high": 0.5769,
+            "queries": 13
+          }
+        }
+      },
+      "description_vector": {
+        "all": {
+          "recall@1": {
+            "mean": 0.5714,
+            "low": 0.381,
+            "high": 0.7619,
+            "queries": 21
+          },
+          "recall@5": {
+            "mean": 0.6286,
+            "low": 0.4857,
+            "high": 0.7714,
+            "queries": 21
+          },
+          "recall@10": {
+            "mean": 0.6095,
+            "low": 0.4807,
+            "high": 0.7429,
+            "queries": 21
+          }
+        },
+        "light": {
+          "recall@1": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          },
+          "recall@5": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          },
+          "recall@10": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          }
+        },
+        "object": {
+          "recall@1": {
+            "mean": 0.5714,
+            "low": 0.2857,
+            "high": 0.8571,
+            "queries": 7
+          },
+          "recall@5": {
+            "mean": 0.6571,
+            "low": 0.4286,
+            "high": 0.8857,
+            "queries": 7
+          },
+          "recall@10": {
+            "mean": 0.6143,
+            "low": 0.4,
+            "high": 0.8286,
+            "queries": 7
+          }
+        },
+        "object+light": {
+          "recall@1": {
+            "mean": 0.5385,
+            "low": 0.3077,
+            "high": 0.7692,
+            "queries": 13
+          },
+          "recall@5": {
+            "mean": 0.5846,
+            "low": 0.4,
+            "high": 0.7538,
+            "queries": 13
+          },
+          "recall@10": {
+            "mean": 0.5769,
+            "low": 0.4,
+            "high": 0.7385,
+            "queries": 13
+          }
+        }
+      },
+      "fused": {
+        "all": {
+          "recall@1": {
+            "mean": 0.5714,
+            "low": 0.381,
+            "high": 0.7619,
+            "queries": 21
+          },
+          "recall@5": {
+            "mean": 0.5238,
+            "low": 0.3619,
+            "high": 0.6857,
+            "queries": 21
+          },
+          "recall@10": {
+            "mean": 0.5095,
+            "low": 0.3571,
+            "high": 0.6619,
+            "queries": 21
+          }
+        },
+        "light": {
+          "recall@1": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          },
+          "recall@5": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          },
+          "recall@10": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          }
+        },
+        "object": {
+          "recall@1": {
+            "mean": 0.5714,
+            "low": 0.2857,
+            "high": 0.8571,
+            "queries": 7
+          },
+          "recall@5": {
+            "mean": 0.5429,
+            "low": 0.2571,
+            "high": 0.8286,
+            "queries": 7
+          },
+          "recall@10": {
+            "mean": 0.4857,
+            "low": 0.2286,
+            "high": 0.7571,
+            "queries": 7
+          }
+        },
+        "object+light": {
+          "recall@1": {
+            "mean": 0.5385,
+            "low": 0.3077,
+            "high": 0.7692,
+            "queries": 13
+          },
+          "recall@5": {
+            "mean": 0.4769,
+            "low": 0.2769,
+            "high": 0.6769,
+            "queries": 13
+          },
+          "recall@10": {
+            "mean": 0.4846,
+            "low": 0.2923,
+            "high": 0.6692,
+            "queries": 13
+          }
+        }
+      },
+      "random": {
+        "all": {
+          "recall@1": {
+            "mean": 0.2381,
+            "low": 0.0952,
+            "high": 0.381,
+            "queries": 21
+          },
+          "recall@5": {
+            "mean": 0.1619,
+            "low": 0.1048,
+            "high": 0.2195,
+            "queries": 21
+          },
+          "recall@10": {
+            "mean": 0.181,
+            "low": 0.1429,
+            "high": 0.219,
+            "queries": 21
+          }
+        },
+        "light": {
+          "recall@1": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0,
+            "queries": 1
+          },
+          "recall@5": {
+            "mean": 0.6,
+            "low": 0.6,
+            "high": 0.6,
+            "queries": 1
+          },
+          "recall@10": {
+            "mean": 0.3,
+            "low": 0.3,
+            "high": 0.3,
+            "queries": 1
+          }
+        },
+        "object": {
+          "recall@1": {
+            "mean": 0.4286,
+            "low": 0.1429,
+            "high": 0.7143,
+            "queries": 7
+          },
+          "recall@5": {
+            "mean": 0.1143,
+            "low": 0.0571,
+            "high": 0.1714,
+            "queries": 7
+          },
+          "recall@10": {
+            "mean": 0.1571,
+            "low": 0.0857,
+            "high": 0.2286,
+            "queries": 7
+          }
+        },
+        "object+light": {
+          "recall@1": {
+            "mean": 0.0769,
+            "low": 0.0,
+            "high": 0.2308,
+            "queries": 13
+          },
+          "recall@5": {
+            "mean": 0.1538,
+            "low": 0.0769,
+            "high": 0.2308,
+            "queries": 13
+          },
+          "recall@10": {
+            "mean": 0.1846,
+            "low": 0.1385,
+            "high": 0.2308,
+            "queries": 13
+          }
+        }
+      }
+    },
+    "caveat": "Queries are made from the nuScenes human annotations, so they are mostly about objects and light; they say little about how well appearance words (wet road, glare) work. Relevant frames contain a clearly visible annotated object; the search sees only the pipeline's own records and the photos."
   },
   "provenance": {
     "classifier": {
