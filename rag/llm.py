@@ -10,8 +10,8 @@ Ollama server over HTTP and `ClaudeLLM` to the Claude API through the official S
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, replace
 from typing import Any, Protocol
 
 import anthropic
@@ -53,6 +53,8 @@ class Answer:
     llm: str
     cited: tuple[str, ...]  # ids the answer cites that were among the retrieved records
     unknown: tuple[str, ...]  # ids the answer cites that were not (the model made them up)
+    model: str = ""  # the model that wrote the text ("" when no model was called)
+    escalated: bool = False  # a cheaper model was tried first and its answer was not used
 
 
 def render_record(hit: Hit) -> str:
@@ -101,7 +103,35 @@ def answer_question(llm: LLM, question: str, hits: Sequence[Hit]) -> Answer:
     cited, unknown = check_citations(text, [h.record.frame_id for h in usable])
     for bad in unknown:  # never show a source that was not retrieved, or echo an id back
         text = text.replace(f"[{bad}]", "[unverified source]")
-    return Answer(text, llm.name, cited, unknown)
+    return Answer(text, llm.name, cited, unknown, str(getattr(llm, "model", "")))
+
+
+def answer_with_escalation(tiers: Sequence[LLM], question: str, hits: Sequence[Hit]) -> Answer:
+    """Try the models in order, cheapest first, and keep the first answer that passes the checks.
+
+    An answer is not good enough, and the next model is tried, when the model failed or declined
+    (LLMUnavailable) or cited an id that was not among the retrieved records. These are facts the
+    code can check; the model's own "I am not sure" is not used. If every model fails the last
+    error is raised; if the last model still cites unknown ids, its answer is returned with them
+    reported (and hidden from the text). A cached `Answer` from a tier that failed is not kept.
+    """
+    if not tiers:
+        raise ValueError("no language model is configured")
+    last_error: LLMUnavailable | None = None
+    fallback: Answer | None = None
+    for index, llm in enumerate(tiers):
+        try:
+            answer = answer_question(llm, question, hits)
+        except LLMUnavailable as exc:
+            last_error = exc
+            continue
+        if not answer.unknown or not answer.model:  # clean, or no model was called at all
+            return replace(answer, escalated=index > 0)
+        fallback = replace(answer, escalated=index > 0)
+    if fallback is not None:
+        return fallback
+    assert last_error is not None
+    raise last_error
 
 
 class OllamaLLM:
@@ -164,8 +194,10 @@ class ClaudeLLM:
         model: str = "claude-opus-5-5",
         client: anthropic.Anthropic | None = None,
         timeout_s: float = 60.0,
+        on_usage: Callable[[str, int, int], None] | None = None,
     ) -> None:
         self.model = model
+        self._on_usage = on_usage
         self._client = client or anthropic.Anthropic(timeout=timeout_s)
 
     def generate(self, system: str, prompt: str) -> str:
@@ -177,6 +209,10 @@ class ClaudeLLM:
                 output_config={"effort": "low"},
                 messages=[{"role": "user", "content": prompt}],
             )
+        except TypeError as exc:
+            if "authentication method" not in str(exc):
+                raise
+            raise LLMUnavailable("Claude is not set up: ANTHROPIC_API_KEY is missing") from exc
         except anthropic.AuthenticationError as exc:
             raise LLMUnavailable("Claude rejected the API key; check ANTHROPIC_API_KEY") from exc
         except anthropic.PermissionDeniedError as exc:
@@ -191,15 +227,32 @@ class ClaudeLLM:
             raise LLMUnavailable("could not reach the Claude API") from exc
         except anthropic.APIStatusError as exc:
             raise LLMUnavailable(f"Claude answered with HTTP {exc.status_code}") from exc
+        usage = getattr(response, "usage", None)
+        if self._on_usage is not None and usage is not None:
+            self._on_usage(self.model, int(usage.input_tokens), int(usage.output_tokens))
         if response.stop_reason == "refusal":
             raise LLMUnavailable("Claude declined to answer this request")
+        if response.stop_reason == "max_tokens":
+            raise LLMUnavailable("Claude's answer was cut off")
         return "".join(block.text for block in response.content if block.type == "text")
 
 
-def make_llm(kind: str, llm_config: Mapping[str, Any]) -> LLM:
-    """The backend for a request's `llm` value ("llama" or "claude") from the `llm:` config."""
+def make_tiers(
+    kind: str,
+    llm_config: Mapping[str, Any],
+    on_usage: Callable[[str, int, int], None] | None = None,
+) -> list[LLM]:
+    """The models to try, cheapest first, for a request's `llm` value ("llama" or "claude").
+
+    "claude" is the small model followed by the larger one (they may be the same name, and then
+    there is only one tier). "llama" is the one local model.
+    """
     if kind == "llama":
-        return OllamaLLM(llm_config["ollama_host"], llm_config["ollama_model"])
+        return [OllamaLLM(llm_config["ollama_host"], llm_config["ollama_model"])]
     if kind == "claude":
-        return ClaudeLLM(llm_config["claude_model"])
+        names = [llm_config["claude_model"]]
+        bigger = llm_config.get("claude_escalation_model")
+        if bigger and bigger != names[0]:
+            names.append(bigger)
+        return [ClaudeLLM(name, on_usage=on_usage) for name in names]
     raise ValueError(f"unknown llm {kind!r}; choose 'llama' or 'claude'")

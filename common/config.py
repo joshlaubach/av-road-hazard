@@ -46,7 +46,11 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
         "OLLAMA_HOST": ("llm", "ollama_host"),
         "OLLAMA_MODEL": ("llm", "ollama_model"),
         "CLAUDE_MODEL": ("llm", "claude_model"),
+        "CLAUDE_ESCALATION_MODEL": ("llm", "claude_escalation_model"),
         "QDRANT_URL": ("qdrant", "url"),
+        "QDRANT_API_KEY": ("qdrant", "api_key"),
+        "ANTHROPIC_DAILY_SPEND_CAP_USD": ("rag", "daily_usd"),
+        "ANTHROPIC_MONTHLY_SPEND_CAP_USD": ("rag", "monthly_usd"),
         "LOG_LEVEL": ("logging", "level"),
     }.items():
         value = os.environ.get(env)
