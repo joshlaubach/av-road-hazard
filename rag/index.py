@@ -8,6 +8,8 @@ another.
 from __future__ import annotations
 
 import json
+import re
+import secrets
 import uuid
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass, field
@@ -22,6 +24,9 @@ COLLECTION = "frames"
 IMAGE_VECTOR = "image"
 TEXT_VECTOR = "text"
 CORPUS = "corpus"
+# A visitor's session id: issued by the server (new_session_id), never chosen by the client. It is
+# long and random so it cannot be guessed, and it can never equal CORPUS.
+SESSION_ID = re.compile(r"s_[A-Za-z0-9_-]{22,64}")
 RRF_K = 60  # reciprocal rank fusion constant; 60 is the value from the original paper
 POOL = 100  # how many hits each vector search contributes before fusing
 KEYWORD_FIELDS = ("session", "source", "time_of_day", "objects", "defects")
@@ -47,6 +52,19 @@ class Hit:
     ranks: dict[str, int] = field(default_factory=dict)
 
 
+def new_session_id() -> str:
+    """A fresh unguessable session id (32 random characters after the prefix)."""
+    return "s_" + secrets.token_urlsafe(24)
+
+
+def check_session(session: str, *, allow_corpus: bool = True) -> str:
+    """The session if it is well formed, else ValueError. Sessions are used as keys into the
+    shared index, so anything that is not the corpus or a server-issued id is refused."""
+    if (allow_corpus and session == CORPUS) or SESSION_ID.fullmatch(session):
+        return session
+    raise ValueError("not a valid session id")
+
+
 def point_id(session: str, frame_id: str) -> str:
     """Stable id for (session, frame). The pair is encoded as JSON so that no two different pairs
     give the same text ("a/b" + "c" and "a" + "b/c" must not collide)."""
@@ -57,6 +75,8 @@ def build_filter(sessions: Collection[str], filters: Filters | None) -> models.F
     """Always restricts to `sessions`; an empty list is an error, never "everything"."""
     if not sessions:
         raise ValueError("a search must name at least one session")
+    for session in sessions:
+        check_session(session)
     must: list[models.Condition] = [
         models.FieldCondition(key="session", match=models.MatchAny(any=sorted(sessions)))
     ]
@@ -74,6 +94,8 @@ def build_filter(sessions: Collection[str], filters: Filters | None) -> models.F
             models.FieldCondition(key="hazard_score", range=models.Range(gte=f.min_hazard_score))
         )
     if f.min_severity is not None:
+        if f.min_severity not in SEVERITY_RANK:
+            raise ValueError(f"min_severity must be one of {sorted(SEVERITY_RANK)}")
         rank = SEVERITY_RANK[f.min_severity]
         must.append(models.FieldCondition(key="severity_rank", range=models.Range(gte=rank)))
     return models.Filter(must=must)
@@ -97,12 +119,12 @@ def payload_for(record: HazardRecord, session: str) -> dict[str, object]:
 class Index:
     """`url` None keeps everything in memory; an http URL uses that server; else a folder path."""
 
-    def __init__(self, dim: int, url: str | None = None) -> None:
+    def __init__(self, dim: int, url: str | None = None, api_key: str | None = None) -> None:
         self.dim = dim
         if url is None:
             self.client = QdrantClient(":memory:")
         elif url.startswith("http"):
-            self.client = QdrantClient(url=url)
+            self.client = QdrantClient(url=url, api_key=api_key)
         else:
             self.client = QdrantClient(path=url)
         if not self.client.collection_exists(COLLECTION):
@@ -120,6 +142,7 @@ class Index:
         text_vectors: np.ndarray,
         session: str = CORPUS,
     ) -> None:
+        check_session(session)
         if not (len(records) == len(image_vectors) == len(text_vectors)):
             raise ValueError("records and vectors must be the same length")
         points = [
@@ -131,6 +154,18 @@ class Index:
             for r, iv, tv in zip(records, image_vectors, text_vectors, strict=True)
         ]
         self.client.upsert(COLLECTION, points)
+
+    def add_upload(
+        self,
+        records: Sequence[HazardRecord],
+        image_vectors: np.ndarray,
+        text_vectors: np.ndarray,
+        session: str,
+    ) -> None:
+        """Store a visitor's photos. Unlike add(), this refuses the shared corpus, so a request that
+        names the session "corpus" cannot write into the demo photos."""
+        check_session(session, allow_corpus=False)
+        self.add(records, image_vectors, text_vectors, session)
 
     def count(self, sessions: Collection[str]) -> int:
         """How many photos the given sessions hold; naming at least one session is required."""
