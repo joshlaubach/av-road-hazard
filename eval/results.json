@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-10-27T04:19:31Z",
-  "git_commit": "7878e0c3073e6a948f919cd989ef7ea9c2bcca9d",
+  "generated_utc": "2026-10-27T04:27:59Z",
+  "git_commit": "b2a4186d1bb74b399d22c70524e7c6a5fd073523",
   "classifier": {
     "chosen": "hn2-repeat10",
     "baseline": "baseline",
@@ -834,7 +834,7 @@
         "checkpoint/baseline": "03360165ffad8323b64ffda0a75de0569760851bdaca645f6a733488e36893de",
         "checkpoint/hn1-repeat20": "3d81f4ad03e3d29b3deea2689d7e698c2dbc60e17eb20464445401eb04d05537",
         "checkpoint/hn2-repeat10": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8",
-        "review_key": "b5d069bffd2f6f6ceb91c2afd39ba3571476171984880b4c7fc49e30348da364",
+        "review_tiles": "b5d069bffd2f6f6ceb91c2afd39ba3571476171984880b4c7fc49e30348da364",
         "review_calls": "7bee74e9f9ccd5fcb3988ab18244069e0c193acbdb72dea8ba7903244edf79c8",
         "road/config.json": "2b8f16dbad9bd85386609386a9cb5dedc6e0c518253a9af484e0a128d9463c88",
         "road/model.safetensors": "8208672861ad1b111dc98f3a7c54196d29875b709c7353e2dd1b7614343fb3a8",
