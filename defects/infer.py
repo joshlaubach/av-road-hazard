@@ -91,6 +91,17 @@ def load_classifier() -> Classifier:
 
 def find_defects(
     frame: np.ndarray,
+    **settings: Any,
+) -> list[Defect]:
+    """find_tile_defects with neighboring flagged tiles of one class merged into one defect.
+
+    Same arguments as find_tile_defects. This is what the pipeline reports (defects/merge.py).
+    """
+    return merge_defects(find_tile_defects(frame, **settings))
+
+
+def find_tile_defects(
+    frame: np.ndarray,
     *,
     objects: Sequence[Object] = (),
     road_mask: RoadMask | None = None,
@@ -105,7 +116,8 @@ def find_defects(
     (x1, y1, x2, y2) in frame pixels and limits scoring to that part of the frame (default: all of
     it); tiles are laid out from its top-left corner, so a sub-region can score different crops than
     the whole frame does. Boxes stay in frame pixels. classifier and settings default to the
-    configured ones.
+    configured ones. One Defect per flagged tile and class, so tile boxes stay exact (the
+    evaluation tools match reviewed tiles by box); find_defects merges neighbors.
     """
     cfg = get_config()
     if cfg["pipeline"]["use_stubs"]:
@@ -114,7 +126,7 @@ def find_defects(
 
     used = classifier or load_classifier()
     chosen = settings or defect_settings(cfg)
-    tiles = find_frame_defects(
+    return find_frame_defects(
         used.model,
         frame,
         objects,
@@ -125,7 +137,6 @@ def find_defects(
         min_road_cover=chosen.min_road_cover,
         region=region,
     )
-    return merge_defects(tiles)
 
 
 def _stub_defects(frame: np.ndarray) -> list[Defect]:
