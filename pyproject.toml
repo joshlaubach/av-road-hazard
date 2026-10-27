@@ -28,6 +28,7 @@ dev = [
   "types-PyYAML",
   "pre-commit>=3.7",
   "qdrant-client>=1.9",  # the search tests run in CI; the models (open_clip, torch) do not
+  "anthropic>=1.0",
 ]
 notebook = [
   "jupyterlab>=4",
@@ -49,6 +50,7 @@ ml = [
 ]
 rag = [
   "qdrant-client>=1.9",
+  "anthropic>=1.0",
   "open_clip_torch>=2.24",
 ]
 

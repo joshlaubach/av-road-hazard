@@ -19,3 +19,8 @@ Three questions on the 404 nuScenes records through `llama3.2` on this laptop: a
 
 ## Limits
 A small model can still misread a record or cite an id that exists but does not support its claim; the check only catches ids that were not retrieved. The answer is only as good as the records, which come from a detector that misses cones and barriers (ADR 0015).
+
+## Addendum: the Claude backend (2026-10-27)
+`ClaudeLLM` in the same file talks to the Claude API through the official `anthropic` package, using the same prompt, citation check and errors. The model is `llm.claude_model` (env `CLAUDE_MODEL`), default `claude-opus-5-5`; the key is `ANTHROPIC_API_KEY`, read by the SDK and never stored in the repo. Effort is `low` (the job is restating a few records) and thinking stays at the model's default, because it cannot be turned off on this model. A refusal, a bad key, a rate limit, a timeout or no network each become one plain sentence. `make_llm("llama" | "claude", config)` picks the backend from a request's `llm` field.
+
+Tests use a fake client (no network, no key), so CI never calls Claude. **Not yet checked against the real API**: no key was available when this was written. Cost: a short answer with a few records is on the order of a thousand tokens in and a few hundred out; if the hosted demo needs a cheaper model, `CLAUDE_MODEL=claude-sonnet-5-5` or `claude-haiku-5-5` is a one-line change, to be judged on real questions first. A spend cap is still open (OPEN_QUESTIONS).
