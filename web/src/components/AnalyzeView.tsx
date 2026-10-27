@@ -12,6 +12,7 @@ import { Findings } from "./Findings";
 import { Gauge } from "./Gauge";
 import { PhotoView } from "./PhotoView";
 import { Uploader } from "./Uploader";
+import { Walkthrough } from "./Walkthrough";
 
 type View =
   | { kind: "idle" }
@@ -80,6 +81,8 @@ export function AnalyzeView() {
     ? summarize(done.analysis.record, showHow && done.analysis.trace ? done.analysis.trace.fusion : [])
     : null;
   const score = done ? toDisplayScore(done.analysis.record.hazard_score) : 0;
+  const trace = done?.analysis.trace ?? null;
+  const walkthrough = Boolean(showHow && trace);
 
   return (
     <main className="page">
@@ -115,23 +118,34 @@ export function AnalyzeView() {
         <>
           <section className="result" aria-label="Result">
             <div className="stage">
-              <PhotoView
-                imageUrl={done.imageUrl}
-                alt={done.alt}
-                record={done.analysis.record}
-                showObjects={showObjects}
-                showDefects={showDefects}
-              />
-              <div className="layers">
-                <label className="switch">
-                  <input type="checkbox" checked={showDefects} onChange={(e) => setShowDefects(e.target.checked)} />
-                  <span>Damage</span>
-                </label>
-                <label className="switch">
-                  <input type="checkbox" checked={showObjects} onChange={(e) => setShowObjects(e.target.checked)} />
-                  <span>People and vehicles</span>
-                </label>
-              </div>
+              {walkthrough && trace ? (
+                <Walkthrough
+                  imageUrl={done.imageUrl}
+                  alt={done.alt}
+                  record={done.analysis.record}
+                  trace={trace}
+                />
+              ) : (
+                <>
+                  <PhotoView
+                    imageUrl={done.imageUrl}
+                    alt={done.alt}
+                    record={done.analysis.record}
+                    showObjects={showObjects}
+                    showDefects={showDefects}
+                  />
+                  <div className="layers">
+                    <label className="switch">
+                      <input type="checkbox" checked={showDefects} onChange={(e) => setShowDefects(e.target.checked)} />
+                      <span>Damage</span>
+                    </label>
+                    <label className="switch">
+                      <input type="checkbox" checked={showObjects} onChange={(e) => setShowObjects(e.target.checked)} />
+                      <span>People and vehicles</span>
+                    </label>
+                  </div>
+                </>
+              )}
               {done.example && (
                 <p className="credit">
                   <strong>{done.example.title}.</strong> {done.example.note} {done.example.credit}

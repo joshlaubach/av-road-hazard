@@ -500,3 +500,167 @@ pre {
   padding-top: 14px;
   max-width: 78ch;
 }
+
+/* Walkthrough layers drawn over the photo */
+.photo-frame .layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: opacity 600ms ease;
+}
+
+.photo-frame canvas.layer {
+  image-rendering: auto;
+}
+
+.photo-frame canvas.heat {
+  mix-blend-mode: normal;
+}
+
+.tile {
+  fill: transparent;
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 1;
+  transition: opacity 500ms ease;
+}
+
+.tile.neutral {
+  stroke: rgba(255, 255, 255, 0.6);
+}
+
+.tile.skipped-road {
+  fill: url(#hatch-road);
+  stroke: #c9d3dc;
+}
+
+.tile.skipped-object {
+  fill: url(#hatch-object);
+  stroke: #f39a2d;
+}
+
+.tile.flagged {
+  fill: rgba(255, 255, 255, 0.06);
+  stroke: #ffffff;
+  stroke-width: 2.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-frame .layer,
+  .tile {
+    transition: none;
+  }
+}
+
+.walkthrough {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+button {
+  font: inherit;
+  font-size: 14px;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button.primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+  font-weight: 500;
+}
+
+.select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.select:disabled {
+  opacity: 0.45;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.legend-bar {
+  width: 96px;
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #2f6fdb, #1fa971, #e4c51f, #f08a24, #d7372b);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.steps button {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 9px;
+  color: var(--muted);
+}
+
+.steps button.done {
+  color: var(--fg);
+}
+
+.steps button[aria-current="step"] {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+}
+
+.step-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.step-text h3 {
+  font-size: 1.05rem;
+}
