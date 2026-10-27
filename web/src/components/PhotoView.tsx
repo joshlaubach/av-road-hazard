@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { HazardRecord } from "@/api/types";
 import { SEVERITY_COLOR, damageName, objectName } from "@/lib/labels";
 
@@ -7,6 +8,8 @@ interface PhotoViewProps {
   record: HazardRecord;
   showObjects: boolean;
   showDefects: boolean;
+  /** Extra layers drawn between the photo and the boxes (the walkthrough's road, heatmap and squares). */
+  overlay?: ReactNode;
 }
 
 function percent(x: number, whole: number): string {
@@ -14,7 +17,7 @@ function percent(x: number, whole: number): string {
 }
 
 /** The photo with the objects and damage boxes drawn over it, in the photo's own coordinates. */
-export function PhotoView({ imageUrl, alt, record, showObjects, showDefects }: PhotoViewProps) {
+export function PhotoView({ imageUrl, alt, record, showObjects, showDefects, overlay }: PhotoViewProps) {
   const [width, height] = record.image_size;
   return (
     <figure className="photo">
@@ -22,6 +25,7 @@ export function PhotoView({ imageUrl, alt, record, showObjects, showDefects }: P
         {/* A plain img: the source is the visitor's own file or a bundled example. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={imageUrl} alt={alt} />
+        {overlay}
         <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
           {showObjects &&
             record.objects.map((o, i) => (

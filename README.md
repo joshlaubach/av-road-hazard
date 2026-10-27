@@ -2,7 +2,7 @@ Purpose: entry point for av-road-hazard, a system that fuses road-object detecti
 
 # av-road-hazard
 
-> **Status (2026-10-27): the core is built and measured, with honest limits.** The object detector, road finder, crack-and-pothole finder, fusion step and evaluation tools run on real models, and every number below comes from `eval/results.json`. The pipeline finds large, near damage and mostly misses small, far damage. Search (RAG), the web UI and the hosted demo are not built yet. [docs/ROADMAP.md](docs/ROADMAP.md) is the live list of what is done and what comes next.
+> **Status (2026-10-27): the core is built and measured, with honest limits.** The object detector, road finder, crack-and-pothole finder, fusion step and evaluation tools run on real models, and every number below comes from `eval/results.json`. The pipeline finds large, near damage and mostly misses small, far damage. Search (RAG) and the hosted demo are not built yet; the web page for trying a photo is. [docs/ROADMAP.md](docs/ROADMAP.md) is the live list of what is done and what comes next.
 
 New words are explained the first time they appear, in **bold**. Every term is also in [docs/GLOSSARY.md](docs/GLOSSARY.md). Math sits in short "The math" notes, so you can skip them and still follow the story.
 
@@ -126,7 +126,7 @@ The detector fine-tune ([ADR 0015](docs/adr/0015-detector-finetune.md)) trained 
 ## Not built yet
 
 - **RAG** (retrieval-augmented generation): search over saved records, for example "frames with a pothole near a pedestrian", answered by a language model using the retrieved records as its source.
-- **Web UI** with the photo, boxes, a 0-100 gauge, plain-language explanations and an animation of the pipeline.
+- **Web UI, the rest:** a Search view and a Settings view. The Analyze view (photo, boxes, a 0-100 gauge, plain-language explanations and an animated walkthrough) exists.
 - **Hosted demo** (Hugging Face Spaces plus Qdrant Cloud free tier, about $20 a month at most).
 
 By rule ([ADR 0011](docs/adr/0011-core-first-gate.md)) these stay at stub level until the core produces numbers worth reporting.
@@ -140,6 +140,14 @@ pip install -r requirements-dev.lock && pip install --no-deps -e .
 uvicorn api.main:app --port 8000      # then open http://localhost:8000/docs
 python -m pytest
 ```
+
+To use the web page (it needs Node 22 or newer):
+
+```
+cd web && npm ci && npm run dev      # then open http://localhost:3000, with the API running on port 8000
+```
+
+It shows the hazard score on a 0 to 100 gauge, explains each result in plain language, and can replay what the pipeline did to your photo (see [web/README.md](web/README.md)).
 
 To run the real models on a photo, set `USE_STUBS=0` and the `DEFECT_CHECKPOINT` environment variable (the app reads real environment variables, not `.env`), then run `python -m tools.smoke_analyze`. All commands are in [AGENTS.md](AGENTS.md) section 4.
 
