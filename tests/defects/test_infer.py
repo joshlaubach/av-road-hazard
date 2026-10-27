@@ -22,6 +22,7 @@ from defects.infer import (  # noqa: E402
     defect_settings,
     find_defects,
     find_tile_defects,
+    trace_defects,
 )
 
 SIDE = 16
@@ -175,3 +176,29 @@ def test_the_per_tile_finder_keeps_every_flagged_tile_that_find_defects_merges(
     tiles = find_tile_defects(all_white, classifier=classifier)
     assert [d.box for d in tiles] == [(0.0, 0.0, 100.0, 100.0), (100.0, 0.0, 200.0, 100.0)]
     assert len(find_defects(all_white, classifier=classifier)) == 1
+
+
+@pytest.mark.usefixtures("real_path")
+def test_the_trace_ends_in_the_same_merged_defects_find_defects_returns(
+    classifier: Classifier,
+) -> None:
+    all_white = np.full((FRAME_H, FRAME_W, 3), 255, dtype=np.uint8)
+    traced = trace_defects(all_white, classifier=classifier)
+    assert [len(g) for g in traced.groups] == [2]  # both tiles fired and were merged
+    assert traced.merged() == find_defects(all_white, classifier=classifier)
+    assert (traced.tile_size, traced.tile_overlap) == (100, 0.0)
+    assert len(traced.tiles) == 2 and traced.thresholds == (0.90, 0.75, 0.65, 0.75)
+
+
+def test_the_stub_trace_has_a_tile_grid_and_the_stub_defect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("USE_STUBS", "1")
+    config.get_config.cache_clear()
+    try:
+        traced = trace_defects(white_frame())
+        assert traced.tiles and all(t.status == "scored" for t in traced.tiles)
+        assert [d.name for d in traced.merged()] == ["pothole"]
+        assert find_defects(white_frame())[0] == traced.merged()[0]
+    finally:
+        config.get_config.cache_clear()

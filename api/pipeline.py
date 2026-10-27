@@ -12,15 +12,18 @@ from typing import Any, NamedTuple
 import numpy as np
 from PIL import Image, UnidentifiedImageError
 
+from api.models import TracedAnalysis
+from api.trace import build_trace
 from common.config import get_config
 from common.debug import dump
-from defects.infer import find_defects
+from defects.infer import find_defects, trace_defects
 from defects.road_crop import (
     MODEL_SUBDIR,
     REQUIRED_FILES,
     ModelIntegrityError,
     RoadSegmenter,
 )
+from fusion.config import load_fusion_config
 from fusion.fuse import RoadMask, fuse
 from fusion.schema import HazardRecord, Source
 from perception.detector import DETECTOR_SUBDIR
@@ -152,3 +155,36 @@ class Pipeline:
         )
         dump("record", record)
         return Analysis(record, road_mask is not None)
+
+    def analyze_traced(self, data: bytes, source: Source = "upload") -> TracedAnalysis:
+        """Like analyze, but also returns the trace: every tile of the grid with its fate and
+        probabilities, the road mask preview, and the factors behind each defect's score.
+
+        The record is the one analyze would return for the same bytes. The defects come from the
+        same tiles through the same merge; the trace only keeps what analyze throws away.
+        """
+        frame = decode_image(data)
+        h, w = frame.shape[:2]
+        objects = detect(frame)
+        road_mask = self.road_mask(frame)
+        traced = trace_defects(frame, objects=objects, road_mask=road_mask)
+        defects = traced.merged()
+        dump("objects", [o.model_dump(mode="json") for o in objects])
+        dump("defects_raw", [d.model_dump(mode="json") for d in defects])
+        record = fuse(
+            frame_id=frame_id_for(data),
+            source=source,
+            image_size=(w, h),
+            objects=objects,
+            defects=defects,
+            road_mask=road_mask,
+        )
+        dump("record", record)
+        trace = build_trace(
+            record=record,
+            objects=objects,
+            road_mask=road_mask,
+            traced=traced,
+            config=load_fusion_config(),
+        )
+        return TracedAnalysis(record=record, trace=trace)

@@ -1,0 +1,1290 @@
+{
+ "id": "stellenbosch-limits",
+ "title": "A road where the pipeline gets it wrong",
+ "credit": "Photo: Road Pothole Images for Pothole Detection, Stellenbosch University, 2015 (S. Nienaber, R. S. Kroon, M. J. Booysen). CC0 1.0 per the Kaggle and Dataset Ninja listings. Dashboard cropped off.",
+ "note": "The authors marked one pothole, beside a manhole cover. The pipeline does not find it, and it flags a patch of plain road instead. This is the full-size photo, 3680 by 1760 pixels.",
+ "analyzed_size": [
+  3680,
+  1760
+ ],
+ "display_size": [
+  1600,
+  765
+ ],
+ "analysis": {
+  "record": {
+   "frame_id": "up-763f27d20a15309c",
+   "source": "upload",
+   "image_size": [
+    3680,
+    1760
+   ],
+   "objects": [
+    {
+     "label": "car",
+     "score": 0.9907565712928772,
+     "box": [
+      2489.33984375,
+      1132.9051513671875,
+      2677.104736328125,
+      1252.761474609375
+     ]
+    },
+    {
+     "label": "car",
+     "score": 0.8838706016540527,
+     "box": [
+      819.1109008789062,
+      1106.1595458984375,
+      1178.89111328125,
+      1256.22314453125
+     ]
+    },
+    {
+     "label": "car",
+     "score": 0.8658299446105957,
+     "box": [
+      1068.8651123046875,
+      1140.7330322265625,
+      1202.5172119140625,
+      1242.29052734375
+     ]
+    },
+    {
+     "label": "car",
+     "score": 0.7655640244483948,
+     "box": [
+      0.0,
+      1142.175537109375,
+      126.87110137939453,
+      1251.9896240234375
+     ]
+    },
+    {
+     "label": "car",
+     "score": 0.5633099675178528,
+     "box": [
+      3492.6904296875,
+      1137.7188720703125,
+      3658.801513671875,
+      1420.959228515625
+     ]
+    },
+    {
+     "label": "car",
+     "score": 0.5512614250183105,
+     "box": [
+      147.03065490722656,
+      1160.4814453125,
+      301.21514892578125,
+      1230.5802001953125
+     ]
+    }
+   ],
+   "defects": [
+    {
+     "name": "D40",
+     "confidence": 0.8757869601249695,
+     "box": [
+      2097.0,
+      1101.0,
+      2481.0,
+      1485.0
+     ],
+     "severity": "high",
+     "in_road": true,
+     "near_objects": [
+      {
+       "label": "car",
+       "iou": 0.0,
+       "dist_px": 102.2222900390625
+      }
+     ]
+    }
+   ],
+   "hazard_score": 0.4933635113482522,
+   "meta": {
+    "time_of_day": "unknown",
+    "location": null
+   }
+  },
+  "trace": {
+   "image_size": [
+    3680,
+    1760
+   ],
+   "tile_size": 384,
+   "tile_overlap": 0.2,
+   "thresholds": {
+    "D00": 0.9,
+    "D10": 0.75,
+    "D20": 0.65,
+    "D40": 0.75
+   },
+   "max_object_cover": 0.3,
+   "min_road_cover": 0.4,
+   "tiles": [
+    {
+     "row": 0,
+     "col": 0,
+     "box": [
+      0.0,
+      0.0,
+      384.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "box": [
+      300.0,
+      0.0,
+      684.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 2,
+     "box": [
+      599.0,
+      0.0,
+      983.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 3,
+     "box": [
+      899.0,
+      0.0,
+      1283.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 4,
+     "box": [
+      1199.0,
+      0.0,
+      1583.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 5,
+     "box": [
+      1498.0,
+      0.0,
+      1882.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 6,
+     "box": [
+      1798.0,
+      0.0,
+      2182.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 7,
+     "box": [
+      2097.0,
+      0.0,
+      2481.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 8,
+     "box": [
+      2397.0,
+      0.0,
+      2781.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 9,
+     "box": [
+      2697.0,
+      0.0,
+      3081.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 10,
+     "box": [
+      2996.0,
+      0.0,
+      3380.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 0,
+     "col": 11,
+     "box": [
+      3296.0,
+      0.0,
+      3680.0,
+      384.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "box": [
+      0.0,
+      275.0,
+      384.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "box": [
+      300.0,
+      275.0,
+      684.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "box": [
+      599.0,
+      275.0,
+      983.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "box": [
+      899.0,
+      275.0,
+      1283.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 4,
+     "box": [
+      1199.0,
+      275.0,
+      1583.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 5,
+     "box": [
+      1498.0,
+      275.0,
+      1882.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 6,
+     "box": [
+      1798.0,
+      275.0,
+      2182.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 7,
+     "box": [
+      2097.0,
+      275.0,
+      2481.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 8,
+     "box": [
+      2397.0,
+      275.0,
+      2781.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 9,
+     "box": [
+      2697.0,
+      275.0,
+      3081.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 10,
+     "box": [
+      2996.0,
+      275.0,
+      3380.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 1,
+     "col": 11,
+     "box": [
+      3296.0,
+      275.0,
+      3680.0,
+      659.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "box": [
+      0.0,
+      550.0,
+      384.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "box": [
+      300.0,
+      550.0,
+      684.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "box": [
+      599.0,
+      550.0,
+      983.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "box": [
+      899.0,
+      550.0,
+      1283.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 4,
+     "box": [
+      1199.0,
+      550.0,
+      1583.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 5,
+     "box": [
+      1498.0,
+      550.0,
+      1882.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 6,
+     "box": [
+      1798.0,
+      550.0,
+      2182.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 7,
+     "box": [
+      2097.0,
+      550.0,
+      2481.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 8,
+     "box": [
+      2397.0,
+      550.0,
+      2781.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 9,
+     "box": [
+      2697.0,
+      550.0,
+      3081.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 10,
+     "box": [
+      2996.0,
+      550.0,
+      3380.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 2,
+     "col": 11,
+     "box": [
+      3296.0,
+      550.0,
+      3680.0,
+      934.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "box": [
+      0.0,
+      826.0,
+      384.0,
+      1210.0
+     ],
+     "object_cover": 0.12950303819444445,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "box": [
+      300.0,
+      826.0,
+      684.0,
+      1210.0
+     ],
+     "object_cover": 0.0032958984375,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "box": [
+      599.0,
+      826.0,
+      983.0,
+      1210.0
+     ],
+     "object_cover": 0.1382378472222222,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "box": [
+      899.0,
+      826.0,
+      1283.0,
+      1210.0
+     ],
+     "object_cover": 0.23295762803819445,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 4,
+     "box": [
+      1199.0,
+      826.0,
+      1583.0,
+      1210.0
+     ],
+     "object_cover": 0.005594889322916667,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 5,
+     "box": [
+      1498.0,
+      826.0,
+      1882.0,
+      1210.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 6,
+     "box": [
+      1798.0,
+      826.0,
+      2182.0,
+      1210.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.04118516710069445,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 7,
+     "box": [
+      2097.0,
+      826.0,
+      2481.0,
+      1210.0
+     ],
+     "object_cover": 0.0011393229166666667,
+     "road_cover": 0.029805501302083332,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 8,
+     "box": [
+      2397.0,
+      826.0,
+      2781.0,
+      1210.0
+     ],
+     "object_cover": 0.11848958333333333,
+     "road_cover": 0.0030314127604166665,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 9,
+     "box": [
+      2697.0,
+      826.0,
+      3081.0,
+      1210.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 10,
+     "box": [
+      2996.0,
+      826.0,
+      3380.0,
+      1210.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 3,
+     "col": 11,
+     "box": [
+      3296.0,
+      826.0,
+      3680.0,
+      1210.0
+     ],
+     "object_cover": 0.10856119791666667,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "box": [
+      0.0,
+      1101.0,
+      384.0,
+      1485.0
+     ],
+     "object_cover": 0.20194498697916666,
+     "road_cover": 0.08097330729166667,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "box": [
+      300.0,
+      1101.0,
+      684.0,
+      1485.0
+     ],
+     "object_cover": 0.00482177734375,
+     "road_cover": 0.12424723307291667,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "box": [
+      599.0,
+      1101.0,
+      983.0,
+      1485.0
+     ],
+     "object_cover": 0.20118543836805555,
+     "road_cover": 0.04156494140625,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "box": [
+      899.0,
+      1101.0,
+      1283.0,
+      1485.0
+     ],
+     "object_cover": 0.3393758138020833,
+     "road_cover": 0.006245930989583333,
+     "status": "skipped_object",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 4,
+     "box": [
+      1199.0,
+      1101.0,
+      1583.0,
+      1485.0
+     ],
+     "object_cover": 0.008429633246527778,
+     "road_cover": 0.005133734809027778,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 5,
+     "box": [
+      1498.0,
+      1101.0,
+      1882.0,
+      1485.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.2740681966145833,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 6,
+     "box": [
+      1798.0,
+      1101.0,
+      2182.0,
+      1485.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.7134331597222222,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.017442485317587852,
+      "D10": 0.024798160418868065,
+      "D20": 0.01798621006309986,
+      "D40": 0.06465348601341248
+     },
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 7,
+     "box": [
+      2097.0,
+      1101.0,
+      2481.0,
+      1485.0
+     ],
+     "object_cover": 0.001803927951388889,
+     "road_cover": 0.7432793511284722,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.025565214455127716,
+      "D10": 0.013636835850775242,
+      "D20": 0.03021458350121975,
+      "D40": 0.8757869601249695
+     },
+     "flagged": [
+      "D40"
+     ]
+    },
+    {
+     "row": 4,
+     "col": 8,
+     "box": [
+      2397.0,
+      1101.0,
+      2781.0,
+      1485.0
+     ],
+     "object_cover": 0.18760850694444445,
+     "road_cover": 0.6476033528645834,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.12168574333190918,
+      "D10": 0.025565214455127716,
+      "D20": 0.2766905128955841,
+      "D40": 0.008847354911267757
+     },
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 9,
+     "box": [
+      2697.0,
+      1101.0,
+      3081.0,
+      1485.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.5661282009548612,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.3720487952232361,
+      "D10": 0.027585282921791077,
+      "D20": 0.17441026866436005,
+      "D40": 0.0120537793263793
+     },
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 10,
+     "box": [
+      2996.0,
+      1101.0,
+      3380.0,
+      1485.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.4712795681423611,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.06754669547080994,
+      "D10": 0.023689469322562218,
+      "D20": 0.15304215252399445,
+      "D40": 0.014063628390431404
+     },
+     "flagged": []
+    },
+    {
+     "row": 4,
+     "col": 11,
+     "box": [
+      3296.0,
+      1101.0,
+      3680.0,
+      1485.0
+     ],
+     "object_cover": 0.3905707465277778,
+     "road_cover": 0.3436957465277778,
+     "status": "skipped_object",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "box": [
+      0.0,
+      1376.0,
+      384.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "box": [
+      300.0,
+      1376.0,
+      684.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "box": [
+      599.0,
+      1376.0,
+      983.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 3,
+     "box": [
+      899.0,
+      1376.0,
+      1283.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.0281982421875,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 4,
+     "box": [
+      1199.0,
+      1376.0,
+      1583.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.3304307725694444,
+     "status": "skipped_off_road",
+     "probabilities": null,
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 5,
+     "box": [
+      1498.0,
+      1376.0,
+      1882.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.7536553276909722,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.019419347867369652,
+      "D10": 0.6934729218482971,
+      "D20": 0.09947021305561066,
+      "D40": 0.02843603305518627
+     },
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 6,
+     "box": [
+      1798.0,
+      1376.0,
+      2182.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.8168267144097222,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.11757213622331619,
+      "D10": 0.10230471193790436,
+      "D20": 0.21601155400276184,
+      "D40": 0.0222861859947443
+     },
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 7,
+     "box": [
+      2097.0,
+      1376.0,
+      2481.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.7816162109375,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.19072403013706207,
+      "D10": 0.015424552373588085,
+      "D20": 0.034618835896253586,
+      "D40": 0.0013670255430042744
+     },
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 8,
+     "box": [
+      2397.0,
+      1376.0,
+      2781.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.7831624348958334,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.09947021305561066,
+      "D10": 0.03514484688639641,
+      "D20": 0.14511536061763763,
+      "D40": 0.016914913430809975
+     },
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 9,
+     "box": [
+      2697.0,
+      1376.0,
+      3081.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.83343505859375,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.0838903859257698,
+      "D10": 0.024423090741038322,
+      "D20": 0.42155182361602783,
+      "D40": 0.037326887249946594
+     },
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 10,
+     "box": [
+      2996.0,
+      1376.0,
+      3380.0,
+      1760.0
+     ],
+     "object_cover": 0.0,
+     "road_cover": 0.9096204969618056,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.012431650422513485,
+      "D10": 0.03676946833729744,
+      "D20": 0.052618950605392456,
+      "D40": 0.02595735713839531
+     },
+     "flagged": []
+    },
+    {
+     "row": 5,
+     "col": 11,
+     "box": [
+      3296.0,
+      1376.0,
+      3680.0,
+      1760.0
+     ],
+     "object_cover": 0.07486979166666667,
+     "road_cover": 0.91864013671875,
+     "status": "scored",
+     "probabilities": {
+      "D00": 0.015424552373588085,
+      "D10": 0.01798621006309986,
+      "D20": 0.004905405919998884,
+      "D40": 0.009412589482963085
+     },
+     "flagged": []
+    }
+   ],
+   "road_mask": {
+    "width": 160,
+    "height": 77,
+    "png_base64": "iVBORw0KGgoAAAANSUhEUgAAAKAAAABNCAAAAAAEfjCtAAAA2UlEQVR4nO3XUQ6CMBBF0Rn3v+dnCCAFTSydtk7MPT8aY9ubUoyYAQAAAAAAAAAAAACAP+RDZlW/iYcEqpxcsXX8fdpwtSoWq7aNkZte45d3y0VaP7l9ufR1vWOp6sDL7L68bIE3C1X/1ao99Y/Tt19jNY0q17uc2WPL1eN+UWRweT+cA3tRl1nOSZ6u7xLmSftsP32eNc/235K8fSvPnWddAmUDPZL32SN5n3nuPIvuoGw0z51noR2c0Tf9j9W0wEl51hio4PwaHFg8F8TPin7xXGwtpp2avp784TAOnv2qowAAAABJRU5ErkJggg=="
+   },
+   "fusion": [
+    {
+     "name": "D40",
+     "merged_from": 1,
+     "in_road": true,
+     "road_multiplier": 1.0,
+     "severity": "high",
+     "severity_weight": 1.0,
+     "confidence": 0.8757869601249695,
+     "proximity": 0.12667471385473067,
+     "score": 0.4933635113482522
+    }
+   ]
+  }
+ }
+}

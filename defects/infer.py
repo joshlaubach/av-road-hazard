@@ -10,18 +10,22 @@ class into one defect (defects/merge.py).
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import numpy as np
 
 from common.config import get_config
 from defects.labels import CODES
-from defects.merge import merge_defects
+from defects.merge import combine, merge_defects, merge_groups
 from defects.patches import IntBox
 from fusion.fuse import RoadMask
 from fusion.schema import Defect, Object
+
+if TYPE_CHECKING:
+    from defects.tile_defects import ScoredTile
 
 
 class DefectsUnavailable(RuntimeError):
@@ -137,6 +141,93 @@ def find_tile_defects(
         min_road_cover=chosen.min_road_cover,
         region=region,
     )
+
+
+@dataclass(frozen=True)
+class TracedDefects:
+    """Everything find_defects did on a frame: every tile with its fate, and the merged groups.
+
+    groups holds the flagged tiles of each merged defect, so merged() is exactly what find_defects
+    returns. tile_size and tile_overlap describe the grid; thresholds are in CODES order.
+    """
+
+    tiles: list[ScoredTile]
+    tile_size: int
+    tile_overlap: float
+    thresholds: tuple[float, ...]
+    max_object_cover: float
+    min_road_cover: float
+    groups: list[list[Defect]]
+
+    def merged(self) -> list[Defect]:
+        return [combine(group) for group in self.groups]
+
+
+def trace_defects(
+    frame: np.ndarray,
+    *,
+    objects: Sequence[Object] = (),
+    road_mask: RoadMask | None = None,
+    classifier: Classifier | None = None,
+    settings: DefectSettings | None = None,
+    region: IntBox | None = None,
+) -> TracedDefects:
+    """find_defects, keeping the per-tile story: which tiles were skipped and why, each scored
+    tile's class probabilities, and which flagged tiles merged into which defect."""
+    cfg = get_config()
+    chosen = settings or defect_settings(cfg)
+    if cfg["pipeline"]["use_stubs"]:
+        return _stub_trace(frame, chosen)
+    from defects.tile_defects import score_frame_tiles, tiles_to_defects
+
+    used = classifier or load_classifier()
+    scored = score_frame_tiles(
+        used.model,
+        frame,
+        objects,
+        used.cfg,
+        max_object_cover=chosen.max_object_cover,
+        road_mask=road_mask,
+        min_road_cover=chosen.min_road_cover,
+        region=region,
+    )
+    flagged = [s for s in scored if s.probabilities is not None]
+    raw = tiles_to_defects(
+        [s.tile for s in flagged], [list(s.probabilities or ()) for s in flagged], chosen.thresholds
+    )
+    return TracedDefects(
+        scored,
+        int(used.cfg["tile_size"]),
+        float(used.cfg["tile_overlap"]),
+        chosen.thresholds,
+        chosen.max_object_cover,
+        chosen.min_road_cover,
+        merge_groups(raw),
+    )
+
+
+def _stub_trace(frame: np.ndarray, chosen: DefectSettings) -> TracedDefects:
+    """A fixed fake trace for the stub pipeline: a 2-tile-wide grid, one tile area flagged."""
+    from defects.patches import tile_grid
+    from defects.tile_defects import ScoredTile
+
+    h, w = frame.shape[:2]
+    stub = _stub_defects(frame)[0]
+    size, overlap = max(1, min(h, w) // 2), 0.5
+    quiet = 0.04
+    scored: list[ScoredTile] = []
+    for tile in tile_grid((w, h), size, overlap):
+        x1, y1, x2, y2 = tile.box
+        hit = (
+            x1 <= (stub.box[0] + stub.box[2]) / 2 <= x2
+            and y1 <= (stub.box[1] + stub.box[3]) / 2 <= y2
+        )
+        row = (quiet, quiet, quiet, stub.confidence if hit else quiet)
+        scored.append(ScoredTile(tile, 0.0, None, "scored", row))
+    return TracedDefects(
+        scored, size, overlap, chosen.thresholds, chosen.max_object_cover, chosen.min_road_cover,
+        [[stub]],
+    )  # fmt: skip
 
 
 def _stub_defects(frame: np.ndarray) -> list[Defect]:

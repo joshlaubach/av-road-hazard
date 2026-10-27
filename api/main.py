@@ -12,7 +12,13 @@ from importlib import metadata
 from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import JSONResponse
 
-from api.models import HealthResponse, IndexResponse, QueryRequest, QueryResponse
+from api.models import (
+    HealthResponse,
+    IndexResponse,
+    QueryRequest,
+    QueryResponse,
+    TracedAnalysis,
+)
 from api.pipeline import InvalidImage, Pipeline, model_status
 from common.config import get_config
 from common.logging import configure_logging, request_id_var
@@ -124,6 +130,15 @@ def create_app() -> FastAPI:
         record = pipeline.analyze(await _read_image(file))
         store[record.frame_id] = record
         return record
+
+    # POST /analyze/trace: the same record as /analyze, plus the trace of what the pipeline did
+    # (tile grid, skipped tiles, class probabilities, road mask preview, fusion factors). The record
+    # is stored like /analyze's. Meant for the UI's walkthrough, not for bulk use.
+    @app.post("/analyze/trace", response_model=TracedAnalysis)
+    async def analyze_trace(file: UploadFile = File(...)) -> TracedAnalysis:  # noqa: B008
+        result = pipeline.analyze_traced(await _read_image(file))
+        store[result.record.frame_id] = result.record
+        return result
 
     # POST /index: analyze a batch of images and keep the records. Capped by max_batch_files so one
     # request cannot hold the server for long. Returns the frame ids that were stored.
