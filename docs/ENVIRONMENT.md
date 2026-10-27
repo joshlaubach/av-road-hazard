@@ -64,7 +64,7 @@ defect-detector uses Python 3.12. The new repo's Python version is undecided: op
 
 ## Local services and paths
 
-Ollama on `http://localhost:11434` with model `llama3.2-vision`. Qdrant in Docker locally and Qdrant Cloud free tier when hosted. The Kaggle API token at `~/.kaggle/kaggle.json` is only needed for MVTec AD, which is dropped from v1. Paths come from `.env` (see `.env.example`) and `configs/*.yaml`; none are hardcoded. <!-- F:E-12 -->
+Ollama on `http://localhost:11434` with model `llama3.2` (the default since ADR 0018; `llama3.2-vision` is not needed for text answers). Qdrant in Docker locally and Qdrant Cloud free tier when hosted. The Kaggle API token at `~/.kaggle/kaggle.json` is only needed for MVTec AD, which is dropped from v1. Paths come from `.env` (see `.env.example`) and `configs/*.yaml`; none are hardcoded. <!-- F:E-12 -->
 
 ## GPU and Docker requirements
 

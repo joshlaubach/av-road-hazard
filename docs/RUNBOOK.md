@@ -14,7 +14,7 @@ Cause: container not running (local) or wrong `QDRANT_URL` / `QDRANT_API_KEY` (c
 
 ## Ollama model not pulled
 
-Cause: the model named in `OLLAMA_MODEL` (default `llama3.2-vision`) is not present on the Ollama host (`OLLAMA_HOST`, default `http://localhost:11434`). The source tool degrades gracefully: reports show "Report unavailable: <error>" while classification still completes. Fix: to be completed when implemented.
+Cause: the model named in `OLLAMA_MODEL` (default `llama3.2`) is not present on the Ollama host (`OLLAMA_HOST`, default `http://localhost:11434`). The source tool degrades gracefully: reports show "Report unavailable: <error>" while classification still completes. Fix: to be completed when implemented.
 
 ## Out of memory (OOM)
 
