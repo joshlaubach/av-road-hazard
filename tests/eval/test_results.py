@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -43,7 +44,8 @@ def _classifier_report() -> dict[str, Any]:
 
     return {
         "baseline": "baseline", "fold": 0,
-        "provenance": {"files": {"checkpoint/baseline": "a" * 64}, "git_commit": "abc",
+        "provenance": {"files": {"checkpoint/baseline": "a" * 64, "review_key": "b" * 64},
+                       "git_commit": "abc",
                        "git_dirty": False, "date_utc": "2026-10-26T00:00:00Z",
                        "thresholds": {"D00": 0.9, "D10": 0.75, "D20": 0.65, "D40": 0.75}},
         "checkpoints": {
@@ -148,6 +150,22 @@ def test_the_results_hold_numbers_only_no_frames_files_or_paths() -> None:
         assert forbidden not in text
 
 
+def test_no_field_name_looks_like_a_secret_to_the_repository_scanner() -> None:
+    """gitleaks reads `"review_key": "<64 hex>"` as an API key: file hashes need other names."""
+    results = _results()
+    results["classifier"]["note"] = "ok"
+    names = _field_names(results)
+    assert not [n for n in names if re.search(r"key|secret|token|passw", n, re.IGNORECASE)]
+
+
+def _field_names(value: Any) -> list[str]:
+    if isinstance(value, dict):
+        return [str(k) for k in value] + [n for v in value.values() for n in _field_names(v)]
+    if isinstance(value, list):
+        return [n for v in value for n in _field_names(v)]
+    return []
+
+
 def test_the_effective_range_turns_patch_width_into_a_distance_for_a_stated_defect_size() -> None:
     rng = effective_range(_fusion_report(), focal_px=1266.0, defect_width_m=0.5)
     by = {row["band"]: row for row in rng["bands"]}
@@ -189,6 +207,7 @@ def test_a_results_file_missing_a_section_or_holding_a_path_is_refused() -> None
 def test_the_committed_results_file_is_valid() -> None:
     results = json.loads((ROOT / "eval" / "results.json").read_text(encoding="utf-8"))
     validate_results(results)
+    assert not [n for n in _field_names(results) if re.search(r"key|secret|token|passw", n, re.I)]
 
 
 def test_the_readme_table_is_exactly_what_the_committed_results_render() -> None:
