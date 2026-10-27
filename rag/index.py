@@ -131,7 +131,7 @@ class Index:
 
     def count(self, session: str | None = None) -> int:
         flt = None if session is None else build_filter([session], None)
-        return self.client.count(COLLECTION, count_filter=flt, exact=True).count
+        return int(self.client.count(COLLECTION, count_filter=flt, exact=True).count)
 
     def get(self, frame_id: str, sessions: Collection[str]) -> HazardRecord | None:
         """The record, only if it lives in one of the sessions the caller may see."""
