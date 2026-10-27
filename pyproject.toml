@@ -17,6 +17,9 @@ dependencies = [
   "pyyaml>=6.0",
   "numpy>=1.26",
   "pillow>=10.3",
+  "httpx>=0.27",  # the Ollama backend
+  "qdrant-client>=1.9",  # the photo index (in memory or a server)
+  "anthropic>=1.0",  # the Claude backend
 ]
 
 [project.optional-dependencies]
@@ -27,8 +30,6 @@ dev = [
   "mypy>=1.10",
   "types-PyYAML",
   "pre-commit>=3.7",
-  "qdrant-client>=1.9",  # the search tests run in CI; the models (open_clip, torch) do not
-  "anthropic>=1.0",
 ]
 notebook = [
   "jupyterlab>=4",
@@ -49,9 +50,7 @@ ml = [
   "huggingface_hub>=0.24",
 ]
 rag = [
-  "qdrant-client>=1.9",
-  "anthropic>=1.0",
-  "open_clip_torch>=2.24",
+  "open_clip_torch>=2.24",  # CLIP; the API runs on a stand-in embedder without it
 ]
 
 [tool.setuptools.packages.find]

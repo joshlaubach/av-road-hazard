@@ -66,8 +66,9 @@ class RagService:
         self._stubs = bool(cfg["pipeline"]["use_stubs"])
         self._embedder = embedder
         self._embedder_lock = threading.Lock()
-        qdrant = cfg["qdrant"]
-        self.index = Index(DIM, qdrant["url"], qdrant.get("api_key"))
+        self._qdrant = cfg["qdrant"]
+        self._index: Index | None = None
+        self._index_lock = threading.Lock()
         self.spend = SpendGuard(float(rag["daily_usd"]), float(rag["monthly_usd"]))
         self.query_limiter = RateLimiter(int(rag["queries_per_minute"]))
         self.index_limiter = RateLimiter(int(rag["uploads_per_minute"]))
@@ -78,6 +79,15 @@ class RagService:
         )
         self._recent: OrderedDict[tuple[str, str], HazardRecord] = OrderedDict()
         self._seen: OrderedDict[str, float] = OrderedDict()
+
+    @property
+    def index(self) -> Index:
+        """Connected on first use, so routes that never store or search (/analyze, /health) do not
+        need the Qdrant server to be up."""
+        with self._index_lock:
+            if self._index is None:
+                self._index = Index(DIM, self._qdrant["url"], self._qdrant.get("api_key"))
+            return self._index
 
     @property
     def embedder(self) -> Embedder:
@@ -109,7 +119,8 @@ class RagService:
         self._seen.pop(session, None)
         for key in [k for k in self._recent if k[0] == session]:
             del self._recent[key]
-        self.index.delete_session(session)
+        if self._index is not None:  # nothing was ever stored if the index was never opened
+            self._index.delete_session(session)
 
     def remember(self, session: str, record: HazardRecord) -> None:
         """Keep a record from /analyze so GET /records can return it (bounded per session)."""
@@ -138,8 +149,10 @@ class RagService:
         return {r.frame_id for r in records if self.index.get(r.frame_id, [session]) is not None}
 
     def get_record(self, frame_id: str, session: str) -> HazardRecord | None:
-        found = self.index.get(frame_id, [CORPUS, session])
-        return found or self._recent.get((session, frame_id))
+        recent = self._recent.get((session, frame_id))
+        if recent is not None:
+            return recent
+        return self.index.get(frame_id, [CORPUS, session])
 
     # ------------------------------------------------------------------ search and answer
 
