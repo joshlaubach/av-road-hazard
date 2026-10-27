@@ -2,7 +2,7 @@ Purpose: entry point for av-road-hazard, a system that fuses road-object detecti
 
 # av-road-hazard
 
-> **Status (2026-10-26): the core works and is being measured.** The object detector, road finder, crack-and-pothole finder, fusion step and evaluation tools run on real models. Search (RAG), the web UI and the hosted demo are not built yet. [docs/ROADMAP.md](docs/ROADMAP.md) is the live list of what is done and what comes next.
+> **Status (2026-10-27): the core is built and measured, with honest limits.** The object detector, road finder, crack-and-pothole finder, fusion step and evaluation tools run on real models, and every number below comes from `eval/results.json`. The pipeline finds large, near damage and mostly misses small, far damage. Search (RAG), the web UI and the hosted demo are not built yet. [docs/ROADMAP.md](docs/ROADMAP.md) is the live list of what is done and what comes next.
 
 New words are explained the first time they appear, in **bold**. Every term is also in [docs/GLOSSARY.md](docs/GLOSSARY.md). Math sits in short "The math" notes, so you can skip them and still follow the story.
 
@@ -30,7 +30,7 @@ photo ─► 1. objects      (detector)   ─► boxes: "pedestrian here, car th
 
 A **detector** is a neural network that looks at a photo and returns **boxes** (rectangles) around things, each with a **label** ("car") and a **confidence** between 0 and 1. We use a pretrained COCO detector (a Faster R-CNN with a MobileNet backbone, [ADR 0014](docs/adr/0014-object-detector.md)) and keep boxes with confidence at least 0.5.
 
-Its weakness: it only knows the 80 things in COCO. It has no word for traffic cones or barriers, which is about 20% of everything annotated in the nuScenes test images. A fine-tune that teaches it those two words is running now ([ADR 0015](docs/adr/0015-detector-finetune.md)).
+Its weakness: it only knows the 80 things in COCO. It has no word for traffic cones or barriers, which is about 20% of everything annotated in the nuScenes test images. We tried fine-tuning it on nuScenes to name those two things. Cones mostly worked, barriers did not, so the original detector stays ([ADR 0015](docs/adr/0015-detector-finetune.md)).
 
 > **The math.** Two boxes $A$ and $B$ overlap by their **intersection over union**:
 > $$\mathrm{IoU}(A,B)=\frac{|A\cap B|}{|A\cup B|}\in[0,1].$$
@@ -85,18 +85,33 @@ All numbers below come from our own evaluation code (`eval/`), with a 90% range 
 $$\frac{\hat p+\frac{z^2}{2n}\pm z\sqrt{\frac{\hat p(1-\hat p)}{n}+\frac{z^2}{4n^2}}}{1+\frac{z^2}{n}},\qquad z\approx1.645.$$
 Few tries means a wide range, so a range is more honest than a single number.
 
-| Test | What we did | Result |
+<!-- results:start -->
+| Measure | Result | In `eval/results.json` |
 |---|---|---|
-| False alarms on driving photos | The classifier run over 404 nuScenes frames (no known damage) | 0.131 alerts per frame after hard-negative training, down from 0.198 |
-| Synthetic fusion test | Pasted 215 real damage patches onto 30 road photos, ran the full pipeline | Damage found on the road: 54 of 170. By patch width: 5% under 64 px, 30% at 64-128 px, 60% at 128 px and up. Reported off-road: 0 of 45. Fusion's road answer matched the hand-drawn road on 52 of 54. **Verdict: fail** (large patches need 70%) |
-| Real photos | 14 dashboard photos from South Africa (Stellenbosch pothole dataset, 44 marked potholes) | 10 of 44 found (23%) |
-| Detector gap | Zero-shot detector on nuScenes | Cannot name barriers, cones or debris; stopped vehicles found 26% of the time |
+| Tile classifier on RDD2022 validation tiles, precision / recall per class | D00 95% / 57% · D10 85% / 61% · D20 88% / 72% · D40 92% / 57% | `classifier.validation` |
+| False alarms on 404 nuScenes driving frames (alerts per frame) | baseline 0.198 (80 alerts), chosen 0.131 (53 alerts, 90% range 0.106 to 0.161) | `classifier.nuscenes` |
+| Flagged nuScenes tiles that a reviewer called a real crack | baseline 6 of 79 (8%), chosen 7 of 52 (13%, 90% range 7% to 23%) | `classifier.nuscenes.*.buckets` |
+| Clean road tiles the classifier still flags (23 held-out tiles) | baseline 23 of 23, chosen 13 of 23 | `classifier.probe` |
+| Non-road tiles flagged (nuScenes, shipped thresholds) | 1 of 2,483 tiles with under 5% road (0.04%, 90% range 0.01% to 0.18%); 5 of 1,701 tiles with 5% to 40% road, which the pipeline skips (0.29%, 90% range 0.14% to 0.60%) | `classifier.non_road_false_positives` |
+| Pasted-patch test: damage found on the road | 54 of 170 (32%, 90% range 26% to 38%); by patch width under 64 / 64 to 128 / 128 px and up: 5% / 30% / 60% | `synthetic_fusion.on_road` |
+| Pasted-patch test: off-road patches reported as defects | 0 of 45 | `synthetic_fusion.off_road` |
+| Pasted-patch test: `in_road` agrees with the hand-drawn road | 52 of 54 (96%, 90% range 89% to 99%) | `synthetic_fusion.in_road` |
+| Pasted-patch test: objects near a defect | 71% of the true neighbors found, 88% of those reported correct | `synthetic_fusion.near_objects` |
+| Pasted-patch test verdict | FAIL: detection rate, large patches: 0.60 is below the minimum 0.70 | `synthetic_fusion.verdict` |
+| Effective range, from the pasted-patch test | defects 128 px wide or more in the frame (about 4.95 m ahead for a 0.5 m wide defect) are found 60% of the time; 64 to 128 px (between about 4.95 and 9.89 m) 30%; under 64 px (farther than about 9.89 m) 5% | `effective_range` |
+| Zero-shot COCO detector on nuScenes (six cameras, cutoff 0.5), precision / recall | pedestrian 42% / 39% · cyclist 11% / 13% · motorcycle 37% / 13% · car 45% / 60% · truck 46% / 39% · bus 54% / 40% | `detector.fine_tune.old_classes` |
+| Fine-tune for cones and barriers, held-out nuScenes scenes | cones: precision 74%, recall 58% over 4 scenes, but only 1 scene reaches both limits alone; barriers: 2 of 1511 found. FAIL: the zero-shot detector stays | `detector.fine_tune` |
+| Real dashboard photos (14 dashboard photos, Stellenbosch pothole dataset, South Africa) | 10 of 44 marked potholes found; 15 other boxes (not necessarily mistakes). Run by hand, not reproducible from this repo | `real_photo_check` |
+| Retrieval (RAG) | not measured | `retrieval` |
+<!-- results:end -->
 
-The pattern: **large damage close to the camera is found; small, far damage mostly is not.** A pothole 30 meters away is only a few pixels wide. We report this as a limit, not a fixable detail.
+Rows marked *pasted-patch* come from a test that pastes real damage patches onto driving photos. It is easier than real damage, so those numbers are not real-world accuracy.
 
-## What is in progress
+The pattern: **large damage close to the camera is found; small, far damage mostly is not.** A pothole 30 meters away is only a few pixels wide. We report this as a limit, not a fixable detail: the effective range row above says how large a defect must look to be found.
 
-The detector fine-tune ([ADR 0015](docs/adr/0015-detector-finetune.md)) teaches the detector to name cones and barriers. Because nuScenes mini has only 10 scenes, we train 10 models, each holding out one scene, and grade each model only on the scene it never saw. Cones and barriers must be right at least 70% of the time and find at least 40% of the clearly visible ones, and the old classes must not get worse. If it fails, the original detector stays.
+## What did not work
+
+The detector fine-tune ([ADR 0015](docs/adr/0015-detector-finetune.md)) trained 10 models, each holding out one nuScenes scene, and graded each only on the scene it never saw. Cones were found and judged right often enough across scenes, but only one scene cleared the limits on its own, and barriers were almost never found in a new scene (they appear in only 3 of the 10 scenes). By the plan, the original detector stays. More scenes are the next step if work-zone objects matter.
 
 ## Limits and open problems
 
