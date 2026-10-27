@@ -41,10 +41,24 @@ llm:
   backend: ollama         # env LLM_BACKEND: ollama | claude
   ollama_host: http://localhost:11434
   ollama_model: llama3.2   # answers come from the retrieved records only, so a text model is enough
-  claude_model: claude-opus-5-5   # env CLAUDE_MODEL; the key is ANTHROPIC_API_KEY, read by the SDK
+  claude_model: claude-haiku-5-5   # env CLAUDE_MODEL, tried first; the key is ANTHROPIC_API_KEY (read by the SDK)
+  claude_escalation_model: claude-sonnet-5-5   # env CLAUDE_ESCALATION_MODEL, used when the first answer fails a check; same name as above = one tier
 
 qdrant:
-  url: null               # env QDRANT_URL
+  url: null               # env QDRANT_URL; null keeps the index in memory (lost on restart)
+  api_key: null           # env QDRANT_API_KEY, for a hosted Qdrant
+
+rag:
+  device: cpu                  # where OpenCLIP runs when not using stubs
+  max_records_per_session: 100 # photos one visitor may keep indexed
+  max_sessions: 500            # visitors kept at once; the least recently used are dropped
+  session_ttl_s: 7200          # a session idle this long is deleted
+  queries_per_minute: 20       # per visitor and per address
+  uploads_per_minute: 6        # per visitor and per address (/analyze, /analyze/trace, /index)
+  parallel_jobs: 3             # model calls and photo analyses running at once; more get a 503
+  daily_usd: 2.0               # env ANTHROPIC_DAILY_SPEND_CAP_USD; stops Claude calls for the day
+  monthly_usd: 20.0            # env ANTHROPIC_MONTHLY_SPEND_CAP_USD; an in-process estimate, set the
+                               # real cap in the Anthropic console too
 
 logging:
   level: INFO             # env LOG_LEVEL
