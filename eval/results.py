@@ -111,6 +111,23 @@ def _fine_tune_summary(report: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def retrieval_section(report: Mapping[str, Any]) -> dict[str, Any]:
+    """The search numbers (tools/eval_retrieval.py) without the provenance block."""
+    return {
+        "status": "measured",
+        "frames": report["frames"],
+        "queries": report["queries"],
+        "embedder": report["embedder"],
+        "methods": report["methods"],
+        "caveat": (
+            "Queries are made from the nuScenes human annotations, so they are mostly about "
+            "objects and light; they say little about how well appearance words (wet road, glare) "
+            "work. Relevant frames contain a clearly visible annotated object; the search sees "
+            "only the pipeline's own records and the photos."
+        ),
+    }
+
+
 def build_results(
     *,
     classifier: Mapping[str, Any],
@@ -193,6 +210,26 @@ def validate_results(results: Mapping[str, Any]) -> None:
 
 
 # ------------------------------------------------------------------------------- the README
+
+
+def _retrieval_row(results: Mapping[str, Any]) -> str:
+    r = results["retrieval"]
+    if r["status"] != "measured":
+        return str(r["status"])
+    at5 = {n: m["all"]["recall@5"] for n, m in r["methods"].items()}
+    parts = [
+        f"{label} {at5[key]['mean']:.2f}"
+        for label, key in (
+            ("description", "description_vector"),
+            ("photo", "photo_vector"),
+            ("both fused", "fused"),
+            ("random order", "random"),
+        )
+    ]
+    return (
+        f"Recall at 5 on {r['frames']} nuScenes frames and {r['queries']} queries made from the "
+        "annotations: " + ", ".join(parts) + " (1.0 is perfect)"
+    )
 
 
 def _pct(x: float) -> str:
@@ -326,7 +363,7 @@ def render_readme_table(results: Mapping[str, Any]) -> str:
                 "`real_photo_check`",
             )
         )
-    rows.append(("Retrieval (RAG)", results["retrieval"]["status"], "`retrieval`"))
+    rows.append(("Retrieval (RAG)", _retrieval_row(results), "`retrieval`"))
     lines = ["| Measure | Result | In `eval/results.json` |", "|---|---|---|"]
     lines += [f"| {m} | {r} | {k} |" for m, r, k in rows]
     return "\n".join(lines)
