@@ -23,6 +23,12 @@ Contracts are frozen after Phase 0. Any change needs a PR labeled `contract-chan
 
 ## Entries
 
+### v0.4.0: 2026-10-27
+- `openapi.json`: new route `POST /analyze/trace`, which takes the same upload as `POST /analyze` and returns `{record, trace}`. `record` is exactly what `/analyze` returns for the same image. `trace` holds the classifier's tile grid (each tile's covers, scored or skipped and why, per-class probabilities and flagged classes), the thresholds, a small base64 PNG of the road mask, and one fusion step per defect (the factors that multiply into its score and how many tiles were merged into it). New schemas: `TracedAnalysis`, `Trace`, `TileTrace`, `RoadMaskPreview`, `FusionStep`.
+- Why: the web UI's walkthrough and heatmap must show what the pipeline did to the user's own image, which the record alone does not say.
+- Compatibility: additive. `HazardRecord` and every existing route are unchanged, so existing callers and the RAG index are unaffected. Only the TypeScript client needs regenerating.
+- PR: web UI, labeled `contract-change`.
+
 ### v0.3.0: 2026-10-26
 - `fusion/schema.py`: the `source` values lose `carla`; they are now `rdd2022`, `upload` and `nuscenes`. `openapi.json` regenerated; the `source` enum is the only difference.
 - Why: nothing in the project produces frames from that source.

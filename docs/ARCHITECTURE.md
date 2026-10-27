@@ -76,6 +76,7 @@ The per-stage Python interfaces are `detect(frame) -> list[Object]` with `Object
 | Route | Purpose |
 |---|---|
 | `POST /analyze` | image upload, returns a `HazardRecord` |
+| `POST /analyze/trace` | the same upload; returns the same record plus a `trace` of what the pipeline did (tile grid and probabilities, road mask preview, fusion factors), for the UI walkthrough |
 | `POST /index` | image or batch, adds to Qdrant |
 | `POST /query` | `{text?, image?, filters?, top_k, llm: "llama\|claude"}`, returns answer plus retrieved records |
 | `GET /records/{id}` | one record |

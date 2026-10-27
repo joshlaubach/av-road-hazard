@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from fusion.schema import HazardRecord, StrictModel
+from fusion.schema import Box, HazardRecord, Prob, Severity, StrictModel
 
 
 # Response of POST /index: the frame ids that were analyzed and stored.
@@ -41,3 +41,60 @@ class HealthResponse(StrictModel):
     llm_backend: str
     qdrant: str
     versions: dict[str, str]
+
+
+# What the pipeline did on the way to a record, for POST /analyze/trace. The record is exactly what
+# POST /analyze returns; the trace is extra and never changes it.
+#
+# One tile of the classifier's grid: where it is, how much of it is under objects and on the road
+# (road_cover is null when there was no road mask), whether it was scored or skipped and why, and
+# for a scored tile its probability for each damage class and the classes at or above their cutoff.
+class TileTrace(StrictModel):
+    row: int = Field(ge=0)
+    col: int = Field(ge=0)
+    box: Box
+    object_cover: Prob
+    road_cover: Prob | None
+    status: Literal["scored", "skipped_object", "skipped_off_road"]
+    probabilities: dict[str, Prob] | None
+    flagged: list[str]
+
+
+# The road mask shrunk for display: a grayscale PNG (white is road), base64 encoded, same aspect
+# ratio as the photo, at most 160 pixels on its longer side.
+class RoadMaskPreview(StrictModel):
+    width: int = Field(ge=1)
+    height: int = Field(ge=1)
+    png_base64: str
+
+
+# How one merged defect became a score: score = road_multiplier x severity_weight x confidence x
+# (0.5 + 0.5 x proximity). merged_from is the number of flagged tiles that were merged into it.
+class FusionStep(StrictModel):
+    name: str
+    merged_from: int = Field(ge=1)
+    in_road: bool | None
+    road_multiplier: Prob
+    severity: Severity
+    severity_weight: Prob
+    confidence: Prob
+    proximity: Prob
+    score: Prob
+
+
+class Trace(StrictModel):
+    image_size: tuple[int, int]
+    tile_size: int = Field(ge=1)
+    tile_overlap: Prob
+    thresholds: dict[str, Prob]
+    max_object_cover: Prob
+    min_road_cover: Prob
+    tiles: list[TileTrace]
+    road_mask: RoadMaskPreview | None
+    fusion: list[FusionStep]
+
+
+# Response of POST /analyze/trace.
+class TracedAnalysis(StrictModel):
+    record: HazardRecord
+    trace: Trace

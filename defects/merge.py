@@ -45,24 +45,29 @@ def _group_roots(defects: Sequence[Defect]) -> list[int]:
     return [find(i) for i in range(len(defects))]
 
 
-def merge_defects(defects: Sequence[Defect]) -> list[Defect]:
-    """The defects with neighboring same-class tiles merged; groups keep their first-seen order."""
+def merge_groups(defects: Sequence[Defect]) -> list[list[Defect]]:
+    """The defects grouped into neighboring same-class tiles; groups keep their first-seen order."""
     groups: dict[int, list[Defect]] = {}
     for defect, root in zip(defects, _group_roots(defects), strict=True):
         groups.setdefault(root, []).append(defect)
-    merged: list[Defect] = []
-    for members in groups.values():
-        strongest = max(members, key=lambda d: d.confidence)  # the first of equals wins
-        merged.append(
-            strongest.model_copy(
-                update={
-                    "box": (
-                        min(d.box[0] for d in members),
-                        min(d.box[1] for d in members),
-                        max(d.box[2] for d in members),
-                        max(d.box[3] for d in members),
-                    )
-                }
+    return list(groups.values())
+
+
+def combine(members: Sequence[Defect]) -> Defect:
+    """One defect for a group of tiles: the union box, with the strongest tile's other fields."""
+    strongest = max(members, key=lambda d: d.confidence)  # the first of equals wins
+    return strongest.model_copy(
+        update={
+            "box": (
+                min(d.box[0] for d in members),
+                min(d.box[1] for d in members),
+                max(d.box[2] for d in members),
+                max(d.box[3] for d in members),
             )
-        )
-    return merged
+        }
+    )
+
+
+def merge_defects(defects: Sequence[Defect]) -> list[Defect]:
+    """The defects with neighboring same-class tiles merged; groups keep their first-seen order."""
+    return [combine(group) for group in merge_groups(defects)]
