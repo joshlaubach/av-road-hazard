@@ -19,7 +19,9 @@ from typing import Any
 from eval.provenance import provenance
 from eval.results import (
     build_results,
+    keep_measured_retrieval,
     render_readme_table,
+    retrieval_section,
     update_readme,
     validate_results,
 )
@@ -35,13 +37,30 @@ def _load(path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     for name in ("classifier", "non-road", "detector-gap", "fine-tune", "fusion"):
-        parser.add_argument(f"--{name}", type=Path, required=True)
+        parser.add_argument(f"--{name}", type=Path, default=None)
+    parser.add_argument("--retrieval", type=Path, default=None)
+    parser.add_argument(
+        "--add-retrieval",
+        action="store_true",
+        help="only replace the retrieval section of an existing results file",
+    )
     parser.add_argument("--real-photo-check", type=Path, default=None)
     parser.add_argument("--chosen", default="hn2-repeat10")
     parser.add_argument("--out", type=Path, default=REPO / "eval" / "results.json")
     parser.add_argument("--readme", type=Path, default=REPO / "README.md")
     args = parser.parse_args(argv)
 
+    if args.add_retrieval:
+        if args.retrieval is None:
+            parser.error("--add-retrieval needs --retrieval")
+        results = _load(args.out)
+        results["retrieval"] = retrieval_section(_load(args.retrieval))
+        return _write(results, args)
+    needed = ("classifier", "non_road", "detector_gap", "fine_tune", "fusion")
+    if any(getattr(args, n) is None for n in needed):
+        parser.error(
+            "the full build needs --classifier --non-road --detector-gap --fine-tune --fusion"
+        )
     here = provenance({}, thresholds={}, repo=REPO)
     results = build_results(
         classifier=_load(args.classifier),
@@ -54,6 +73,14 @@ def main(argv: list[str] | None = None) -> int:
         git_commit=here["git_commit"],
         real_photo_check=_load(args.real_photo_check) if args.real_photo_check else None,
     )
+    if args.retrieval is not None:
+        results["retrieval"] = retrieval_section(_load(args.retrieval))
+    elif args.out.exists():
+        results = keep_measured_retrieval(results, _load(args.out))
+    return _write(results, args)
+
+
+def _write(results: dict[str, Any], args: argparse.Namespace) -> int:
     validate_results(results)
     args.out.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     readme = args.readme.read_text(encoding="utf-8")

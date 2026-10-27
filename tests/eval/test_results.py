@@ -14,7 +14,9 @@ from eval.results import (
     README_START,
     build_results,
     effective_range,
+    keep_measured_retrieval,
     render_readme_table,
+    retrieval_section,
     update_readme,
     validate_results,
 )
@@ -216,3 +218,63 @@ def test_the_readme_table_is_exactly_what_the_committed_results_render() -> None
     start, end = readme.index(README_START), readme.index(README_END)
     block = readme[start + len(README_START) : end].strip("\n")
     assert block == render_readme_table(results).strip("\n")
+
+
+def _retrieval_report() -> dict[str, Any]:
+    def cell(mean: float) -> dict[str, dict[str, float]]:
+        return {
+            f"recall@{k}": {"mean": mean, "low": mean, "high": mean, "queries": 3}
+            for k in (1, 5, 10)
+        }
+
+    methods = {
+        name: {"all": cell(mean)}
+        for name, mean in (
+            ("photo_vector", 0.4),
+            ("description_vector", 0.6),
+            ("fused", 0.5),
+            ("random", 0.15),
+        )
+    }
+    return {
+        "frames": 404,
+        "queries": 21,
+        "embedder": {"model": "ViT-B-32", "pretrained": "laion2b_s34b_b79k"},
+        "pipeline": {"use_stubs": False},
+        "methods": methods,
+        "provenance": {
+            "files": {"detector": "ab" * 32},
+            "thresholds": {"object_score": 0.5},
+            "git_commit": "abc",
+            "git_dirty": False,
+            "date_utc": "2026-10-27T00:00:00Z",
+        },
+    }
+
+
+def test_measured_search_numbers_replace_the_placeholder_and_reach_the_table() -> None:
+    results = _results()
+    results["retrieval"] = retrieval_section(_retrieval_report())
+    validate_results(results)
+    table = render_readme_table(results)
+    for expected in (
+        "404 nuScenes frames",
+        "21 queries",
+        "description 0.60",
+        "photo 0.40",
+        "random order 0.15",
+    ):
+        assert expected in table, expected
+    assert "annotations" in results["retrieval"]["caveat"]
+    assert results["retrieval"]["pipeline"] == {"use_stubs": False}
+    assert results["retrieval"]["provenance"]["files"] == {"detector": "ab" * 32}
+
+
+def test_a_full_rebuild_keeps_the_search_numbers_already_measured() -> None:
+    measured = {"retrieval": retrieval_section(_retrieval_report())}
+    rebuilt = keep_measured_retrieval(_results(), measured)
+    assert rebuilt["retrieval"]["status"] == "measured"
+    fresh = _results()
+    fresh["retrieval"] = {"status": "measured", "frames": 1}
+    assert keep_measured_retrieval(fresh, measured)["retrieval"]["frames"] == 1  # a new report wins
+    assert keep_measured_retrieval(_results(), {})["retrieval"]["status"] == "not measured"
