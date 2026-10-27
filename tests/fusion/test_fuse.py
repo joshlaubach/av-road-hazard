@@ -118,8 +118,8 @@ def test_all_road_mask_with_default_config_is_on_road_and_scores() -> None:
     assert record.hazard_score > 0
 
 
-def test_severity_defaults_to_unknown_weight() -> None:
-    """Until the class mapping is verified every fused defect is severity 'unknown'."""
+def test_a_defect_the_config_has_no_severity_for_is_unknown() -> None:
+    """A name that is not in defect_severity (here "x") scores with the 'unknown' weight."""
     record = fuse(
         frame_id="f",
         source="upload",
@@ -311,3 +311,40 @@ def test_non_finite_box_is_rejected(bad: float, with_mask: bool, which: str) -> 
             defects=defects,
             road_mask=ALL_ROAD if with_mask else None,
         )
+
+
+def _named(name: str) -> Defect:
+    return Defect(cls=1, name=name, confidence=1.0, box=DEFECT_BOX, patch_row=0, patch_col=0)
+
+
+def _fuse_one(name: str) -> HazardRecord:
+    return fuse(
+        frame_id="f",
+        source="upload",
+        image_size=(W, H),
+        objects=[],
+        defects=[_named(name)],
+        road_mask=ALL_ROAD,
+        config=CFG,
+    )
+
+
+def test_severity_comes_from_the_damage_type_in_the_config() -> None:
+    assert [_fuse_one(c).defects[0].severity for c in ("D00", "D10", "D20", "D40")] == [
+        "low", "low", "medium", "high",
+    ]  # fmt: skip
+
+
+def test_a_pothole_outscores_an_alligator_crack_which_outscores_a_single_crack() -> None:
+    scores = {c: _fuse_one(c).hazard_score for c in ("D00", "D10", "D20", "D40")}
+    assert scores["D40"] > scores["D20"] > scores["D00"]
+    assert scores["D00"] == scores["D10"]
+    assert scores["D40"] == pytest.approx(CFG.severity_weights["high"] * 0.5)
+
+
+def test_a_severity_function_passed_in_still_wins_over_the_config() -> None:
+    record = fuse(
+        frame_id="f", source="upload", image_size=(W, H), objects=[], defects=[_named("D00")],
+        road_mask=ALL_ROAD, config=CFG, severity_fn=_high,
+    )  # fmt: skip
+    assert record.defects[0].severity == "high"

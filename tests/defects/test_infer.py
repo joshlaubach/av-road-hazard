@@ -157,3 +157,10 @@ def test_region_boxes_stay_in_frame_pixels(classifier: Classifier) -> None:
     frame[:, 100:] = 255  # white right tile only
     (defect,) = find_defects(frame, classifier=classifier, region=(100, 0, 200, 100))
     assert defect.box == (100.0, 0.0, 200.0, 100.0)
+
+
+@pytest.mark.usefixtures("real_path")
+def test_neighboring_flagged_tiles_come_back_as_one_defect(classifier: Classifier) -> None:
+    all_white = np.full((FRAME_H, FRAME_W, 3), 255, dtype=np.uint8)  # both 100 px tiles fire
+    defects = find_defects(all_white, classifier=classifier)
+    assert [(d.name, d.box) for d in defects] == [("D00", (0.0, 0.0, 200.0, 100.0))]

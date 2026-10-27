@@ -53,6 +53,8 @@ A **classifier** is a neural network that looks at one image and returns a proba
 
 The cutoffs differ per class and are provisional, not final. A **false alarm** (false positive) is a flag where nothing is wrong.
 
+One long crack lights up several overlapping tiles, so flagged tiles of the same damage type that touch are merged into one defect: the box covers the group and the confidence is the strongest tile's ([ADR 0016](docs/adr/0016-defect-merge-and-severity.md)). On one Norwegian photo this turned 15 boxes into 2.
+
 We also trained on **hard negatives**: tiles of ordinary road that the classifier wrongly flagged, shown again with the label "no damage". Repeating them 10 times cut false alarms on nuScenes photos from 80 to 53, with no class losing more than 3 points of recall (details in the Done table of [docs/ROADMAP.md](docs/ROADMAP.md)).
 
 > **The math.** Flag a tile for damage type $c$ when its probability $p_c\ge\tau_c$, where $\tau_c$ is the cutoff in the table. Raising $\tau_c$ trades **recall** for **precision**:
@@ -71,9 +73,9 @@ We also trained on **hard negatives**: tiles of ordinary road that the classifie
 > $$d_{jk}=\frac{\text{pixel gap between object bottom-center and damage box}}{\max(h_j,\,16)},\qquad r_{jk}=v_j\,c_j\,e^{-d_{jk}},$$
 > with $h_j$ the object's box height in pixels and $c_j$ its detector confidence. The closeness of the most relevant object is $\pi_k=\max_j r_{jk}$ (the **maximum**, not the sum, so a crowd cannot inflate the score). The damage score and the frame's **hazard score** are
 > $$s_k=m_k\,w_k\,c_k\,\Bigl(\tfrac12+\tfrac12\pi_k\Bigr),\qquad H=\min\Bigl(1,\ \max_k s_k\Bigr)\ \ (H=0\text{ with no damage}).$$
-> Here $m_k=0$ if the box is confidently off-road and $1$ otherwise, $w_k$ is the severity weight (0.6 for "unknown", which every defect has until severity is built), and $c_k$ is the classifier probability.
+> Here $m_k=0$ if the box is confidently off-road and $1$ otherwise, $w_k$ is the severity weight (0.3 for a single crack, 0.6 for an alligator crack, 1.0 for a pothole; a first draft chosen by judgment, not measured), and $c_k$ is the classifier probability.
 >
-> **Worked example.** A pothole with $c_k=0.8$, on the road ($m_k=1$), severity unknown ($w_k=0.6$). With nobody near, $\pi_k=0$ and $s_k=0.6\cdot0.8\cdot0.5=0.24$. With a pedestrian ($v=1$, $c=0.9$) half an object height away, $r=0.9\,e^{-0.5}\approx0.55$, so $s_k=0.48\cdot(0.5+0.27)\approx0.37$. The same pothole scores 24 alone and 37 with a person beside it. The record stores $H$ in $[0,1]$ and the UI shows $\mathrm{round}(100H)$.
+> **Worked example.** A pothole with $c_k=0.8$, on the road ($m_k=1$), severity high ($w_k=1.0$). With nobody near, $\pi_k=0$ and $s_k=1.0\cdot0.8\cdot0.5=0.40$. With a pedestrian ($v=1$, $c=0.9$) half an object height away, $r=0.9\,e^{-0.5}\approx0.55$, so $s_k=0.8\cdot(0.5+0.27)\approx0.62$. The same pothole scores 40 alone and 62 with a person beside it. The record stores $H$ in $[0,1]$ and the UI shows $\mathrm{round}(100H)$.
 
 The score ranks urgency. It is not the probability of a crash.
 
@@ -102,7 +104,7 @@ The detector fine-tune ([ADR 0015](docs/adr/0015-detector-finetune.md)) teaches 
 - **Domain gap.** The classifier learned from close-up road photos, but a windshield frame is a wide view. Tiling only the road ([ADR 0002](docs/adr/0002-road-masked-tiling.md)) is our fix, and the numbers above show it is only partly working.
 - **Label names.** The original `defect-detector` repo had the four damage codes mapped to the wrong names. The mapping above matches the RDD2022 paper and the annotation files, and `tests/defects/test_label_mapping.py` pins it.
 - **No ground truth for fusion.** No dataset has both objects and road damage labeled. The paste test is the substitute and is easier than real damage, so its results are not real-world accuracy.
-- **Severity is unknown** for every defect for now, so the severity weight is a constant 0.6.
+- **Severity is a guess from the damage type** (single cracks low, alligator crack medium, pothole high). It ignores the size and depth of the damage, and the weights were chosen by judgment, not measured.
 - **Licenses.** nuScenes images and any model fine-tuned on them stay local and non-commercial. RDD2022 names no license in one source and CC BY-SA 4.0 in another, so we use the strictest reading, never use its US subset, and publish none of its images. See [docs/DATA_AND_LICENSES.md](docs/DATA_AND_LICENSES.md).
 - **Evaluation is mostly, not fully, automatic** ([ADR 0007](docs/adr/0007-no-hand-labeling-eval.md)). The two hand steps are the road outlines drawn on 30 photos for the paste test and one person's review of flagged tiles.
 
