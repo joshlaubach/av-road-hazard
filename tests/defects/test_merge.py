@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from defects.merge import merge_defects
+from defects.merge import merge_defects, merge_groups
 from fusion.schema import Defect
 
 
@@ -81,3 +81,12 @@ def test_a_strong_tile_tie_keeps_the_earliest_tile_and_inputs_are_not_changed() 
 def test_a_row_of_overlapping_tiles_is_always_one_defect(count: int) -> None:
     tiles = [_d((i * 50.0, 0, i * 50.0 + 100, 100)) for i in range(count)]
     assert len(merge_defects(tiles)) == 1
+
+
+def test_the_groups_say_which_tiles_each_merged_defect_came_from() -> None:
+    a, b = _d((0, 0, 100, 100)), _d((90, 0, 190, 100))
+    far = _d((500, 0, 600, 100))
+    groups = merge_groups([a, far, b])
+    assert [len(g) for g in groups] == [2, 1]
+    assert groups[0] == [a, b] and groups[1] == [far]
+    assert [d.box for d in merge_defects([a, far, b])] == [(0, 0, 190, 100), (500, 0, 600, 100)]

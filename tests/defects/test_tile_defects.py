@@ -8,7 +8,12 @@ import numpy as np
 import pytest
 
 from defects.patches import Tile
-from defects.tile_defects import find_frame_defects, tile_probabilities, tiles_to_defects
+from defects.tile_defects import (
+    find_frame_defects,
+    score_frame_tiles,
+    tile_probabilities,
+    tiles_to_defects,
+)
 from fusion.schema import Object
 
 THRESHOLDS = (0.9, 0.75, 0.65, 0.75)  # D00, D10, D20, D40
@@ -307,3 +312,37 @@ def test_tile_probabilities_gives_one_row_per_tile_and_one_column_per_class(
 @pytest.mark.ml
 def test_tile_probabilities_of_no_tiles_is_an_empty_table(cfg: dict[str, Any]) -> None:
     assert tile_probabilities(red_detector(), frame_with_white(), [], cfg).shape == (0, 4)
+
+
+@pytest.mark.ml
+def test_score_frame_tiles_says_why_a_tile_was_skipped(cfg: dict[str, Any]) -> None:
+    frame = frame_with_white((0, 0, 200, 100))
+    car = Object(label="car", score=0.9, box=(100.0, 0.0, 200.0, 100.0))
+    left, right = score_frame_tiles(red_detector(), frame, [car], cfg)
+    assert (left.status, right.status) == ("scored", "skipped_object")
+    assert left.probabilities is not None and left.probabilities[0] > 0.99
+    assert right.probabilities is None and right.object_cover > 0.9
+    assert left.road_cover is None  # no road mask: the road is unknown, nothing is off-road
+
+
+@pytest.mark.ml
+def test_score_frame_tiles_marks_off_road_tiles_with_their_road_cover(cfg: dict[str, Any]) -> None:
+    frame = frame_with_white((0, 0, 200, 100))
+    mask = np.zeros((FRAME_H, FRAME_W), dtype=bool)
+    mask[:, 100:] = True  # road under the right tile only
+    left, right = score_frame_tiles(red_detector(), frame, [], cfg, road_mask=mask)
+    assert (left.status, right.status) == ("skipped_off_road", "scored")
+    assert left.road_cover == 0.0 and right.road_cover == 1.0
+
+
+@pytest.mark.ml
+def test_the_scored_tiles_give_exactly_the_defects_find_frame_defects_gives(
+    cfg: dict[str, Any],
+) -> None:
+    frame = frame_with_white((0, 0, 200, 100))
+    car = Object(label="car", score=0.9, box=(100.0, 0.0, 200.0, 100.0))
+    scored = [s for s in score_frame_tiles(red_detector(), frame, [car], cfg) if s.probabilities]
+    from_scores = tiles_to_defects(
+        [s.tile for s in scored], [list(s.probabilities or ()) for s in scored], STRICT
+    )
+    assert from_scores == find_frame_defects(red_detector(), frame, [car], cfg, thresholds=STRICT)
