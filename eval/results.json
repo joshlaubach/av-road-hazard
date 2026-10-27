@@ -1,0 +1,929 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-27T04:27:59Z",
+  "git_commit": "b2a4186d1bb74b399d22c70524e7c6a5fd073523",
+  "classifier": {
+    "chosen": "hn2-repeat10",
+    "baseline": "baseline",
+    "thresholds": {
+      "D00": 0.9,
+      "D10": 0.75,
+      "D20": 0.65,
+      "D40": 0.75
+    },
+    "checkpoint_sha256": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8",
+    "validation": {
+      "baseline": {
+        "D00": {
+          "precision": 0.9484690067214339,
+          "recall": 0.5893271461716937,
+          "auroc": 0.9571511069517512,
+          "flagged": 1339,
+          "positives": 2155,
+          "recall_at_baseline_fpr": 0.5893271461716937
+        },
+        "D10": {
+          "precision": 0.8848,
+          "recall": 0.5808823529411765,
+          "auroc": 0.9579721048291187,
+          "flagged": 625,
+          "positives": 952,
+          "recall_at_baseline_fpr": 0.5819327731092437
+        },
+        "D20": {
+          "precision": 0.8903966597077244,
+          "recall": 0.6895715440582053,
+          "auroc": 0.9697427451787516,
+          "flagged": 958,
+          "positives": 1237,
+          "recall_at_baseline_fpr": 0.6895715440582053
+        },
+        "D40": {
+          "precision": 0.9014423076923077,
+          "recall": 0.5622188905547226,
+          "auroc": 0.9707819094786453,
+          "flagged": 416,
+          "positives": 667,
+          "recall_at_baseline_fpr": 0.5637181409295352
+        }
+      },
+      "hn2-repeat10": {
+        "D00": {
+          "precision": 0.949034749034749,
+          "recall": 0.5703016241299304,
+          "auroc": 0.9567909355078503,
+          "flagged": 1295,
+          "positives": 2155,
+          "recall_at_baseline_fpr": 0.5809744779582366
+        },
+        "D10": {
+          "precision": 0.8490566037735849,
+          "recall": 0.6144957983193278,
+          "auroc": 0.9543396056733701,
+          "flagged": 689,
+          "positives": 952,
+          "recall_at_baseline_fpr": 0.5483193277310925
+        },
+        "D20": {
+          "precision": 0.8757396449704142,
+          "recall": 0.7178658043654002,
+          "auroc": 0.9702723300296654,
+          "flagged": 1014,
+          "positives": 1237,
+          "recall_at_baseline_fpr": 0.7033144704931286
+        },
+        "D40": {
+          "precision": 0.9158653846153846,
+          "recall": 0.5712143928035982,
+          "auroc": 0.9714853184340305,
+          "flagged": 416,
+          "positives": 667,
+          "recall_at_baseline_fpr": 0.5952023988005997
+        }
+      }
+    },
+    "nuscenes": {
+      "baseline": {
+        "alerts": 80,
+        "per_frame": 0.19801980198019803,
+        "day": {
+          "frames": 283,
+          "alerts": 69,
+          "per_frame": 0.24381625441696114
+        },
+        "night": {
+          "frames": 121,
+          "alerts": 11,
+          "per_frame": 0.09090909090909091
+        },
+        "by_class": {
+          "D00": 39,
+          "D10": 29,
+          "D20": 2,
+          "D40": 10
+        },
+        "buckets": {
+          "No crack": 50,
+          "Ambiguous": 23,
+          "Crack": 6,
+          "Unreviewed": 0
+        },
+        "by_road_cover": {
+          "under 0.4": 0,
+          "0.4-0.6": 5,
+          "0.6-0.8": 25,
+          "0.8-1.0": 50
+        }
+      },
+      "hn1-repeat20": {
+        "alerts": 46,
+        "per_frame": 0.11386138613861387,
+        "day": {
+          "frames": 283,
+          "alerts": 40,
+          "per_frame": 0.1413427561837456
+        },
+        "night": {
+          "frames": 121,
+          "alerts": 6,
+          "per_frame": 0.049586776859504134
+        },
+        "by_class": {
+          "D00": 23,
+          "D10": 16,
+          "D20": 2,
+          "D40": 5
+        },
+        "buckets": {
+          "No crack": 27,
+          "Ambiguous": 13,
+          "Crack": 5,
+          "Unreviewed": 0
+        },
+        "by_road_cover": {
+          "under 0.4": 0,
+          "0.4-0.6": 3,
+          "0.6-0.8": 16,
+          "0.8-1.0": 27
+        }
+      },
+      "hn2-repeat10": {
+        "alerts": 53,
+        "per_frame": 0.1311881188118812,
+        "day": {
+          "frames": 283,
+          "alerts": 48,
+          "per_frame": 0.1696113074204947
+        },
+        "night": {
+          "frames": 121,
+          "alerts": 5,
+          "per_frame": 0.04132231404958678
+        },
+        "by_class": {
+          "D00": 23,
+          "D10": 27,
+          "D20": 3
+        },
+        "buckets": {
+          "Crack": 7,
+          "No crack": 36,
+          "Not road": 1,
+          "Ambiguous": 8,
+          "Unreviewed": 0
+        },
+        "by_road_cover": {
+          "under 0.4": 0,
+          "0.4-0.6": 4,
+          "0.6-0.8": 15,
+          "0.8-1.0": 34
+        }
+      }
+    },
+    "probe": {
+      "baseline": {
+        "tiles": 23,
+        "flagged": 23,
+        "count": 23,
+        "total": 23,
+        "low90": 0.8947318770599499,
+        "high90": 1.0
+      },
+      "hn1-repeat20": {
+        "tiles": 23,
+        "flagged": 11,
+        "count": 11,
+        "total": 23,
+        "low90": 0.3184613091900348,
+        "high90": 0.642637304850837
+      },
+      "hn2-repeat10": {
+        "tiles": 23,
+        "flagged": 13,
+        "count": 13,
+        "total": 23,
+        "low90": 0.3973662861310256,
+        "high90": 0.719337871746359
+      }
+    },
+    "recall_guard": {
+      "passed": true,
+      "reasons": []
+    },
+    "non_road_false_positives": {
+      "frames": 404,
+      "non_road_tiles_scored": 4184,
+      "clearly_not_road": {
+        "tiles": 2483,
+        "cover_from": 0.0,
+        "cover_below": 0.05,
+        "flagged": {
+          "count": 1,
+          "total": 2483,
+          "rate": 0.0004027386226339106,
+          "low90": 8.984282452354853e-05,
+          "high90": 0.001803391915493626
+        },
+        "per_class": {
+          "D00": {
+            "count": 0,
+            "total": 2483,
+            "rate": 0.0,
+            "low90": 0.0,
+            "high90": 0.0010886343649587444
+          },
+          "D10": {
+            "count": 0,
+            "total": 2483,
+            "rate": 0.0,
+            "low90": 0.0,
+            "high90": 0.0010886343649587444
+          },
+          "D20": {
+            "count": 0,
+            "total": 2483,
+            "rate": 0.0,
+            "low90": 0.0,
+            "high90": 0.0010886343649587444
+          },
+          "D40": {
+            "count": 1,
+            "total": 2483,
+            "rate": 0.0004027386226339106,
+            "low90": 8.984282452354853e-05,
+            "high90": 0.001803391915493626
+          }
+        }
+      },
+      "partly_road_skipped": {
+        "tiles": 1701,
+        "cover_from": 0.05,
+        "cover_below": 0.4,
+        "flagged": {
+          "count": 5,
+          "total": 1701,
+          "rate": 0.0029394473838918285,
+          "low90": 0.001431472320475489,
+          "high90": 0.006026401757301516
+        },
+        "per_class": {
+          "D00": {
+            "count": 5,
+            "total": 1701,
+            "rate": 0.0029394473838918285,
+            "low90": 0.001431472320475489,
+            "high90": 0.006026401757301516
+          },
+          "D10": {
+            "count": 0,
+            "total": 1701,
+            "rate": 0.0,
+            "low90": 0.0,
+            "high90": 0.0015883168576574119
+          },
+          "D20": {
+            "count": 0,
+            "total": 1701,
+            "rate": 0.0,
+            "low90": 0.0,
+            "high90": 0.0015883168576574119
+          },
+          "D40": {
+            "count": 0,
+            "total": 1701,
+            "rate": 0.0,
+            "low90": 0.0,
+            "high90": 0.0015883168576574119
+          }
+        }
+      }
+    }
+  },
+  "detector": {
+    "zero_shot": {
+      "model": "fasterrcnn_mobilenet_v3_large_fpn",
+      "frames": 404,
+      "cutoff": 0.7,
+      "all_frames": {
+        "frames": 404,
+        "precision": 0.572347266881029,
+        "recall": 0.4405940594059406,
+        "f1": 0.49790209790209794,
+        "ap50": 0.30104696045974016
+      },
+      "recall_by_size": [
+        {
+          "low": 0.0,
+          "high": 1024.0,
+          "n": 390,
+          "recall": 0.002564102564102564
+        },
+        {
+          "low": 1024.0,
+          "high": 9216.0,
+          "n": 2157,
+          "recall": 0.23180343069077422
+        },
+        {
+          "low": 9216.0,
+          "high": null,
+          "n": 1644,
+          "recall": 0.4975669099756691
+        }
+      ],
+      "outside_vocabulary": {
+        "barrier": 172,
+        "traffic_cone": 285
+      }
+    },
+    "fine_tune": {
+      "passed": false,
+      "decision": "the zero-shot detector stays",
+      "cones": {
+        "passed": true,
+        "qualifying_scenes": [
+          "scene-0061",
+          "scene-0103",
+          "scene-0655",
+          "scene-0757"
+        ],
+        "passing_scenes": [
+          "scene-0061"
+        ],
+        "caveat": false,
+        "caveat_scenes": [],
+        "reasons": [],
+        "pooled": {
+          "tp": 501,
+          "fp": 173,
+          "fn": 362,
+          "boxes": 863,
+          "predictions": 674,
+          "precision": 0.7433234421364985,
+          "recall": 0.5805330243337196,
+          "precision_range90": [
+            0.7147117626226536,
+            0.7699891087786317
+          ],
+          "recall_range90": [
+            0.5526906962295051,
+            0.6078718919770401
+          ]
+        }
+      },
+      "barriers": {
+        "passed": false,
+        "qualifying_scenes": [
+          "scene-0061",
+          "scene-0553",
+          "scene-1077"
+        ],
+        "passing_scenes": [],
+        "caveat": false,
+        "caveat_scenes": [],
+        "reasons": [
+          "pooled precision or recall is below the limit",
+          "0 scene(s) pass on their own, 2 needed"
+        ],
+        "pooled": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 1509,
+          "boxes": 1511,
+          "predictions": 2,
+          "precision": 1.0,
+          "recall": 0.0013236267372600927,
+          "precision_range90": [
+            0.42498711757799845,
+            1.0
+          ],
+          "recall_range90": [
+            0.0004380761989884628,
+            0.003992126818800279
+          ]
+        }
+      },
+      "old_classes": {
+        "pedestrian": {
+          "passed": true,
+          "zero_shot": {
+            "tp": 1320,
+            "fp": 1828,
+            "fn": 2082,
+            "boxes": 3402,
+            "predictions": 3148,
+            "precision": 0.4193138500635324,
+            "recall": 0.3880070546737213,
+            "precision_range90": [
+              0.4049218501162432,
+              0.4338444467171784
+            ],
+            "recall_range90": [
+              0.3743579163449783,
+              0.40183421466286695
+            ]
+          },
+          "fine_tuned": {
+            "tp": 1654,
+            "fp": 532,
+            "fn": 1748,
+            "boxes": 3402,
+            "predictions": 2186,
+            "precision": 0.7566331198536139,
+            "recall": 0.4861845972957084,
+            "precision_range90": [
+              0.7412240099680878,
+              0.7714076487308004
+            ],
+            "recall_range90": [
+              0.47210494857835356,
+              0.5002862066903306
+            ]
+          }
+        },
+        "cyclist": {
+          "passed": true,
+          "zero_shot": {
+            "tp": 24,
+            "fp": 203,
+            "fn": 158,
+            "boxes": 182,
+            "predictions": 227,
+            "precision": 0.10572687224669604,
+            "recall": 0.13186813186813187,
+            "precision_range90": [
+              0.07667596673430996,
+              0.1440671548272599
+            ],
+            "recall_range90": [
+              0.09595459213592045,
+              0.17856826113862756
+            ]
+          },
+          "fine_tuned": {
+            "tp": 30,
+            "fp": 101,
+            "fn": 152,
+            "boxes": 182,
+            "predictions": 131,
+            "precision": 0.22900763358778625,
+            "recall": 0.16483516483516483,
+            "precision_range90": [
+              0.174463205136882,
+              0.2945210833422647
+            ],
+            "recall_range90": [
+              0.12456852030395185,
+              0.21492243566242766
+            ]
+          }
+        },
+        "motorcycle": {
+          "passed": true,
+          "zero_shot": {
+            "tp": 47,
+            "fp": 80,
+            "fn": 302,
+            "boxes": 349,
+            "predictions": 127,
+            "precision": 0.3700787401574803,
+            "recall": 0.1346704871060172,
+            "precision_range90": [
+              0.3029975509738334,
+              0.44258096012462944
+            ],
+            "recall_range90": [
+              0.10740616322857137,
+              0.16755649912559217
+            ]
+          },
+          "fine_tuned": {
+            "tp": 85,
+            "fp": 80,
+            "fn": 264,
+            "boxes": 349,
+            "predictions": 165,
+            "precision": 0.5151515151515151,
+            "recall": 0.24355300859598855,
+            "precision_range90": [
+              0.45142288850098916,
+              0.5783911864554709
+            ],
+            "recall_range90": [
+              0.20782470297392613,
+              0.2832275188354671
+            ]
+          }
+        },
+        "car": {
+          "passed": true,
+          "zero_shot": {
+            "tp": 3616,
+            "fp": 4483,
+            "fn": 2366,
+            "boxes": 5982,
+            "predictions": 8099,
+            "precision": 0.4464748734411656,
+            "recall": 0.6044801069876296,
+            "precision_range90": [
+              0.43740731706539493,
+              0.4555781853306885
+            ],
+            "recall_range90": [
+              0.5940354801077902,
+              0.6148302511041285
+            ]
+          },
+          "fine_tuned": {
+            "tp": 3920,
+            "fp": 1109,
+            "fn": 2062,
+            "boxes": 5982,
+            "predictions": 5029,
+            "precision": 0.7794790216742892,
+            "recall": 0.6552992310264125,
+            "precision_range90": [
+              0.7697128511130437,
+              0.7889445875436593
+            ],
+            "recall_range90": [
+              0.6451226243193521,
+              0.6653353985540437
+            ]
+          }
+        },
+        "truck": {
+          "passed": true,
+          "zero_shot": {
+            "tp": 341,
+            "fp": 407,
+            "fn": 535,
+            "boxes": 876,
+            "predictions": 748,
+            "precision": 0.45588235294117646,
+            "recall": 0.3892694063926941,
+            "precision_range90": [
+              0.42613871658696323,
+              0.4859440457699792
+            ],
+            "recall_range90": [
+              0.36255035966012583,
+              0.4166704554014302
+            ]
+          },
+          "fine_tuned": {
+            "tp": 338,
+            "fp": 278,
+            "fn": 538,
+            "boxes": 876,
+            "predictions": 616,
+            "precision": 0.5487012987012987,
+            "recall": 0.3858447488584475,
+            "precision_range90": [
+              0.5155779172206031,
+              0.5813986719438552
+            ],
+            "recall_range90": [
+              0.35917997260727225,
+              0.4132126202396927
+            ]
+          }
+        },
+        "bus": {
+          "passed": true,
+          "zero_shot": {
+            "tp": 195,
+            "fp": 163,
+            "fn": 287,
+            "boxes": 482,
+            "predictions": 358,
+            "precision": 0.5446927374301676,
+            "recall": 0.4045643153526971,
+            "precision_range90": [
+              0.501222391583768,
+              0.5874925113624746
+            ],
+            "recall_range90": [
+              0.36842096531258917,
+              0.44177326530379324
+            ]
+          },
+          "fine_tuned": {
+            "tp": 240,
+            "fp": 140,
+            "fn": 242,
+            "boxes": 482,
+            "predictions": 380,
+            "precision": 0.631578947368421,
+            "recall": 0.4979253112033195,
+            "precision_range90": [
+              0.5900759211024071,
+              0.6712212455674931
+            ],
+            "recall_range90": [
+              0.4605780884890052,
+              0.5352956991330902
+            ]
+          }
+        }
+      },
+      "front_camera": {
+        "passed": false,
+        "cones_passed": false,
+        "barriers_passed": false,
+        "old_classes_failed": [
+          "cyclist"
+        ]
+      },
+      "cpu_p95": [
+        {
+          "n": 57,
+          "p50_s": 0.13922389992512763,
+          "p95_s": 0.17767246002331377,
+          "threads": 24,
+          "cpu": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+          "passed": true
+        },
+        {
+          "n": 57,
+          "p50_s": 0.15812269994057715,
+          "p95_s": 0.1958238400053233,
+          "threads": 4,
+          "cpu": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+          "passed": true
+        },
+        {
+          "n": 57,
+          "p50_s": 0.24385480000637472,
+          "p95_s": 0.29419325990602374,
+          "threads": 2,
+          "cpu": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+          "passed": true
+        }
+      ]
+    }
+  },
+  "synthetic_fusion": {
+    "on_road": {
+      "trials": 170,
+      "found": 54,
+      "found_range90": [
+        0.2621583197109957,
+        0.37885015118629917
+      ],
+      "by_size": {
+        "small (<64 px)": {
+          "trials": 57,
+          "found": 3,
+          "rate": 0.05263157894736842,
+          "range90": [
+            0.02122612741910114,
+            0.12458872124985647
+          ]
+        },
+        "medium (64-128 px)": {
+          "trials": 56,
+          "found": 17,
+          "rate": 0.30357142857142855,
+          "range90": [
+            0.2134940420729617,
+            0.41175736951554204
+          ]
+        },
+        "large (>=128 px)": {
+          "trials": 57,
+          "found": 34,
+          "rate": 0.5964912280701754,
+          "range90": [
+            0.4875820460555079,
+            0.6966539669766777
+          ]
+        }
+      },
+      "by_height": {
+        "far (above 65% of height)": {
+          "trials": 1,
+          "found": 0,
+          "rate": 0.0,
+          "range90": [
+            0.0,
+            0.7301691165062297
+          ]
+        },
+        "mid (65%-80%)": {
+          "trials": 40,
+          "found": 10,
+          "rate": 0.25,
+          "range90": [
+            0.1556970546358059,
+            0.3759849504208576
+          ]
+        },
+        "near (below 80%)": {
+          "trials": 129,
+          "found": 44,
+          "rate": 0.34108527131782945,
+          "range90": [
+            0.27631884539740587,
+            0.41238180440202427
+          ]
+        }
+      }
+    },
+    "off_road": {
+      "trials": 45,
+      "not_reported": 45,
+      "reported_off_road": 0,
+      "leaked": 0,
+      "leak_rate": 0.0,
+      "leak_range90": [
+        0.0,
+        0.0567229191700629
+      ]
+    },
+    "in_road": {
+      "scored": 54,
+      "correct": 52,
+      "unknown": 0,
+      "rate": 0.9629629629629629,
+      "range90": [
+        0.8940723557201014,
+        0.9876681647977801
+      ]
+    },
+    "near_objects": {
+      "defects": 54,
+      "expected": 105,
+      "reported": 85,
+      "matched": 75,
+      "recall": 0.7142857142857143,
+      "precision": 0.8823529411764706,
+      "exact": 24
+    },
+    "median_iou": 0.11183088555618866,
+    "verdict": {
+      "passed": false,
+      "failures": [
+        "detection rate, large patches: 0.60 is below the minimum 0.70"
+      ]
+    },
+    "criteria": {
+      "min_detection_rate_large": 0.7,
+      "min_in_road_accuracy": 0.9,
+      "max_off_road_leak_rate": 0.1,
+      "min_near_recall": 0.5
+    },
+    "clean_frames": {
+      "frames": 30,
+      "defects": 1,
+      "per_frame": 0.03333333333333333
+    },
+    "skipped_placements": 55,
+    "patches_in_bank": 200
+  },
+  "effective_range": {
+    "basis": "defect patches pasted on nuScenes front-camera frames; found = a reported box contains the patch center",
+    "bands": [
+      {
+        "band": "small (<64 px)",
+        "found": 3,
+        "trials": 57,
+        "rate": 0.05263157894736842,
+        "range90": [
+          0.02122612741910114,
+          0.12458872124985647
+        ]
+      },
+      {
+        "band": "medium (64-128 px)",
+        "found": 17,
+        "trials": 56,
+        "rate": 0.30357142857142855,
+        "range90": [
+          0.2134940420729617,
+          0.41175736951554204
+        ]
+      },
+      {
+        "band": "large (>=128 px)",
+        "found": 34,
+        "trials": 57,
+        "rate": 0.5964912280701754,
+        "range90": [
+          0.4875820460555079,
+          0.6966539669766777
+        ]
+      }
+    ],
+    "assumed_defect_width_m": 0.5,
+    "focal_length_px": 1266.0,
+    "distance_formula": "d = f * W / w",
+    "distance_m_at_width_px": {
+      "128": 4.95,
+      "64": 9.89
+    },
+    "caveat": "These are pasted patches, not real damage, and the distance is only the pinhole-camera size for one assumed defect width. Real damage will differ."
+  },
+  "retrieval": {
+    "status": "not measured",
+    "reason": "RAG is not built yet (ADR 0011)"
+  },
+  "provenance": {
+    "classifier": {
+      "files": {
+        "checkpoint/baseline": "03360165ffad8323b64ffda0a75de0569760851bdaca645f6a733488e36893de",
+        "checkpoint/hn1-repeat20": "3d81f4ad03e3d29b3deea2689d7e698c2dbc60e17eb20464445401eb04d05537",
+        "checkpoint/hn2-repeat10": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8",
+        "review_tiles": "b5d069bffd2f6f6ceb91c2afd39ba3571476171984880b4c7fc49e30348da364",
+        "review_calls": "7bee74e9f9ccd5fcb3988ab18244069e0c193acbdb72dea8ba7903244edf79c8",
+        "road/config.json": "2b8f16dbad9bd85386609386a9cb5dedc6e0c518253a9af484e0a128d9463c88",
+        "road/model.safetensors": "8208672861ad1b111dc98f3a7c54196d29875b709c7353e2dd1b7614343fb3a8",
+        "detector": "f7731b02ff6365453ad4fb85c008f4dc86dea63a2d4d77377f986fa54b797e21",
+        "probe": "0d83b44a245778b69c71ffc058a9b0f42a2874be1471109be2af82eee09422f6"
+      },
+      "thresholds": {
+        "D00": 0.9,
+        "D10": 0.75,
+        "D20": 0.65,
+        "D40": 0.75
+      },
+      "git_commit": "93ecf93eee62cfa46a192a216cea0c0f815dbd01",
+      "git_dirty": false,
+      "date_utc": "2026-10-27T02:09:20Z"
+    },
+    "non_road": {
+      "files": {
+        "checkpoint": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8",
+        "road/config.json": "2b8f16dbad9bd85386609386a9cb5dedc6e0c518253a9af484e0a128d9463c88",
+        "road/model.safetensors": "8208672861ad1b111dc98f3a7c54196d29875b709c7353e2dd1b7614343fb3a8",
+        "detector": "f7731b02ff6365453ad4fb85c008f4dc86dea63a2d4d77377f986fa54b797e21"
+      },
+      "thresholds": {
+        "D00": 0.9,
+        "D10": 0.75,
+        "D20": 0.65,
+        "D40": 0.75
+      },
+      "git_commit": "7878e0c3073e6a948f919cd989ef7ea9c2bcca9d",
+      "git_dirty": false,
+      "date_utc": "2026-10-27T04:14:38Z"
+    },
+    "detector_gap": {
+      "files": {
+        "fasterrcnn_mobilenet_v3_large_fpn": "f7731b02ff6365453ad4fb85c008f4dc86dea63a2d4d77377f986fa54b797e21"
+      },
+      "thresholds": {
+        "score_threshold": 0.5
+      },
+      "git_commit": "816dc3a5727344301a5257c5e56c6bf9f6404efc",
+      "git_dirty": false,
+      "date_utc": "2026-10-26T22:03:41Z"
+    },
+    "fine_tune": {
+      "files": {
+        "zero_shot": "f7731b02ff6365453ad4fb85c008f4dc86dea63a2d4d77377f986fa54b797e21",
+        "config": "9e39a9db22cc48a2d25b85ccc367f6090cea0085a089f5e749156a26cb76c703",
+        "fold/scene-0061": "7248aa3220e39abdb0ffb4b4d376dee03c593e41533234530dbe4327564ab41d",
+        "fold/scene-0103": "379e222095d84a40855a2100bb7239dd5e0b2d7591797aa32844b70d8d15a45c",
+        "fold/scene-0553": "dd73a5b94f53b17bacf1d2540a2c586262ca3f5763238da6ab817961870ec0d7",
+        "fold/scene-0655": "40509868b5f83b236e35dd60145c0897c6374d5cd418ca0e19a10dc3d4f76225",
+        "fold/scene-0757": "fec723d294d51527ebed412fa8fb8cbae34aff7acf1c08212b94caa32fc4f11f",
+        "fold/scene-0796": "cfc3cd1765a391d4921a693a7cbb914ddb93a8041093ce0582a462f999753af8",
+        "fold/scene-0916": "dde208b92f7bb347d647bb5b4e35fb38922f8035d07afb54fefaaca317a62203",
+        "fold/scene-1077": "4502ce3b2c58fb77fe9a5252a401116232ce113f4f3b16efbb2b3071ad20cca5",
+        "fold/scene-1094": "b7f9c3efeaf86244f4a679c7fcc0dfcf4ff306531a8b791c31fb1c4c5d36c158",
+        "fold/scene-1100": "26da8026a09d683a9deb4efa46cdaa8b4352a11af29f932cbd894c662328e22f"
+      },
+      "thresholds": {
+        "old_classes": 0.5
+      },
+      "git_commit": "dc5046aa1946000ff64b9da5090b7c5f66cc2e55",
+      "git_dirty": false,
+      "date_utc": "2026-10-27T01:24:55Z"
+    },
+    "synthetic_fusion": {
+      "files": {
+        "outlines": "a55e9dfc130234715743290a1be6e183b02fc314e1c077cc5706caa43a96a15d",
+        "config": "6c328a5d03e30c2daf731db863894f2edec1a0278ccc224348d20bc92e98bf6b",
+        "classifier": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8"
+      },
+      "thresholds": {
+        "D00": 0.9,
+        "D10": 0.75,
+        "D20": 0.65,
+        "D40": 0.75
+      },
+      "git_commit": "7878e0c3073e6a948f919cd989ef7ea9c2bcca9d",
+      "git_dirty": false,
+      "date_utc": "2026-10-27T04:16:30Z"
+    }
+  },
+  "real_photo_check": {
+    "photos": "14 dashboard photos",
+    "source": "Stellenbosch pothole dataset, South Africa",
+    "marked": 44,
+    "found": 10,
+    "extra_boxes": 15,
+    "reproducible": false
+  }
+}

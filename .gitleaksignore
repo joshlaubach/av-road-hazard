@@ -1,0 +1,4 @@
+# Reviewed false positive. In this commit eval/results.json labeled the SHA-256 digest of a review
+# file "review_key", which gitleaks' generic-api-key rule read as a key. It is a public file hash,
+# not a secret, and the field was renamed in the next commit (a test now blocks such names).
+b2a4186d1bb74b399d22c70524e7c6a5fd073523:eval/results.json:generic-api-key:837

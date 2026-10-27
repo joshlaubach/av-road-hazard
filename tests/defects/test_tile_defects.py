@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from defects.patches import Tile
-from defects.tile_defects import find_frame_defects, tiles_to_defects
+from defects.tile_defects import find_frame_defects, tile_probabilities, tiles_to_defects
 from fusion.schema import Object
 
 THRESHOLDS = (0.9, 0.75, 0.65, 0.75)  # D00, D10, D20, D40
@@ -291,3 +291,19 @@ def test_find_frame_defects_forwards_the_minimum_road_cover(cfg: dict[str, Any])
     )
     assert [d.patch_col for d in lenient] == [0, 1]
     assert [d.patch_col for d in strict] == [0]
+
+
+@pytest.mark.ml
+def test_tile_probabilities_gives_one_row_per_tile_and_one_column_per_class(
+    cfg: dict[str, Any],
+) -> None:
+    frame = frame_with_white((100, 0, 200, 100))  # right tile white, left tile black
+    probs = tile_probabilities(red_detector(), frame, TILES, cfg)
+    assert probs.shape == (2, 4)
+    assert probs[1, 0] > 0.99 and probs[0, 0] < 0.01  # the white tile fires, the black one not
+    assert np.allclose(probs[:, 1:], 0.5)
+
+
+@pytest.mark.ml
+def test_tile_probabilities_of_no_tiles_is_an_empty_table(cfg: dict[str, Any]) -> None:
+    assert tile_probabilities(red_detector(), frame_with_white(), [], cfg).shape == (0, 4)
