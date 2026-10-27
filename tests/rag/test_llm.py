@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 from typing import Any
 
+import anthropic
 import httpx
+import httpx2
 import pytest
 
 from fusion.schema import DefectRecord, HazardRecord, Meta, Object
@@ -11,11 +13,13 @@ from rag.index import Hit
 from rag.llm import (
     NO_MATCH,
     SYSTEM,
+    ClaudeLLM,
     LLMUnavailable,
     OllamaLLM,
     answer_question,
     build_prompt,
     check_citations,
+    make_llm,
 )
 
 
@@ -154,3 +158,99 @@ def test_ollama_down_or_slow_is_reported() -> None:
         ollama(refuse).generate("s", "p")
     with pytest.raises(LLMUnavailable, match="too long"):
         ollama(slow).generate("s", "p")
+
+
+# ------------------------------------------------------------------ Claude (mocked, no network)
+
+
+def status_error(cls: type[anthropic.APIStatusError], code: int) -> anthropic.APIStatusError:
+    request = httpx2.Request("POST", "https://api.anthropic.test/v1/messages")
+    return cls("boom", response=httpx2.Response(code, request=request), body=None)
+
+
+class FakeMessages:
+    def __init__(self, reply: Any) -> None:
+        self.reply = reply
+        self.calls: list[dict[str, Any]] = []
+
+    def create(self, **kwargs: Any) -> Any:
+        self.calls.append(kwargs)
+        if isinstance(self.reply, Exception):
+            raise self.reply
+        return self.reply
+
+
+def claude(reply: Any) -> tuple[ClaudeLLM, FakeMessages]:
+    messages = FakeMessages(reply)
+    fake_client = type("FakeClient", (), {"messages": messages})()
+    return ClaudeLLM(model="claude-test", client=fake_client), messages
+
+
+def message(*blocks: Any, stop_reason: str = "end_turn") -> Any:
+    return type("Msg", (), {"content": list(blocks), "stop_reason": stop_reason})()
+
+
+def text(value: str) -> Any:
+    return type("Block", (), {"type": "text", "text": value})()
+
+
+def thinking() -> Any:
+    return type("Block", (), {"type": "thinking", "thinking": ""})()
+
+
+def test_claude_sends_the_records_prompt_and_returns_only_the_text_blocks() -> None:
+    llm, messages = claude(message(thinking(), text("A pothole is in [f1]. "), text("Done.")))
+    assert llm.generate("sys", "user prompt") == "A pothole is in [f1]. Done."
+    call = messages.calls[0]
+    assert call["model"] == "claude-test" and call["system"] == "sys"
+    assert call["messages"] == [{"role": "user", "content": "user prompt"}]
+    assert call["output_config"] == {"effort": "low"} and call["max_tokens"] >= 1024
+    assert "temperature" not in call and "thinking" not in call
+
+
+def test_claude_answers_flow_through_the_citation_check() -> None:
+    llm, _ = claude(message(text("See [f1] and [ghost].")))
+    answer = answer_question(llm, "q", [hit("f1")])
+    assert answer.llm == "claude" and answer.cited == ("f1",) and answer.unknown == ("ghost",)
+
+
+def test_a_claude_refusal_is_a_plain_error() -> None:
+    llm, _ = claude(message(stop_reason="refusal"))
+    with pytest.raises(LLMUnavailable, match="declined"):
+        llm.generate("s", "p")
+
+
+@pytest.mark.parametrize(
+    ("error", "words"),
+    [
+        (status_error(anthropic.AuthenticationError, 401), "ANTHROPIC_API_KEY"),
+        (status_error(anthropic.PermissionDeniedError, 403), "may not use"),
+        (status_error(anthropic.NotFoundError, 404), "claude-test"),
+        (status_error(anthropic.RateLimitError, 429), "rate limiting"),
+        (status_error(anthropic.InternalServerError, 500), "HTTP 500"),
+    ],
+)
+def test_claude_api_problems_become_plain_errors(error: Exception, words: str) -> None:
+    llm, _ = claude(error)
+    with pytest.raises(LLMUnavailable, match=words):
+        llm.generate("s", "p")
+
+
+def test_claude_network_problems_become_plain_errors() -> None:
+    request = httpx2.Request("POST", "https://api.anthropic.test/v1/messages")
+    llm, _ = claude(anthropic.APITimeoutError(request=request))
+    with pytest.raises(LLMUnavailable, match="too long"):
+        llm.generate("s", "p")
+    llm, _ = claude(anthropic.APIConnectionError(request=request))
+    with pytest.raises(LLMUnavailable, match="reach the Claude API"):
+        llm.generate("s", "p")
+
+
+def test_make_llm_picks_the_backend_the_request_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    cfg = {"ollama_host": "http://h:1", "ollama_model": "m", "claude_model": "claude-test"}
+    assert make_llm("llama", cfg).name == "llama"
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    backend = make_llm("claude", cfg)
+    assert isinstance(backend, ClaudeLLM) and backend.model == "claude-test"
+    with pytest.raises(ValueError, match="unknown llm"):
+        make_llm("gpt", cfg)

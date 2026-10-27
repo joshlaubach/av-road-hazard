@@ -4,16 +4,17 @@
 frame ids it used in square brackets, and then checks the citations: an id that was not among the
 records is reported, never trusted. With no records it does not call the model at all.
 A backend is anything with `name` and `generate(system, prompt)`; `OllamaLLM` talks to a local
-Ollama server over HTTP.
+Ollama server over HTTP and `ClaudeLLM` to the Claude API through the official SDK.
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+import anthropic
 import httpx
 
 from defects.labels import NAMES
@@ -24,6 +25,7 @@ SAFE_ID = re.compile(r"[A-Za-z0-9_.:+-]{1,128}")  # nuScenes file names contain 
 CITATION = re.compile(r"\[([^\[\]\s]+)\]")
 MAX_QUESTION_CHARS = 500
 MAX_ANSWER_TOKENS = 400
+CLAUDE_MAX_TOKENS = 1024  # room for the model's own reasoning as well as the short answer
 NO_MATCH = "I found no matching photos, so I have nothing to answer from."
 
 SYSTEM = (
@@ -135,3 +137,58 @@ class OllamaLLM:
         if not isinstance(content, str):
             raise LLMUnavailable("Ollama sent a reply this code does not understand")
         return content
+
+
+class ClaudeLLM:
+    """Claude through the Anthropic SDK. The key comes from the environment (ANTHROPIC_API_KEY).
+
+    Thinking stays at its default (it cannot be turned off on this model); effort is low because
+    the job is to restate a few records, not to reason hard. The SDK retries 429 and 5xx twice.
+    """
+
+    name = "claude"
+
+    def __init__(
+        self,
+        model: str = "claude-opus-5-5",
+        client: anthropic.Anthropic | None = None,
+        timeout_s: float = 60.0,
+    ) -> None:
+        self.model = model
+        self._client = client or anthropic.Anthropic(timeout=timeout_s)
+
+    def generate(self, system: str, prompt: str) -> str:
+        try:
+            response = self._client.messages.create(
+                model=self.model,
+                max_tokens=CLAUDE_MAX_TOKENS,
+                system=system,
+                output_config={"effort": "low"},
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except anthropic.AuthenticationError as exc:
+            raise LLMUnavailable("Claude rejected the API key; check ANTHROPIC_API_KEY") from exc
+        except anthropic.PermissionDeniedError as exc:
+            raise LLMUnavailable("this API key may not use Claude here") from exc
+        except anthropic.NotFoundError as exc:
+            raise LLMUnavailable(f"Claude has no model called {self.model!r}") from exc
+        except anthropic.RateLimitError as exc:
+            raise LLMUnavailable("Claude is rate limiting requests; try again shortly") from exc
+        except anthropic.APITimeoutError as exc:
+            raise LLMUnavailable("Claude took too long to answer") from exc
+        except anthropic.APIConnectionError as exc:
+            raise LLMUnavailable("could not reach the Claude API") from exc
+        except anthropic.APIStatusError as exc:
+            raise LLMUnavailable(f"Claude answered with HTTP {exc.status_code}") from exc
+        if response.stop_reason == "refusal":
+            raise LLMUnavailable("Claude declined to answer this request")
+        return "".join(block.text for block in response.content if block.type == "text")
+
+
+def make_llm(kind: str, llm_config: Mapping[str, Any]) -> LLM:
+    """The backend for a request's `llm` value ("llama" or "claude") from the `llm:` config."""
+    if kind == "llama":
+        return OllamaLLM(llm_config["ollama_host"], llm_config["ollama_model"])
+    if kind == "claude":
+        return ClaudeLLM(llm_config["claude_model"])
+    raise ValueError(f"unknown llm {kind!r}; choose 'llama' or 'claude'")
