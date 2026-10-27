@@ -22,7 +22,7 @@ With weights and inputs in [0, 1] the score is in [0, 1].
 | Piece | Rule |
 |---|---|
 | `road_multiplier` | `in_road` False -> 0, True -> 1, null (unknown) -> 1 |
-| `severity_weight` | low 0.3, medium 0.6, high 1.0, unknown 0.6 (config) |
+| `severity_weight` | low 0.3, medium 0.6, high 1.0, unknown 0.6 (config). The level comes from the damage type: D00 and D10 low, D20 medium, D40 high ([ADR 0016](../docs/adr/0016-defect-merge-and-severity.md)) |
 | Baseline `0.5` | An empty road can still hold a dangerous pothole; multiplying by proximity alone would score it 0 |
 | Maximum, not sum | Duplicate detections or a crowd cannot inflate the score |
 | `normalized_distance` | Pixel distance from the object's bottom-center to the nearest point of the defect box (0 if inside), divided by `max(object box height, min_object_height_px)` |
@@ -47,6 +47,7 @@ All numeric settings must be finite and are validated whenever a `FusionConfig` 
 
 - Pixel proximity is not physical proximity. Dividing by the object's own height is a perspective heuristic.
 - "Walking toward" the defect is out of scope: the contract has no velocity, trajectory or lane assignment.
-- Severity is `unknown` for every defect until the RDD2022 class mapping is verified; `fuse()` takes a `severity_fn` to plug the mapping in later.
+- Severity comes from the damage type alone (a judgment, not a measurement, listed in `defect_severity` in `configs/fusion.yaml`). A class not in the table is `unknown`. `fuse()` still takes a `severity_fn` that overrides the table.
+- A defect may be a merged box of neighboring tiles, so it can be large and can include non-road; `in_road` is judged on the whole box.
 - All weights are uncalibrated starting values.
 - A truthful `in_road` needs a trustworthy road mask. Where the mask comes from is not decided.

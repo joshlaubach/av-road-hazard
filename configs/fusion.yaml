@@ -37,3 +37,12 @@ near_radius: 3.0             # objects within this many object heights are liste
 
 # A defect counts as on the road when at least this fraction of its box lies on road pixels.
 road_overlap_threshold: 0.5
+
+# Severity by damage type (RDD2022 class code, the Defect.name that defects/ emits). A first draft
+# set by judgment, not measured: a pothole is a hole a wheel can drop into, alligator cracking means
+# the surface is failing, and a single crack is the least urgent. A code not listed is "unknown".
+defect_severity:
+  D00: low       # longitudinal crack
+  D10: low       # transverse crack
+  D20: medium    # alligator crack
+  D40: high      # pothole

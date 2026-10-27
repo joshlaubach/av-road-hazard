@@ -35,6 +35,8 @@ class FusionConfig:
     min_object_height_px: float
     near_radius: float
     road_overlap_threshold: float
+    # Severity by RDD2022 class code (Defect.name). A code not listed here is "unknown".
+    defect_severity: Mapping[str, str] = MappingProxyType({})
 
     def __post_init__(self) -> None:
         """Check every setting and replace the fields with clean, read-only values."""
@@ -43,10 +45,16 @@ class FusionConfig:
                 f"severity_weights keys must be exactly {SEVERITIES}, "
                 f"got {sorted(self.severity_weights)}"
             )
+        for code, level in self.defect_severity.items():
+            if level not in SEVERITIES:
+                raise ValueError(
+                    f"defect_severity.{code} must be one of {SEVERITIES}, got {level!r}"
+                )
         near_radius = _number(self.near_radius, "near_radius")
         if near_radius < 0.0:
             raise ValueError(f"near_radius must be >= 0, got {near_radius}")
         # object.__setattr__ because the dataclass is frozen.
+        object.__setattr__(self, "defect_severity", MappingProxyType(dict(self.defect_severity)))
         object.__setattr__(
             self,
             "severity_weights",
@@ -81,6 +89,10 @@ class FusionConfig:
             "road_overlap_threshold",
             _unit(self.road_overlap_threshold, "road_overlap_threshold"),
         )
+
+    def severity_for(self, code: str) -> str:
+        """Severity for a damage class code, \"unknown\" for a code that is not listed."""
+        return self.defect_severity.get(code, "unknown")
 
     def vulnerability(self, label: str) -> float:
         """Weight for an object label, falling back to the default for unlisted labels."""
@@ -123,6 +135,7 @@ def parse_fusion_config(raw: dict[str, Any]) -> FusionConfig:
         min_object_height_px=raw["min_object_height_px"],
         near_radius=raw["near_radius"],
         road_overlap_threshold=raw["road_overlap_threshold"],
+        defect_severity=raw.get("defect_severity", {}),
     )
 
 

@@ -100,3 +100,24 @@ def test_severity_keys_must_be_exactly_the_contract_values(bad: dict[str, float]
     raw["severity_weights"] = bad
     with pytest.raises(ValueError, match="severity_weights"):
         parse_fusion_config(raw)
+
+
+def test_the_shipped_config_maps_the_four_damage_codes_to_severities() -> None:
+    cfg = load_fusion_config()
+    assert dict(cfg.defect_severity) == {"D00": "low", "D10": "low", "D20": "medium", "D40": "high"}
+    assert cfg.severity_for("D40") == "high"
+    assert cfg.severity_for("not-a-code") == "unknown"
+
+
+@pytest.mark.parametrize("bad", ["severe", "", 3, None])
+def test_a_defect_severity_must_be_one_of_the_contract_values(bad: object) -> None:
+    raw = copy.deepcopy(_raw())
+    raw["defect_severity"]["D40"] = bad
+    with pytest.raises(ValueError, match="defect_severity"):
+        parse_fusion_config(raw)
+
+
+def test_a_config_without_defect_severity_means_every_defect_is_unknown() -> None:
+    raw = copy.deepcopy(_raw())
+    del raw["defect_severity"]
+    assert parse_fusion_config(raw).severity_for("D40") == "unknown"

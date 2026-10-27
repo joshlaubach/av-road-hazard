@@ -2,8 +2,9 @@
 
 With USE_STUBS on, find_defects returns one fixed fake defect. With stubs off it loads the tile
 classifier named by defects.classifier_checkpoint (env DEFECT_CHECKPOINT), tiles the frame, skips
-tiles that objects cover or that are off the road, and applies the per-class thresholds from the
-config (all under `defects:` in configs/default.yaml).
+tiles that objects cover or that are off the road, applies the per-class thresholds from the
+config (all under `defects:` in configs/default.yaml), and merges neighboring flagged tiles of one
+class into one defect (defects/merge.py).
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ import numpy as np
 
 from common.config import get_config
 from defects.labels import CODES
+from defects.merge import merge_defects
 from defects.patches import IntBox
 from fusion.fuse import RoadMask
 from fusion.schema import Defect, Object
@@ -112,7 +114,7 @@ def find_defects(
 
     used = classifier or load_classifier()
     chosen = settings or defect_settings(cfg)
-    return find_frame_defects(
+    tiles = find_frame_defects(
         used.model,
         frame,
         objects,
@@ -123,6 +125,7 @@ def find_defects(
         min_road_cover=chosen.min_road_cover,
         region=region,
     )
+    return merge_defects(tiles)
 
 
 def _stub_defects(frame: np.ndarray) -> list[Defect]:
