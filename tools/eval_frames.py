@@ -2,7 +2,9 @@
 
 The road mask and detected objects do not depend on the classifier, so they are computed once per
 frame (FrameContext) and reused for every checkpoint; only the classifier changes between runs.
-Alerts come from the shipped defects.infer.find_defects. The nuScenes images stay on this machine.
+Alerts come from the shipped defects.infer.find_tile_defects (one alert per flagged tile, before
+neighbors are merged, so they match the tiles the reviewers saw). The nuScenes images stay on this
+machine.
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
-from defects.infer import find_defects
+from defects.infer import find_tile_defects
 from defects.patches import Tile
 from defects.road_region import road_coverage
 from eval.classifier import Alert, Box
@@ -81,9 +83,13 @@ def prepare_frames(
 
 
 def collect_alerts(
-    contexts: Sequence[FrameContext], root: Path, *, finder: Finder = find_defects, **settings: Any
+    contexts: Sequence[FrameContext],
+    root: Path,
+    *,
+    finder: Finder = find_tile_defects,
+    **settings: Any,
 ) -> list[Alert]:
-    """Every alert find_defects raises on the frames; classifier= and settings= pass through."""
+    """Every per-tile alert on the frames (unmerged); classifier= and settings= pass through."""
     alerts: list[Alert] = []
     for context in contexts:
         mask = context.mask()
