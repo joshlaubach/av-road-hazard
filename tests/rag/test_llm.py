@@ -17,9 +17,10 @@ from rag.llm import (
     LLMUnavailable,
     OllamaLLM,
     answer_question,
+    answer_with_escalation,
     build_prompt,
     check_citations,
-    make_llm,
+    make_tiers,
 )
 
 
@@ -246,11 +247,95 @@ def test_claude_network_problems_become_plain_errors() -> None:
         llm.generate("s", "p")
 
 
-def test_make_llm_picks_the_backend_the_request_names(monkeypatch: pytest.MonkeyPatch) -> None:
-    cfg = {"ollama_host": "http://h:1", "ollama_model": "m", "claude_model": "claude-test"}
-    assert make_llm("llama", cfg).name == "llama"
+def test_make_tiers_gives_the_backend_the_request_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    cfg = {
+        "ollama_host": "http://h:1",
+        "ollama_model": "m",
+        "claude_model": "small",
+        "claude_escalation_model": "big",
+    }
+    assert [t.name for t in make_tiers("llama", cfg)] == ["llama"]
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
-    backend = make_llm("claude", cfg)
-    assert isinstance(backend, ClaudeLLM) and backend.model == "claude-test"
+    tiers = make_tiers("claude", cfg)
+    assert [getattr(t, "model", None) for t in tiers] == ["small", "big"]
+    same = make_tiers("claude", {**cfg, "claude_escalation_model": "small"})
+    assert len(same) == 1
+    assert len(make_tiers("claude", {**cfg, "claude_escalation_model": None})) == 1
     with pytest.raises(ValueError, match="unknown llm"):
-        make_llm("gpt", cfg)
+        make_tiers("gpt", cfg)
+
+
+# ------------------------------------------------------------------ escalation and spend reporting
+
+
+class Tier:
+    """A scripted model: returns its reply, or raises it if it is an exception."""
+
+    def __init__(self, name: str, reply: object) -> None:
+        self.name = "claude"
+        self.model = name
+        self.reply = reply
+        self.calls = 0
+
+    def generate(self, system: str, prompt: str) -> str:
+        self.calls += 1
+        if isinstance(self.reply, Exception):
+            raise self.reply
+        return str(self.reply)
+
+
+def test_a_clean_first_answer_is_used_and_the_bigger_model_is_not_called() -> None:
+    small, big = Tier("small", "Yes [f1]."), Tier("big", "Yes [f1].")
+    answer = answer_with_escalation([small, big], "q", [hit("f1")])
+    assert answer.model == "small" and not answer.escalated and big.calls == 0
+
+
+def test_a_made_up_citation_moves_the_question_to_the_bigger_model() -> None:
+    small, big = Tier("small", "See [ghost]."), Tier("big", "See [f1].")
+    answer = answer_with_escalation([small, big], "q", [hit("f1")])
+    assert answer.model == "big" and answer.escalated and answer.cited == ("f1",)
+
+
+def test_a_failed_first_model_moves_on_and_two_failures_raise() -> None:
+    boom = LLMUnavailable("down")
+    ok = answer_with_escalation([Tier("small", boom), Tier("big", "Yes [f1].")], "q", [hit("f1")])
+    assert ok.model == "big" and ok.escalated
+    with pytest.raises(LLMUnavailable, match="down"):
+        answer_with_escalation([Tier("small", boom), Tier("big", boom)], "q", [hit("f1")])
+
+
+def test_if_every_model_cites_a_ghost_the_last_answer_is_returned_with_it_hidden() -> None:
+    answer = answer_with_escalation(
+        [Tier("small", "A [ghost]."), Tier("big", "B [ghost2].")], "q", [hit("f1")]
+    )
+    assert answer.model == "big" and answer.unknown == ("ghost2",) and "ghost2" not in answer.text
+
+
+def test_no_records_means_no_model_is_called_at_all() -> None:
+    small = Tier("small", "x")
+    answer = answer_with_escalation([small], "q", [])
+    assert small.calls == 0 and answer.model == "" and not answer.escalated
+
+
+def test_claude_reports_its_token_use_and_a_cut_off_answer_is_an_error() -> None:
+    seen: list[tuple[str, int, int]] = []
+    usage = type("Usage", (), {"input_tokens": 120, "output_tokens": 30})()
+    reply = type("Msg", (), {"content": [text("ok")], "stop_reason": "end_turn", "usage": usage})()
+    messages = FakeMessages(reply)
+    fake_client = type("FakeClient", (), {"messages": messages})()
+    llm = ClaudeLLM(model="m", client=fake_client, on_usage=lambda *a: seen.append(a))
+    assert llm.generate("s", "p") == "ok" and seen == [("m", 120, 30)]
+    cut = type("Msg", (), {"content": [text("par")], "stop_reason": "max_tokens", "usage": usage})()
+    llm = ClaudeLLM(model="m", client=type("C", (), {"messages": FakeMessages(cut)})())
+    with pytest.raises(LLMUnavailable, match="cut off"):
+        llm.generate("s", "p")
+
+
+def test_a_missing_api_key_is_a_plain_error_not_a_crash() -> None:
+    err = TypeError("Could not resolve authentication method. Expected one of api_key")
+    llm, _ = claude(err)
+    with pytest.raises(LLMUnavailable, match="ANTHROPIC_API_KEY is missing"):
+        llm.generate("s", "p")
+    other, _ = claude(TypeError("something else"))
+    with pytest.raises(TypeError):
+        other.generate("s", "p")

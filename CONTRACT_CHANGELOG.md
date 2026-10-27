@@ -23,6 +23,13 @@ Contracts are frozen after Phase 0. Any change needs a PR labeled `contract-chan
 
 ## Entries
 
+### v0.5.0: 2026-10-27
+- `openapi.json`, `POST /query`: `filters` changes from a free `object` to a typed `QueryFilters` (`source`, `time_of_day`, `min_hazard_score`, `min_severity`, `has_object`, `has_defect`; unknown keys are refused). `text` is limited to 500 characters and `image_b64` to about 14 MB of base64. The response gains three optional fields: `model` (the model that wrote the answer, or null), `cited` (frame ids the answer cites, all among `records`) and `notice` (set when the written answer was skipped because a limit was reached or the model was unavailable). New schema: `QueryFilters`.
+- Behavior (no schema change): `/analyze`, `/analyze/trace`, `/index`, `/query` and `/records/{id}` work per visitor. The server sets an HttpOnly `rh_session` cookie; photos are stored and searched per session plus the shared corpus, and another session's record is a 404. Over-limit requests get a 429 with `Retry-After`; a busy server gets a 503.
+- Why: the Search view needs real retrieval, and a public endpoint needs size limits, typed filters and per-visitor isolation (docs/SECURITY_RAG.md).
+- Compatibility: `filters` was never used by a caller in this repo; a caller that sent other keys now gets a 422. Everything added to the response is optional. The TypeScript client was regenerated.
+- PR: RAG API wiring, labeled `contract-change`.
+
 ### v0.4.0: 2026-10-27
 - `openapi.json`: new route `POST /analyze/trace`, which takes the same upload as `POST /analyze` and returns `{record, trace}`. `record` is exactly what `/analyze` returns for the same image. `trace` holds the classifier's tile grid (each tile's covers, scored or skipped and why, per-class probabilities and flagged classes), the thresholds, a small base64 PNG of the road mask, and one fusion step per defect (the factors that multiply into its score and how many tiles were merged into it). New schemas: `TracedAnalysis`, `Trace`, `TileTrace`, `RoadMaskPreview`, `FusionStep`.
 - Why: the web UI's walkthrough and heatmap must show what the pipeline did to the user's own image, which the record alone does not say.

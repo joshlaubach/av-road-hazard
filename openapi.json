@@ -446,24 +446,119 @@
         "title": "Object",
         "type": "object"
       },
+      "QueryFilters": {
+        "additionalProperties": false,
+        "properties": {
+          "has_defect": {
+            "anyOf": [
+              {
+                "enum": [
+                  "D00",
+                  "D10",
+                  "D20",
+                  "D40"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Defect"
+          },
+          "has_object": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z _-]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Object"
+          },
+          "min_hazard_score": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Hazard Score"
+          },
+          "min_severity": {
+            "anyOf": [
+              {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Severity"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "rdd2022",
+                  "upload",
+                  "nuscenes"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "time_of_day": {
+            "anyOf": [
+              {
+                "enum": [
+                  "day",
+                  "night",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Of Day"
+          }
+        },
+        "title": "QueryFilters",
+        "type": "object"
+      },
       "QueryRequest": {
         "additionalProperties": false,
         "properties": {
           "filters": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/QueryFilters"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Filters"
+            ]
           },
           "image_b64": {
             "anyOf": [
               {
+                "maxLength": 14000000,
                 "type": "string"
               },
               {
@@ -485,6 +580,7 @@
           "text": {
             "anyOf": [
               {
+                "maxLength": 500,
                 "type": "string"
               },
               {
@@ -511,6 +607,13 @@
             "title": "Answer",
             "type": "string"
           },
+          "cited": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Cited",
+            "type": "array"
+          },
           "llm": {
             "enum": [
               "llama",
@@ -518,6 +621,28 @@
             ],
             "title": "Llm",
             "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "notice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice"
           },
           "records": {
             "items": {
