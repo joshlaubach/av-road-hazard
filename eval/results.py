@@ -118,7 +118,9 @@ def retrieval_section(report: Mapping[str, Any]) -> dict[str, Any]:
         "frames": report["frames"],
         "queries": report["queries"],
         "embedder": report["embedder"],
+        "pipeline": report["pipeline"],
         "methods": report["methods"],
+        "provenance": _scanner_safe(report["provenance"]),
         "caveat": (
             "Queries are made from the nuScenes human annotations, so they are mostly about "
             "objects and light; they say little about how well appearance words (wet road, glare) "

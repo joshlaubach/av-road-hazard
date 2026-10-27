@@ -5,6 +5,7 @@ import pytest
 from eval.retrieval import (
     FrameFacts,
     Query,
+    cache_matches,
     make_queries,
     mean_with_interval,
     random_ranker,
@@ -65,3 +66,15 @@ def test_interval_contains_the_mean_and_summary_groups_by_kind() -> None:
     out = summarize(score_ranker(lambda q: sorted(q.relevant), qs, (1, 5)), qs)
     assert out["all"]["recall@5"]["mean"] == 1.0
     assert set(out) >= {"all", "object", "light"}
+
+
+def test_cached_records_are_used_only_for_the_same_frames_dataset_and_models() -> None:
+    config = {"files": {"detector": "aaa"}, "thresholds": {"x": 1}}
+    stored = {"version": "v1", "frame_ids": ["a", "b"], "config": config, "records": [{}, {}]}
+    assert cache_matches(stored, "v1", ["a", "b"], config)
+    assert not cache_matches(stored, "v1", ["b", "a"], config)  # same frames, different order
+    assert not cache_matches(stored, "v1", ["a", "c"], config)
+    assert not cache_matches(stored, "v2", ["a", "b"], config)
+    assert not cache_matches(stored, "v1", ["a", "b"], {**config, "files": {"detector": "bbb"}})
+    assert not cache_matches({**stored, "records": [{}]}, "v1", ["a", "b"], config)
+    assert not cache_matches({}, "v1", ["a", "b"], config)

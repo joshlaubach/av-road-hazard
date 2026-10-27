@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from fusion.schema import DefectRecord, HazardRecord, Meta, Object
-from rag.index import CORPUS, Filters, Index, build_filter
+from rag.index import CORPUS, Filters, Index, build_filter, point_id
 from rag.text import describe
 
 DIM = 8
@@ -104,12 +104,33 @@ def test_the_same_frame_id_in_two_sessions_is_two_points() -> None:
     index = Index(DIM)
     index.add([record("x")], unit(0)[None, :], unit(0)[None, :], session="s1")
     index.add([record("x")], unit(0)[None, :], unit(0)[None, :], session="s2")
-    assert index.count() == 2 and index.count("s1") == 1
+    assert index.count(["s1", "s2"]) == 2 and index.count(["s1"]) == 1
 
 
 def test_a_search_must_name_a_session() -> None:
     with pytest.raises(ValueError):
         build_filter([], None)
+
+
+def test_get_and_count_must_name_a_session_too() -> None:
+    index = filled()
+    with pytest.raises(ValueError):
+        index.get("a", [])
+    with pytest.raises(ValueError):
+        index.count([])
+    assert index.count([CORPUS]) == 3
+
+
+def test_session_and_frame_names_containing_slashes_do_not_collide() -> None:
+    assert point_id("a/b", "c") != point_id("a", "b/c")
+    index = Index(DIM)
+    index.add([record("c")], unit(0)[None, :], unit(0)[None, :], session="a/b")
+    index.add([record("b/c")], unit(1)[None, :], unit(1)[None, :], session="a")
+    assert index.count(["a/b", "a"]) == 2
+    assert index.get("c", ["a/b"]) is not None
+    assert index.get("c", ["a"]) is None
+    assert index.get("b/c", ["a"]) is not None
+    assert index.get("b/c", ["a/b"]) is None
 
 
 def test_vectors_and_records_must_match_in_length() -> None:

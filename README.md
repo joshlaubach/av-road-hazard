@@ -83,7 +83,7 @@ The score ranks urgency. It is not the probability of a crash.
 
 All numbers below come from our own evaluation code (`eval/`), with a 90% range where it counts something. A **90% range** is a Wilson interval: if we saw $k$ successes in $n$ tries with observed rate $\hat p=k/n$, the true rate is probably between
 $$\frac{\hat p+\frac{z^2}{2n}\pm z\sqrt{\frac{\hat p(1-\hat p)}{n}+\frac{z^2}{4n^2}}}{1+\frac{z^2}{n}},\qquad z\approx1.645.$$
-Few tries means a wide range, so a range is more honest than a single number.
+Few tries means a wide range, so a range is more honest than a single number. The search rows are different: their range comes from re-drawing the set of queries many times (resampling), because each query gets a score between 0 and 1, not a success or a failure.
 
 <!-- results:start -->
 | Measure | Result | In `eval/results.json` |
