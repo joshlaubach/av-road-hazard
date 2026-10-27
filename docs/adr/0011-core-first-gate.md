@@ -16,3 +16,6 @@ Keep detection, road-masked tiling, fusion and the synthetic evaluation, with a 
 
 ## Consequences
 Delays D, F and I if the core is slow. Accepted by the maintainer on 2026-10-26; the maintainer can still override it. Building `web/` against the stub API is allowed, since the gate only stops work beyond stubs.
+
+## Update (2026-10-27)
+The gate is met: the object detector, road-masked tiling, the classifier, fusion and the synthetic fusion evaluation have reportable numbers in `eval/results.json`, which include failures (the synthetic test fails one of four criteria; the detector fine-tune failed). The gate asked for numbers, not good numbers. Starting RAG, the web UI or deployment is now the owner's call, and the README's evidence rules still apply to every claim they make.

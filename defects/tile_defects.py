@@ -63,6 +63,40 @@ def tiles_to_defects(
     return defects
 
 
+def tile_probabilities(
+    model: Any,
+    frame: np.ndarray,
+    tiles: Sequence[Tile],
+    cfg: dict[str, Any],
+    *,
+    device: str | None = None,
+) -> np.ndarray:
+    """Class probabilities for each tile of an RGB uint8 frame: shape (tiles, classes).
+
+    Classes follow CODES order. This is the scoring step of find_frame_defects, on its own, so the
+    evaluation tools score tiles the same way the pipeline does.
+    """
+    import torch
+
+    from defects.dataset import image_transform
+
+    if not tiles:
+        return np.zeros((0, len(CODES)))
+    image = Image.fromarray(frame)
+    transform = image_transform(cfg, training=False)
+    batch: Any = torch.stack([transform(image.crop(tile.box)) for tile in tiles])
+    target = device or select_device()
+    model.to(target).eval()
+    with torch.no_grad():
+        probabilities = torch.cat(
+            [
+                forward_logits(model, chunk, target, cfg).sigmoid()
+                for chunk in batch.split(cfg["batch_size"])
+            ]
+        )
+    return np.asarray(probabilities.cpu().numpy(), dtype=float)
+
+
 def find_frame_defects(
     model: Any,
     frame: np.ndarray,
@@ -89,9 +123,6 @@ def find_frame_defects(
     with. The frame must be RGB channel order, not OpenCV's BGR. The model is moved to the device
     and put in eval mode, as in predict_tiled.
     """
-    import torch
-
-    from defects.dataset import image_transform
 
     if frame.ndim != 3 or frame.shape[2] != 3 or frame.dtype != np.uint8:
         raise ValueError(
@@ -111,16 +142,5 @@ def find_frame_defects(
         kept = drop_offroad_tiles(kept, road_mask, min_road=min_road_cover)
     if not kept:
         return []
-    image = Image.fromarray(frame)
-    transform = image_transform(cfg, training=False)
-    batch: Any = torch.stack([transform(image.crop(tile.box)) for tile in kept])
-    target = device or select_device()
-    model.to(target).eval()
-    with torch.no_grad():
-        probabilities = torch.cat(
-            [
-                forward_logits(model, chunk, target, cfg).sigmoid()
-                for chunk in batch.split(cfg["batch_size"])
-            ]
-        )
-    return tiles_to_defects(kept, probabilities.cpu().tolist(), thresholds)
+    probabilities = tile_probabilities(model, frame, kept, cfg, device=device)
+    return tiles_to_defects(kept, probabilities.tolist(), thresholds)
