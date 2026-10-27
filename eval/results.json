@@ -832,6 +832,9 @@
       "model": "ViT-B-32",
       "pretrained": "laion2b_s34b_b79k"
     },
+    "pipeline": {
+      "use_stubs": false
+    },
     "methods": {
       "photo_vector": {
         "all": {
@@ -1161,6 +1164,25 @@
           }
         }
       }
+    },
+    "provenance": {
+      "files": {
+        "checkpoint/defects": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8",
+        "detector": "f7731b02ff6365453ad4fb85c008f4dc86dea63a2d4d77377f986fa54b797e21",
+        "road_model": "8208672861ad1b111dc98f3a7c54196d29875b709c7353e2dd1b7614343fb3a8"
+      },
+      "thresholds": {
+        "object_score": 0.5,
+        "max_object_cover": 0.3,
+        "min_road_cover": 0.4,
+        "cutoff_D00": 0.9,
+        "cutoff_D10": 0.75,
+        "cutoff_D20": 0.65,
+        "cutoff_D40": 0.75
+      },
+      "git_commit": "fa48225afc03576c7240706f37131d3e7c63f9f6",
+      "git_dirty": true,
+      "date_utc": "2026-10-27T05:31:03Z"
     },
     "caveat": "Queries are made from the nuScenes human annotations, so they are mostly about objects and light; they say little about how well appearance words (wet road, glare) work. Relevant frames contain a clearly visible annotated object; the search sees only the pipeline's own records and the photos."
   },

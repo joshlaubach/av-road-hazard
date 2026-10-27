@@ -239,7 +239,15 @@ def _retrieval_report() -> dict[str, Any]:
         "frames": 404,
         "queries": 21,
         "embedder": {"model": "ViT-B-32", "pretrained": "laion2b_s34b_b79k"},
+        "pipeline": {"use_stubs": False},
         "methods": methods,
+        "provenance": {
+            "files": {"detector": "ab" * 32},
+            "thresholds": {"object_score": 0.5},
+            "git_commit": "abc",
+            "git_dirty": False,
+            "date_utc": "2026-10-27T00:00:00Z",
+        },
     }
 
 
@@ -257,3 +265,5 @@ def test_measured_search_numbers_replace_the_placeholder_and_reach_the_table() -
     ):
         assert expected in table, expected
     assert "annotations" in results["retrieval"]["caveat"]
+    assert results["retrieval"]["pipeline"] == {"use_stubs": False}
+    assert results["retrieval"]["provenance"]["files"] == {"detector": "ab" * 32}

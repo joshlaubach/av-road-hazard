@@ -7,6 +7,7 @@ another.
 
 from __future__ import annotations
 
+import json
 import uuid
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass, field
@@ -47,7 +48,9 @@ class Hit:
 
 
 def point_id(session: str, frame_id: str) -> str:
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"{session}/{frame_id}"))
+    """Stable id for (session, frame). The pair is encoded as JSON so that no two different pairs
+    give the same text ("a/b" + "c" and "a" + "b/c" must not collide)."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, json.dumps([session, frame_id])))
 
 
 def build_filter(sessions: Collection[str], filters: Filters | None) -> models.Filter:
@@ -129,16 +132,23 @@ class Index:
         ]
         self.client.upsert(COLLECTION, points)
 
-    def count(self, session: str | None = None) -> int:
-        flt = None if session is None else build_filter([session], None)
+    def count(self, sessions: Collection[str]) -> int:
+        """How many photos the given sessions hold; naming at least one session is required."""
+        flt = build_filter(sessions, None)
         return int(self.client.count(COLLECTION, count_filter=flt, exact=True).count)
 
     def get(self, frame_id: str, sessions: Collection[str]) -> HazardRecord | None:
-        """The record, only if it lives in one of the sessions the caller may see."""
+        """The record, only if it lives in one of the sessions the caller may see.
+
+        The stored session and frame id are checked as well as the point id, so a mix-up in how
+        ids are made could never hand back another session's record.
+        """
+        build_filter(sessions, None)  # an empty session list is an error here too
         for session in sorted(sessions):
             found = self.client.retrieve(COLLECTION, [point_id(session, frame_id)])
-            if found and found[0].payload:
-                return HazardRecord.model_validate(found[0].payload["record"])
+            payload = found[0].payload if found else None
+            if payload and payload["session"] == session and payload["frame_id"] == frame_id:
+                return HazardRecord.model_validate(payload["record"])
         return None
 
     def search(

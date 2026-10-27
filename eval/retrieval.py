@@ -12,6 +12,7 @@ from __future__ import annotations
 import random
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -73,6 +74,18 @@ def make_queries(frames: Sequence[FrameFacts]) -> list[Query]:
                 )
             )
     return [q for q in candidates if MIN_RELEVANT <= len(q.relevant) <= MAX_SHARE * total]
+
+
+def cache_matches(
+    stored: Mapping[str, Any], version: str, frame_ids: Sequence[str], config: Mapping[str, Any]
+) -> bool:
+    """Whether a cached set of records was made for exactly these frames, dataset and models."""
+    return (
+        stored.get("version") == version
+        and stored.get("frame_ids") == list(frame_ids)
+        and stored.get("config") == dict(config)
+        and len(stored.get("records", ())) == len(frame_ids)
+    )
 
 
 def recall_at_k(ranked: Sequence[str], relevant: frozenset[str], k: int) -> float:
