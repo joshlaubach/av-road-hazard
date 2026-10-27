@@ -15,6 +15,20 @@
         "title": "Body_analyze_analyze_post",
         "type": "object"
       },
+      "Body_analyze_trace_analyze_trace_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_analyze_trace_analyze_trace_post",
+        "type": "object"
+      },
       "Body_index_index_post": {
         "properties": {
           "files": {
@@ -104,6 +118,84 @@
           "in_road"
         ],
         "title": "DefectRecord",
+        "type": "object"
+      },
+      "FusionStep": {
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "in_road": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Road"
+          },
+          "merged_from": {
+            "minimum": 1.0,
+            "title": "Merged From",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "proximity": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Proximity",
+            "type": "number"
+          },
+          "road_multiplier": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Road Multiplier",
+            "type": "number"
+          },
+          "score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          },
+          "severity": {
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "unknown"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "severity_weight": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Severity Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "merged_from",
+          "in_road",
+          "road_multiplier",
+          "severity",
+          "severity_weight",
+          "confidence",
+          "proximity",
+          "score"
+        ],
+        "title": "FusionStep",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -443,6 +535,235 @@
         "title": "QueryResponse",
         "type": "object"
       },
+      "RoadMaskPreview": {
+        "additionalProperties": false,
+        "properties": {
+          "height": {
+            "minimum": 1.0,
+            "title": "Height",
+            "type": "integer"
+          },
+          "png_base64": {
+            "title": "Png Base64",
+            "type": "string"
+          },
+          "width": {
+            "minimum": 1.0,
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "width",
+          "height",
+          "png_base64"
+        ],
+        "title": "RoadMaskPreview",
+        "type": "object"
+      },
+      "TileTrace": {
+        "additionalProperties": false,
+        "properties": {
+          "box": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Box",
+            "type": "array"
+          },
+          "col": {
+            "minimum": 0.0,
+            "title": "Col",
+            "type": "integer"
+          },
+          "flagged": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Flagged",
+            "type": "array"
+          },
+          "object_cover": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Object Cover",
+            "type": "number"
+          },
+          "probabilities": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "maximum": 1.0,
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probabilities"
+          },
+          "road_cover": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Cover"
+          },
+          "row": {
+            "minimum": 0.0,
+            "title": "Row",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "scored",
+              "skipped_object",
+              "skipped_off_road"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "row",
+          "col",
+          "box",
+          "object_cover",
+          "road_cover",
+          "status",
+          "probabilities",
+          "flagged"
+        ],
+        "title": "TileTrace",
+        "type": "object"
+      },
+      "Trace": {
+        "additionalProperties": false,
+        "properties": {
+          "fusion": {
+            "items": {
+              "$ref": "#/components/schemas/FusionStep"
+            },
+            "title": "Fusion",
+            "type": "array"
+          },
+          "image_size": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Image Size",
+            "type": "array"
+          },
+          "max_object_cover": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Max Object Cover",
+            "type": "number"
+          },
+          "min_road_cover": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Road Cover",
+            "type": "number"
+          },
+          "road_mask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoadMaskPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "thresholds": {
+            "additionalProperties": {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "title": "Thresholds",
+            "type": "object"
+          },
+          "tile_overlap": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Tile Overlap",
+            "type": "number"
+          },
+          "tile_size": {
+            "minimum": 1.0,
+            "title": "Tile Size",
+            "type": "integer"
+          },
+          "tiles": {
+            "items": {
+              "$ref": "#/components/schemas/TileTrace"
+            },
+            "title": "Tiles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "image_size",
+          "tile_size",
+          "tile_overlap",
+          "thresholds",
+          "max_object_cover",
+          "min_road_cover",
+          "tiles",
+          "road_mask",
+          "fusion"
+        ],
+        "title": "Trace",
+        "type": "object"
+      },
+      "TracedAnalysis": {
+        "additionalProperties": false,
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/HazardRecord"
+          },
+          "trace": {
+            "$ref": "#/components/schemas/Trace"
+          }
+        },
+        "required": [
+          "record",
+          "trace"
+        ],
+        "title": "TracedAnalysis",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -527,6 +848,44 @@
           }
         },
         "summary": "Analyze"
+      }
+    },
+    "/analyze/trace": {
+      "post": {
+        "operationId": "analyze_trace_analyze_trace_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_analyze_trace_analyze_trace_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracedAnalysis"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze Trace"
       }
     },
     "/health": {

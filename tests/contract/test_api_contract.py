@@ -13,9 +13,10 @@ def test_openapi_json_is_current() -> None:
 
 
 def test_expected_routes_present() -> None:
-    """All five contract routes exist."""
+    """All contract routes exist."""
     paths = app.openapi()["paths"]
-    for route in ["/analyze", "/index", "/query", "/records/{record_id}", "/health"]:
+    routes = ["/analyze", "/analyze/trace", "/index", "/query", "/records/{record_id}", "/health"]
+    for route in routes:
         assert route in paths
 
 

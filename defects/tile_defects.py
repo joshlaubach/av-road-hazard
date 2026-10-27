@@ -11,15 +11,16 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Literal
 
 import numpy as np
 from PIL import Image
 
 from defects.labels import CODES
-from defects.object_mask import DEFAULT_MAX_COVER, drop_covered_tiles
+from defects.object_mask import DEFAULT_MAX_COVER, drop_covered_tiles, object_coverage
 from defects.patches import IntBox, Tile, tile_grid
-from defects.road_region import DEFAULT_MIN_ROAD, drop_offroad_tiles
+from defects.road_region import DEFAULT_MIN_ROAD, drop_offroad_tiles, road_coverage
 from defects.runtime import forward_logits, select_device
 from fusion.fuse import RoadMask
 from fusion.schema import Defect, Object
@@ -97,6 +98,82 @@ def tile_probabilities(
     return np.asarray(probabilities.cpu().numpy(), dtype=float)
 
 
+TileStatus = Literal["scored", "skipped_object", "skipped_off_road"]
+
+
+@dataclass(frozen=True)
+class ScoredTile:
+    """One tile of the grid with what happened to it: scored, or skipped and why.
+
+    probabilities is one value per class in CODES order for a scored tile, None for a skipped one.
+    road_cover is None when there was no road mask (the road is unknown).
+    """
+
+    tile: Tile
+    object_cover: float
+    road_cover: float | None
+    status: TileStatus
+    probabilities: tuple[float, ...] | None
+
+
+def _check_frame(frame: np.ndarray, road_mask: RoadMask | None) -> tuple[int, int]:
+    """The frame's (width, height); raises ValueError for a frame or mask of the wrong shape."""
+    if frame.ndim != 3 or frame.shape[2] != 3 or frame.dtype != np.uint8:
+        raise ValueError(
+            f"frame must be an RGB uint8 image of shape (H, W, 3), got {frame.shape} {frame.dtype}"
+        )
+    height, width = frame.shape[:2]
+    if road_mask is not None and road_mask.shape != (height, width):
+        raise ValueError(
+            f"road_mask shape {road_mask.shape} must match the frame's (height, width) "
+            f"{(height, width)}"
+        )
+    return width, height
+
+
+def score_frame_tiles(
+    model: Any,
+    frame: np.ndarray,
+    objects: Sequence[Object],
+    cfg: dict[str, Any],
+    *,
+    region: IntBox | None = None,
+    max_object_cover: float = DEFAULT_MAX_COVER,
+    road_mask: RoadMask | None = None,
+    min_road_cover: float = DEFAULT_MIN_ROAD,
+    device: str | None = None,
+) -> list[ScoredTile]:
+    """Every tile of the grid, in reading order, with its covers, its status and its probabilities.
+
+    The same filters as find_frame_defects, in the same order: a tile with too much object cover is
+    skipped first, then a tile with too little road. Skipped tiles are reported too, because the
+    walkthrough in the UI shows them; only scored tiles reach the classifier.
+    """
+    width, height = _check_frame(frame, road_mask)
+    tiles = tile_grid(
+        (width, height), int(cfg["tile_size"]), float(cfg["tile_overlap"]), region=region
+    )
+    boxes = [o.box for o in objects]
+    kept = drop_covered_tiles(tiles, boxes, max_cover=max_object_cover)
+    if road_mask is not None:
+        kept = drop_offroad_tiles(kept, road_mask, min_road=min_road_cover)
+    probabilities = tile_probabilities(model, frame, kept, cfg, device=device) if kept else None
+    by_tile = {(tile.row, tile.col): i for i, tile in enumerate(kept)}
+    scored: list[ScoredTile] = []
+    for tile in tiles:
+        obj_cover = object_coverage(tile, boxes)
+        road = road_coverage(tile, road_mask) if road_mask is not None else None
+        index = by_tile.get((tile.row, tile.col))
+        if index is not None and probabilities is not None:
+            status: TileStatus = "scored"
+            row: tuple[float, ...] | None = tuple(float(v) for v in probabilities[index])
+        else:
+            status = "skipped_object" if obj_cover > max_object_cover else "skipped_off_road"
+            row = None
+        scored.append(ScoredTile(tile, obj_cover, road, status, row))
+    return scored
+
+
 def find_frame_defects(
     model: Any,
     frame: np.ndarray,
@@ -123,24 +200,23 @@ def find_frame_defects(
     with. The frame must be RGB channel order, not OpenCV's BGR. The model is moved to the device
     and put in eval mode, as in predict_tiled.
     """
-
-    if frame.ndim != 3 or frame.shape[2] != 3 or frame.dtype != np.uint8:
-        raise ValueError(
-            f"frame must be an RGB uint8 image of shape (H, W, 3), got {frame.shape} {frame.dtype}"
+    scored = [
+        s
+        for s in score_frame_tiles(
+            model,
+            frame,
+            objects,
+            cfg,
+            region=region,
+            max_object_cover=max_object_cover,
+            road_mask=road_mask,
+            min_road_cover=min_road_cover,
+            device=device,
         )
-    height, width = frame.shape[:2]
-    if road_mask is not None and road_mask.shape != (height, width):
-        raise ValueError(
-            f"road_mask shape {road_mask.shape} must match the frame's (height, width) "
-            f"{(height, width)}"
-        )
-    tiles = tile_grid(
-        (width, height), int(cfg["tile_size"]), float(cfg["tile_overlap"]), region=region
-    )
-    kept = drop_covered_tiles(tiles, [o.box for o in objects], max_cover=max_object_cover)
-    if road_mask is not None:
-        kept = drop_offroad_tiles(kept, road_mask, min_road=min_road_cover)
-    if not kept:
+        if s.probabilities is not None
+    ]
+    if not scored:
         return []
-    probabilities = tile_probabilities(model, frame, kept, cfg, device=device)
-    return tiles_to_defects(kept, probabilities.tolist(), thresholds)
+    return tiles_to_defects(
+        [s.tile for s in scored], [list(s.probabilities or ()) for s in scored], thresholds
+    )
