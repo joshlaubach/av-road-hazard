@@ -18,8 +18,10 @@ from tools.finetune_detector import (
     check_outside_repo,
     check_run_id,
     class_box_counts,
+    fold_jobs,
     learning_rate_factor,
     load_config,
+    load_fold_plan,
     save_model,
     train,
 )
@@ -35,6 +37,46 @@ def _image(folder: Path, name: str, size: tuple[int, int] = (96, 64)) -> str:
         np.random.default_rng(0).integers(0, 255, (size[1], size[0], 3), dtype=np.uint8)
     ).save(path)
     return str(path)
+
+
+def _plan_file(tmp_path: Path, text: str) -> Path:
+    path = tmp_path / "plan.yaml"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_a_fold_plan_maps_each_scene_to_its_fold(tmp_path: Path) -> None:
+    path = _plan_file(tmp_path, "scenes:\n  scene-0001: 0\n  scene-0002: 1\n  scene-0003: 0\n")
+    assert load_fold_plan(path) == {"scene-0001": 0, "scene-0002": 1, "scene-0003": 0}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "folds: 5\n",
+        "scenes: {}\n",
+        "scenes:\n  a: 0\n  b: 0\n",
+        "scenes:\n  a: 0\n  b: 2\n",
+        "scenes:\n  a: zero\n  b: 1\n",
+        "scenes:\n  a: true\n  b: 1\n",
+        "scenes:\n  1: 0\n  2: 1\n",
+        "- not a table\n",
+    ],
+    ids=[
+        "no scenes table", "empty", "one fold", "gap in folds", "word for a fold",
+        "boolean for a fold", "scene named by a number", "not a table",
+    ],
+)  # fmt: skip
+def test_a_broken_fold_plan_is_refused(tmp_path: Path, text: str) -> None:
+    with pytest.raises(ValueError):
+        load_fold_plan(_plan_file(tmp_path, text))
+
+
+def test_fold_jobs_are_named_by_number_and_never_train_on_their_held_out_scenes() -> None:
+    jobs = fold_jobs({"a": 0, "b": 1, "c": 0, "d": 1})
+    assert [name for name, _, _ in jobs] == ["fold-0", "fold-1"]
+    assert jobs[0][1:] == (["b", "d"], ["a", "c"])
+    assert jobs[1][1:] == (["a", "c"], ["b", "d"])
 
 
 def test_the_output_folder_must_be_outside_the_repository(tmp_path: Path) -> None:
@@ -152,7 +194,7 @@ def test_a_short_training_run_gives_finite_losses_and_changes_the_weights(tmp_pa
 
 @needs_torch
 def test_a_saved_model_comes_with_its_hash_and_notes(tmp_path: Path) -> None:
-    save_model(_tiny_model(), tmp_path / "fold", {"held_out_scene": "scene-1"})
+    save_model(_tiny_model(), tmp_path / "fold", {"held_out_scenes": ["scene-1"]})
     meta = json.loads((tmp_path / "fold" / "meta.json").read_text())
-    assert meta["held_out_scene"] == "scene-1" and len(meta["sha256"]) == 64
+    assert meta["held_out_scenes"] == ["scene-1"] and len(meta["sha256"]) == 64
     assert (tmp_path / "fold" / "model.safetensors").is_file()
