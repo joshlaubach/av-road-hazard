@@ -7,6 +7,12 @@ __pycache__
 data
 checkpoints
 outputs
+runs
+wt-gap
+handoff
+.vibe-wise
+.playwright-mcp
+scratch_*.png
 tests
 docs
 web/node_modules

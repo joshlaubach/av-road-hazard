@@ -19,6 +19,7 @@ import json
 import math
 import random
 import re
+import subprocess
 import sys
 import time
 from collections.abc import Collection, Mapping
@@ -130,11 +131,32 @@ def check_run_id(run_id: str) -> str:
     return run_id
 
 
+def _git_ignores(path: Path) -> bool:
+    """True only if git itself says it ignores the path; any trouble asking counts as no."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(REPO), "check-ignore", "-q", "--", str(path)],
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return result.returncode == 0
+
+
 def check_outside_repo(path: Path) -> Path:
-    """The resolved output folder; refuses one inside the repository (weights never go in git)."""
+    """The resolved output folder; refuses one git would track (weights never go in git).
+
+    A folder outside the repository is fine, and so is one inside it that .gitignore covers
+    (runs/). The repository folder itself is never accepted.
+    """
     resolved = path.resolve()
-    if resolved == REPO or REPO in resolved.parents:
-        raise ValueError(f"--out-dir must be outside the repository, got {resolved}")
+    inside = resolved == REPO or REPO in resolved.parents
+    if inside and (resolved == REPO or not _git_ignores(resolved)):
+        raise ValueError(
+            f"--out-dir must be outside the repository or in a folder git ignores, got {resolved}"
+        )
     return resolved
 
 
