@@ -110,3 +110,48 @@ Read this gain with care: the zero-shot detector never saw nuScenes, so part of 
 **Next step options (owner decides):** (1) more nuScenes scenes, free under the non-commercial terms (the full release has 700 scenes; barriers need several more scenes with road work), then repeat this same test; (2) a different source of barrier labels; (3) leave work-zone objects for later and continue with the next roadmap row (merged tiles and severity, done the same day, ADR 0016). Recommendation: (1), starting with a small slice of the full release, because the same code runs unchanged on more scenes.
 
 Limits of this result: 10 scenes from two cities, one split protocol, and the cutoffs and limits were fixed before any result was seen. The raw report is local only and contains no images; the 10 models stay on the owner's machine under the nuScenes terms.
+
+## Amendment 2026-10-30: more drives, and a fairer way to split them
+
+Written before any model of this second test was trained. The pass marks in items 1 to 4 above do not change, and nobody edits them after the results come in.
+
+**What happened last time.** The detector is a program that looks at a dashcam photo and draws boxes around things. It was taught on everyday objects, so it cannot name traffic cones or road barriers, the things that mark construction zones. We tried teaching it with the 10 drives in nuScenes mini. Barriers showed up in only 3 of those drives, so there was too little to learn from, and it flunked: on drives it had never seen, it found 2 of 1,511 barriers.
+
+**What we are doing now.** The same exam with a bigger lesson. We downloaded part 1 of the full nuScenes release: 85 more drives (59 in Singapore One North, 26 in Boston Seaport), all six cameras. The photos and the trained models stay on the owner's computer, because of the nuScenes license. The mini drives are not used (only scene-0061 is also in part 1). To keep memory small, `tools/trim_nuscenes.py` cuts the full label tables down to these 85 drives, so loading takes about 1 GB of memory instead of about 7.
+
+**Which drives, and why this rule.** Picking drives by hand would invite cherry-picking. So a fixed rule (`tools/plan_detector_scenes.py`) picks them using only the labels, never any results:
+- Keep a drive if it has at least 20 barriers or at least 20 traffic cones that are visible enough to count. "Visible enough" means at least 40% of the object can be seen, the same cutoff training and scoring already use.
+- Add the first 10 drives, in alphabetical order, that have neither. They check that the detector does not see cones and barriers that are not there.
+
+That gives 66 drives: 34 with 20 or more barriers, 52 with 20 or more cones, and 10 plain road. The counts are 3D labels, used only to rank drives; they are not test scores. The full list is `configs/detector_scenes.yaml`.
+
+**How the exam works.** Think of studying for a test where you are only graded on questions you have never seen.
+1. Split the 66 drives into 5 groups (folds).
+2. Train a model on 4 groups, then quiz it on the 5th.
+3. Do that 5 times, so every drive is a quiz question exactly once, always graded by a model that never saw it.
+
+We split by drive, never by photo. Photos half a second apart are nearly identical, so splitting by photo would be like finding the exam question in your homework. To keep the groups fair, drives are ranked richest first (most barriers plus cones) and dealt out like cards, so the richest drives do not all end up in one group.
+
+| Fold | Drives | Boston | Singapore | Barrier drives | Cone drives | Plain road |
+|---|---|---|---|---|---|---|
+| 0 | 14 | 4 | 10 | 7 | 11 | 2 |
+| 1 | 13 | 4 | 9 | 6 | 11 | 2 |
+| 2 | 13 | 5 | 8 | 7 | 9 | 2 |
+| 3 | 13 | 5 | 8 | 6 | 10 | 2 |
+| 4 | 13 | 4 | 9 | 8 | 11 | 2 |
+
+**Why 5 groups and not one drive at a time.** Quizzing one drive per model would need 66 models, each learning from about 65 drives: roughly 50 hours on the GPU. Five groups need roughly 3 hours. These times are scaled from the mini run, not measured.
+
+**The passing marks (unchanged).**
+1. **Cones and barriers.** Two scores, each worked out from the model's boxes:
+   - precision = correct boxes / all boxes it drew. It must be at least 70%.
+   - recall = real objects it found / all real objects. It must be at least 40%.
+
+   These are counted only over drives with at least 20 visible examples of that object. Precision is the stricter mark on purpose: a missed cone leaves us where we are today, but a made-up one raises a hazard score for no reason. Barriers must also pass by themselves on at least two held-out drives.
+2. **No forgetting.** For the six old kinds of object (people, cars, bikes and so on), recall may drop at most 3 points and precision at most 5 points compared with the original detector.
+3. **Speed.** On an ordinary CPU, the slowest 5% of photos (p95) take at most 2 seconds, at 24, 4 and 2 threads.
+4. **Sanity check outside nuScenes.** On the 20 local test images and the Stellenbosch photos, the model must not invent objects on empty road. These are counted and shown to the owner, not scored.
+
+If any mark fails, the original detector stays, and the numbers are recorded in the roadmap.
+
+**What this test cannot tell us.** It covers only two city areas, about 70% of the drives are Singapore, and none are from Queenstown or Holland Village. So a pass means "works on these drives", not "works everywhere". A per-city breakdown is not built yet; if it is added, it changes none of the marks.
