@@ -140,7 +140,7 @@ We split by drive, never by photo. Photos half a second apart are nearly identic
 | 3 | 13 | 5 | 8 | 6 | 10 | 2 |
 | 4 | 13 | 4 | 9 | 8 | 11 | 2 |
 
-**Why 5 groups and not one drive at a time.** Quizzing one drive per model would need 66 models, each learning from about 65 drives: roughly 50 hours on the GPU. Five groups need roughly 3 hours. These times are scaled from the mini run, not measured.
+**Why 5 groups and not one drive at a time.** Quizzing one drive per model would need 66 models, each learning from about 65 drives: roughly 160 hours on the GPU. Five groups need about 10 hours: the first epoch of the real run measured 2.6 training steps per second, which is about 10 minutes per epoch, so about 2 hours for each group's 12 epochs over roughly 12,400 photos. The 160 hours is scaled from that speed. (The first draft of this plan said 3 hours; that was a guess from the mini run.)
 
 **The passing marks (unchanged).**
 1. **Cones and barriers.** Two scores, each worked out from the model's boxes:
