@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -79,12 +80,50 @@ def test_fold_jobs_are_named_by_number_and_never_train_on_their_held_out_scenes(
     assert jobs[1][1:] == (["a", "c"], ["b", "d"])
 
 
-def test_the_output_folder_must_be_outside_the_repository(tmp_path: Path) -> None:
-    assert check_outside_repo(tmp_path) == tmp_path.resolve()
+@pytest.fixture
+def git_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A throwaway git repository that ignores runs/, standing in for the project repository."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    (repo / ".gitignore").write_text("runs/\n", encoding="utf-8")
+    monkeypatch.setattr("tools.finetune_detector.REPO", repo.resolve())
+    return repo
+
+
+def test_an_output_folder_outside_the_repository_is_fine(git_repo: Path, tmp_path: Path) -> None:
+    elsewhere = tmp_path / "elsewhere"
+    assert check_outside_repo(elsewhere) == elsewhere.resolve()
+
+
+def test_an_output_folder_inside_the_repository_is_accepted_only_if_git_ignores_it(
+    git_repo: Path,
+) -> None:
+    assert check_outside_repo(git_repo / "runs" / "x") == (git_repo / "runs" / "x").resolve()
     with pytest.raises(ValueError, match="outside the repository"):
-        check_outside_repo(REPO / "data" / "weights")
-    with pytest.raises(ValueError):
-        check_outside_repo(REPO)
+        check_outside_repo(git_repo / "docs" / "weights")
+
+
+def test_the_repository_folder_itself_is_never_an_output_folder(git_repo: Path) -> None:
+    with pytest.raises(ValueError, match="outside the repository"):
+        check_outside_repo(git_repo)
+
+
+def test_an_output_folder_inside_the_repository_is_refused_if_git_cannot_be_asked(
+    git_repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def no_git(*args: Any, **kwargs: Any) -> None:
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr("tools.finetune_detector.subprocess.run", no_git)
+    with pytest.raises(ValueError, match="outside the repository"):
+        check_outside_repo(git_repo / "runs" / "x")
+
+
+def test_the_projects_own_gitignore_covers_runs_but_not_source_folders() -> None:
+    assert check_outside_repo(REPO / "runs" / "x") == (REPO / "runs" / "x").resolve()
+    with pytest.raises(ValueError, match="outside the repository"):
+        check_outside_repo(REPO / "docs" / "weights")
 
 
 BAD_RUN_IDS = [
