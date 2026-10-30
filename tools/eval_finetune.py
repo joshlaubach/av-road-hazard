@@ -38,7 +38,14 @@ from perception.detector import DETECTOR_SUBDIR, DETECTORS, build_model, load_de
 from perception.finetune import FINETUNE_CLASSES, class_name, finetune_label, swap_head
 from perception.labels import coco_label
 from tools.eval_detector import ladder_rungs, thread_limit
-from tools.finetune_detector import DEFAULT_CONFIG, SceneFrame, load_config, load_scene_frames
+from tools.finetune_detector import (
+    DEFAULT_CONFIG,
+    SceneFrame,
+    fold_jobs,
+    load_config,
+    load_fold_plan,
+    load_scene_frames,
+)
 
 FRONT = "CAM_FRONT"
 ADR_CAMERAS = (
@@ -48,12 +55,14 @@ OLD_CLASSES = FINETUNE_CLASSES[:6]
 
 
 def check_fold_meta(
-    meta: dict[str, Any], scene: str, scenes: list[str], cfg: dict[str, Any]
+    meta: dict[str, Any], held_out: list[str], scenes: list[str], cfg: dict[str, Any]
 ) -> None:
-    """Refuse a record that does not describe a full run that left exactly this scene out."""
-    if meta.get("held_out_scene") != scene:
-        raise ValueError(f"model for {scene} was held out of {meta.get('held_out_scene')!r}")
-    if sorted(meta.get("train_scenes", [])) != sorted(s for s in scenes if s != scene):
+    """Refuse a record that does not describe a full run that left exactly these scenes out."""
+    scene = ", ".join(held_out)
+    recorded = meta.get("held_out_scenes")
+    if not isinstance(recorded, list) or sorted(recorded) != sorted(held_out):
+        raise ValueError(f"model for {scene} was held out of {recorded!r}")
+    if sorted(meta.get("train_scenes", [])) != sorted(s for s in scenes if s not in held_out):
         raise ValueError(f"model for {scene} was not trained on exactly the other scenes")
     if meta.get("smoke") is not False:
         raise ValueError(f"model for {scene} is not marked as a full (non-smoke) run")
@@ -74,19 +83,20 @@ def load_finetuned(
     folder: Path,
     device: str,
     *,
-    scene: str | None = None,
+    held_out: list[str] | None = None,
     scenes: list[str] | None = None,
     cfg: dict[str, Any] | None = None,
 ) -> Any:
     """A fine-tuned fold model, after checking its file against the hash in its meta.json.
 
-    With scene, scenes and cfg given, the record must also say the model left that scene out.
+    With held_out, scenes and cfg given, the record must also say the model left exactly those
+    scenes out.
     """
     from safetensors.torch import load_file
 
     meta = json.loads((folder / "meta.json").read_text(encoding="utf-8"))
-    if scene is not None and scenes is not None and cfg is not None:
-        check_fold_meta(meta, scene, scenes, cfg)
+    if held_out is not None and scenes is not None and cfg is not None:
+        check_fold_meta(meta, held_out, scenes, cfg)
     weights = folder / "model.safetensors"
     if file_sha256(weights) != meta["sha256"]:
         raise ValueError(f"{weights} does not match the hash in its meta.json")
@@ -173,6 +183,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--nuscenes-root", type=Path, default=Path("data/nuscenes/raw"))
     parser.add_argument("--version", default="v1.0-mini")
+    parser.add_argument("--plan", type=Path, required=True, help="the plan the run was trained on")
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--timing-frames", type=int, default=60)
@@ -184,9 +195,17 @@ def main(argv: list[str] | None = None) -> int:
     cfg = load_config(args.config)
     check_cameras(cfg["cameras"])
     device = select_device()
-    frames = load_scene_frames(args.nuscenes_root, args.version, cfg["cameras"])
+    plan = load_fold_plan(args.plan)
+    frames = load_scene_frames(args.nuscenes_root, args.version, cfg["cameras"], set(plan))
     scenes = sorted({f.scene for f in frames})
-    missing = [s for s in scenes if not (args.run_dir / s / "model.safetensors").is_file()]
+    if scenes != sorted(plan):
+        print(
+            f"the plan names scenes with no images: {sorted(set(plan) - set(scenes))}",
+            file=sys.stderr,
+        )
+        return 2
+    jobs = fold_jobs(plan)
+    missing = [n for n, _, _ in jobs if not (args.run_dir / n / "model.safetensors").is_file()]
     if missing:
         print(f"no trained model for {missing} in {args.run_dir}", file=sys.stderr)
         return 2
@@ -197,12 +216,14 @@ def main(argv: list[str] | None = None) -> int:
     zero_shot = load_detector_model(zero_weights, spec, device=device)
     tuned_detections: dict[int, list[Detection]] = {}
     zero_detections: list[list[Detection]] = []
-    for scene in scenes:
-        model = load_finetuned(args.run_dir / scene, device, scene=scene, scenes=scenes, cfg=cfg)
+    for name, _, held_out in jobs:
+        model = load_finetuned(
+            args.run_dir / name, device, held_out=held_out, scenes=scenes, cfg=cfg
+        )
         for index, frame in enumerate(frames):
-            if frame.scene == scene:
+            if frame.scene in held_out:
                 tuned_detections[index] = predict(model, _rgb(frame.path), device, finetuned=True)
-        print(f"scored {scene}", file=sys.stderr)
+        print(f"scored {name}: {len(held_out)} scenes", file=sys.stderr)
         del model
     for frame in frames:
         zero_detections.append(predict(zero_shot, _rgb(frame.path), device, finetuned=False))
@@ -217,8 +238,9 @@ def main(argv: list[str] | None = None) -> int:
             OLD_CLASSES,
         )
     if args.timing_frames > 0:
+        first_name, _, first_held_out = jobs[0]
         cpu_model = load_finetuned(
-            args.run_dir / scenes[0], "cpu", scene=scenes[0], scenes=scenes, cfg=cfg
+            args.run_dir / first_name, "cpu", held_out=first_held_out, scenes=scenes, cfg=cfg
         )
         front = [f.path for f in frames if f.camera == FRONT]
         step = max(1, len(front) // args.timing_frames)
@@ -234,7 +256,8 @@ def main(argv: list[str] | None = None) -> int:
         {
             "zero_shot": zero_weights,
             "config": args.config,
-            **{f"fold/{s}": args.run_dir / s / "model.safetensors" for s in scenes},
+            "plan": args.plan,
+            **{f"fold/{n}": args.run_dir / n / "model.safetensors" for n, _, _ in jobs},
         },
         thresholds={"old_classes": cfg["evaluation"]["old_classes_cutoff"]},
         repo=Path(__file__).resolve().parents[1],

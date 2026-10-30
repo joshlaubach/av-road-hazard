@@ -1,11 +1,13 @@
 """Fine-tune the COCO detector on nuScenes for traffic cones and barriers (ADR 0015).
 
-Usage: python -m tools.finetune_detector --nuscenes-root data/nuscenes/raw --out-dir DIR
-           --run-id NAME [--folds all | --fold SCENE | --all-scenes] [--epochs N] [--smoke]
+Usage: python -m tools.finetune_detector --nuscenes-root data/nuscenes/raw --plan FILE
+           --out-dir DIR --run-id NAME [--folds all | --fold NAME | --all-scenes] [--epochs N]
+           [--smoke]
 DIR must be outside the repository. Starts from the pinned COCO weights, swaps the box head for the
-8-class one (the six COCO rows are kept), and trains on all six cameras. --folds all trains one
-model per scene with that scene left out (the leave-one-scene-out evaluation); --all-scenes trains
-the final model on every scene. --smoke trains briefly on a few images to check the loop runs.
+8-class one (the six COCO rows are kept), and trains on all six cameras. FILE is the plan: a table
+of scene name to fold number, written before any training. --folds all trains one model per fold
+with that fold's scenes left out (grouped cross-validation by scene); --all-scenes trains the
+final model on every scene. --smoke trains briefly on a few images to check the loop runs.
 Each model is saved to DIR/RUN_ID/<fold>/ as model.safetensors with a meta.json beside it. The
 nuScenes images and these weights stay on this machine: the weights carry the nuScenes terms.
 """
@@ -19,6 +21,7 @@ import random
 import re
 import sys
 import time
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -34,7 +37,7 @@ from perception.finetune import (
     TrainItem,
     flip_boxes,
     freeze_batchnorm_statistics,
-    scene_folds,
+    grouped_folds,
     swap_head,
     training_item,
 )
@@ -54,17 +57,44 @@ class SceneFrame:
     ground_truth: list[GtBox]
 
 
-def load_scene_frames(root: Path, version: str, cameras: list[str]) -> list[SceneFrame]:
-    """Every image of the chosen cameras with its projected ground truth (needs the devkit)."""
+FoldJob = tuple[str, list[str], list[str]]
+
+
+def load_fold_plan(path: Path) -> dict[str, int]:
+    """The plan file's table of scene name to fold number, checked to give usable folds."""
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    scenes = data.get("scenes") if isinstance(data, dict) else None
+    if not isinstance(scenes, dict) or not scenes:
+        raise ValueError(f"{path} needs a 'scenes' table of scene name: fold number")
+    if not all(isinstance(s, str) and type(f) is int for s, f in scenes.items()):
+        raise ValueError(f"{path}: every scene needs a text name and a whole-number fold")
+    grouped_folds(scenes)  # refuses fold numbers that are not 0..k-1
+    return dict(scenes)
+
+
+def fold_jobs(plan: Mapping[str, int]) -> list[FoldJob]:
+    """(name, training scenes, held-out scenes) per fold, named fold-0, fold-1, and so on."""
+    return [(f"fold-{n}", train, held) for n, (train, held) in enumerate(grouped_folds(plan))]
+
+
+def load_scene_frames(
+    root: Path, version: str, cameras: list[str], scenes: Collection[str] | None = None
+) -> list[SceneFrame]:
+    """Every image of the chosen cameras with its projected ground truth (needs the devkit).
+
+    With scenes given, only those scenes are read; images of other scenes need not be on disk.
+    """
     from nuscenes.nuscenes import NuScenes
 
     from tools.eval_detector import _project
 
     nusc = NuScenes(version=version, dataroot=str(root), verbose=False)
-    scenes = {s["token"]: s for s in nusc.scene}
+    by_token = {s["token"]: s for s in nusc.scene}
     frames: list[SceneFrame] = []
     for sample in nusc.sample:
-        scene = scenes[sample["scene_token"]]
+        scene = by_token[sample["scene_token"]]
+        if scenes is not None and scene["name"] not in scenes:
+            continue
         for camera in cameras:
             path, boxes = _project(nusc, sample, camera)
             frames.append(
@@ -259,11 +289,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--nuscenes-root", type=Path, default=Path("data/nuscenes/raw"))
     parser.add_argument("--version", default="v1.0-mini")
+    parser.add_argument("--plan", type=Path, required=True, help="scene to fold table (YAML)")
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--folds", choices=["all"], help="one model per held-out scene")
-    group.add_argument("--fold", help="one fold: the scene to hold out, e.g. scene-0061")
+    group.add_argument("--folds", choices=["all"], help="one model per fold of the plan")
+    group.add_argument("--fold", help="one fold by name, e.g. fold-0")
     group.add_argument("--all-scenes", action="store_true", help="the final model, all scenes")
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--smoke", action="store_true", help="a few images, one epoch")
@@ -276,18 +307,26 @@ def main(argv: list[str] | None = None) -> int:
     cfg = load_config(args.config)
     out_root = check_outside_repo(check_outside_repo(args.out_dir) / check_run_id(args.run_id))
     device = select_device()
-    frames = load_scene_frames(args.nuscenes_root, args.version, cfg["cameras"])
+    plan = load_fold_plan(args.plan)
+    frames = load_scene_frames(args.nuscenes_root, args.version, cfg["cameras"], set(plan))
     scenes = sorted({f.scene for f in frames})
-    jobs: list[tuple[str, list[str], str | None]]
+    if scenes != sorted(plan):
+        print(
+            f"the plan names scenes with no images: {sorted(set(plan) - set(scenes))}",
+            file=sys.stderr,
+        )
+        return 2
+    jobs: list[FoldJob]
     if args.all_scenes:
-        jobs = [("all-scenes", scenes, None)]
+        jobs = [("all-scenes", scenes, [])]
     else:
-        folds = scene_folds(scenes)
-        wanted = [f for f in folds if args.folds == "all" or f[1] == args.fold]
-        if not wanted:
-            print(f"no scene named {args.fold!r}; scenes are {scenes}", file=sys.stderr)
+        jobs = [j for j in fold_jobs(plan) if args.folds == "all" or j[0] == args.fold]
+        if not jobs:
+            print(
+                f"no fold named {args.fold!r}; folds are fold-0 to fold-{max(plan.values())}",
+                file=sys.stderr,
+            )
             return 2
-        jobs = [(held, train_scenes, held) for train_scenes, held in wanted]
     epochs = args.epochs or (1 if args.smoke else cfg["train"]["epochs"])
     for name, train_scenes, held_out in jobs:
         chosen = [f for f in frames if f.scene in set(train_scenes)]
@@ -303,7 +342,7 @@ def main(argv: list[str] | None = None) -> int:
             out_root / name,
             {
                 "run_id": args.run_id,
-                "held_out_scene": held_out,
+                "held_out_scenes": held_out,
                 "train_scenes": sorted(train_scenes),
                 "images": len(items),
                 "boxes": class_box_counts(items),
