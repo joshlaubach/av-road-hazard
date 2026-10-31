@@ -111,19 +111,32 @@ CFG: dict[str, Any] = {
 
 def _good_meta() -> dict[str, Any]:
     return {
-        "held_out_scene": "a", "train_scenes": ["b", "c"], "smoke": False, "epochs": 12,
+        "held_out_scenes": ["a"], "train_scenes": ["b", "c"], "smoke": False, "epochs": 12,
         "classes": list(FINETUNE_CLASSES), "config": CFG,
     }  # fmt: skip
 
 
 def test_a_correct_fold_record_is_accepted() -> None:
-    check_fold_meta(_good_meta(), "a", SCENES, CFG)
+    check_fold_meta(_good_meta(), ["a"], SCENES, CFG)
+
+
+def test_a_fold_that_holds_out_two_scenes_is_accepted() -> None:
+    meta = {**_good_meta(), "held_out_scenes": ["a", "b"], "train_scenes": ["c"]}
+    check_fold_meta(meta, ["a", "b"], SCENES, CFG)
+
+
+def test_a_record_for_one_scene_is_refused_when_the_fold_holds_out_two() -> None:
+    meta = {**_good_meta(), "held_out_scenes": ["a"], "train_scenes": ["b", "c"]}
+    with pytest.raises(ValueError, match="held out"):
+        check_fold_meta(meta, ["a", "b"], SCENES, CFG)
 
 
 @pytest.mark.parametrize(
     ("change", "message"),
     [
-        ({"held_out_scene": "b"}, "held out"),
+        ({"held_out_scenes": ["b"]}, "held out"),
+        ({"held_out_scenes": ["a", "b"]}, "held out"),
+        ({"held_out_scenes": "a"}, "held out"),
         ({"train_scenes": ["a", "b", "c"]}, "trained on"),
         ({"train_scenes": ["b"]}, "trained on"),
         ({"smoke": True}, "smoke"),
@@ -139,7 +152,7 @@ def test_a_fold_record_that_does_not_match_its_scene_is_refused(
     change: dict[str, Any], message: str
 ) -> None:
     with pytest.raises(ValueError, match=message):
-        check_fold_meta({**_good_meta(), **change}, "a", SCENES, CFG)
+        check_fold_meta({**_good_meta(), **change}, ["a"], SCENES, CFG)
 
 
 def test_a_config_must_name_all_six_adr_cameras() -> None:

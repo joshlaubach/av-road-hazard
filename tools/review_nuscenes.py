@@ -1,7 +1,7 @@
 """Inspect a tile checkpoint's near-threshold scores on local nuScenes CAM_FRONT images.
 
 Usage: python -m tools.review_nuscenes --images-dir data/nuscenes/raw/samples/CAM_FRONT
-       --checkpoint ../runs/tile-fold0/fold0/best.pt --review-config configs/defects_review.yaml
+       --checkpoint runs/tile-fold0/fold0/best.pt --review-config configs/defects_review.yaml
        --out-dir data/nuscenes/derived/threshold_review
 
 The contact sheet contains nuScenes pixels. Keep it local in gitignored data/.
