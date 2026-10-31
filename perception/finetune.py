@@ -12,7 +12,7 @@ Debris is dropped: 13 examples are too few to learn.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -94,6 +94,36 @@ def scene_folds(scenes: Sequence[str]) -> list[tuple[list[str], str]]:
     if len(ordered) < 2:
         raise ValueError("need at least two scenes to leave one out")
     return [([s for s in ordered if s != held_out], held_out) for held_out in ordered]
+
+
+def deal_into_folds(ranked_scenes: Sequence[str], k: int) -> dict[str, int]:
+    """Deal scenes to k folds in turn: the scene at rank i goes to fold i % k.
+
+    The caller ranks the scenes by a rule fixed before any result is seen, so the scenes with the
+    most barriers and cones end up in different folds instead of all in one.
+    """
+    if k < 2:
+        raise ValueError("need at least two folds")
+    if len(set(ranked_scenes)) != len(ranked_scenes):
+        raise ValueError("a scene is listed twice")
+    if len(ranked_scenes) < k:
+        raise ValueError(f"{len(ranked_scenes)} scenes cannot fill {k} folds")
+    return {scene: rank % k for rank, scene in enumerate(ranked_scenes)}
+
+
+def grouped_folds(plan: Mapping[str, int]) -> list[tuple[list[str], list[str]]]:
+    """Grouped cross-validation: (training scenes, held-out scenes) per fold, in fold order.
+
+    plan maps each scene to a fold number; the numbers must be 0..k-1 with k >= 2. Every scene is
+    held out once, by a model that never trained on it.
+    """
+    numbers = sorted(set(plan.values()))
+    if len(numbers) < 2 or numbers != list(range(len(numbers))):
+        raise ValueError(f"fold numbers must be 0..k-1 with k >= 2, got {numbers}")
+    return [
+        (sorted(s for s, f in plan.items() if f != n), sorted(s for s, f in plan.items() if f == n))
+        for n in numbers
+    ]
 
 
 def swap_head(model: Any, *, seed: int = 0) -> Any:

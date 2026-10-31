@@ -13,9 +13,11 @@ from perception.finetune import (
     NEW_CLASSES,
     class_index,
     class_name,
+    deal_into_folds,
     finetune_label,
     flip_boxes,
     freeze_batchnorm_statistics,
+    grouped_folds,
     scene_folds,
     swap_head,
     training_item,
@@ -87,6 +89,44 @@ def test_folds_hold_out_each_scene_once_and_never_train_on_it() -> None:
 def test_folds_need_at_least_two_scenes() -> None:
     with pytest.raises(ValueError):
         scene_folds(["only"])
+
+
+def test_dealing_hands_ranked_scenes_to_folds_in_turn() -> None:
+    assert deal_into_folds(["a", "b", "c", "d", "e"], 2) == {"a": 0, "b": 1, "c": 0, "d": 1, "e": 0}
+
+
+def test_dealing_keeps_the_biggest_scenes_in_different_folds() -> None:
+    plan = deal_into_folds([f"s{i}" for i in range(10)], 5)
+    assert len({plan["s0"], plan["s1"], plan["s2"], plan["s3"], plan["s4"]}) == 5
+
+
+@pytest.mark.parametrize(
+    ("ranked", "k"),
+    [(["a", "b", "c"], 1), (["a", "b"], 3), (["a", "a", "b", "c"], 2)],
+    ids=["one fold", "fewer scenes than folds", "duplicate scene"],
+)
+def test_dealing_refuses_a_plan_that_cannot_hold_out_every_scene(ranked: list[str], k: int) -> None:
+    with pytest.raises(ValueError):
+        deal_into_folds(ranked, k)
+
+
+def test_grouped_folds_hold_each_scene_out_exactly_once() -> None:
+    plan = {"s1": 0, "s2": 1, "s3": 0, "s4": 1, "s5": 2}
+    folds = grouped_folds(plan)
+    assert [held for _, held in folds] == [["s1", "s3"], ["s2", "s4"], ["s5"]]
+    for train, held in folds:
+        assert set(train).isdisjoint(held) and sorted([*train, *held]) == sorted(plan)
+    assert sorted(s for _, held in folds for s in held) == sorted(plan)
+
+
+@pytest.mark.parametrize(
+    "plan",
+    [{"a": 0, "b": 0}, {"a": 0, "b": 2}, {"a": 1, "b": 2}],
+    ids=["one fold", "gap in fold numbers", "folds not starting at 0"],
+)
+def test_grouped_folds_refuse_a_plan_with_missing_folds(plan: dict[str, int]) -> None:
+    with pytest.raises(ValueError):
+        grouped_folds(plan)
 
 
 def test_flipping_boxes_mirrors_them_inside_the_image() -> None:
