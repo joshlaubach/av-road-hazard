@@ -155,3 +155,36 @@ We split by drive, never by photo. Photos half a second apart are nearly identic
 If any mark fails, the original detector stays, and the numbers are recorded in the roadmap.
 
 **What this test cannot tell us.** It covers only two city areas, about 70% of the drives are Singapore, and none are from Queenstown or Holland Village. So a pass means "works on these drives", not "works everywhere". A per-city breakdown is not built yet; if it is added, it changes none of the marks.
+
+## Results 2026-10-31: the automatic checks pass; the outside-nuScenes check is still manual
+
+Run `detector-ft-v2`: 5 models (12 epochs each, about 1.5 hours per model), one per fold of the grouped plan above, trained on nuScenes trainval part 1 (66 scenes). Each scene was scored only by the model that left its fold out, with `python -m tools.eval_finetune --plan configs/detector_scenes.yaml --run-dir runs/detector-ft-v2 --version v1.0-part1` on commit `7bf2e17` (clean tree). The marks were not changed. The scores file is `runs/detector-ft-v2/scores.json` (not committed).
+
+**Cones and barriers (all six cameras, pooled over the scenes that qualify).**
+
+| Class | Precision | Recall | Scenes that qualify | Scenes that pass both marks |
+|---|---|---|---|---|
+| barrier | 72% (90% range 72-73) | 55% (54-55) | 35 | 14 |
+| traffic cone | 73% (72-74) | 66% (65-67) | 50 | 27 |
+
+The front camera alone gives barrier 72% / 55% (24 scenes qualify, 10 pass) and cone 74% / 55% (18 qualify, 12 pass). Both classes pass the pooled marks (70% precision, 40% recall) on both camera sets, and barriers pass by themselves on well over two held-out scenes.
+
+**Per fold (all cameras, F1 = 2 x precision x recall / (precision + recall)).** This is not a mark; it shows how much the answer depends on which scenes are held out.
+
+| Fold | Barrier | Cone |
+|---|---|---|
+| 0 | 0.62 | 0.67 |
+| 1 | 0.68 | 0.61 |
+| 2 | 0.47 | 0.77 |
+| 3 | 0.71 | 0.64 |
+| 4 | 0.51 | 0.73 |
+
+Barriers swing from 0.47 to 0.71. Fold 2 is weakest (barrier recall 36%) and holds the fewest barrier labels (1,709 against 3,246 in fold 1), so its score is the noisiest. Cones are steadier (0.61 to 0.77).
+
+**No forgetting.** All six old classes pass at score 0.5 on both camera sets. Pooled, all cameras, zero-shot to fine-tuned: pedestrian precision 48% to 76%, recall 43% to 58%; car 44% to 80% and 62% to 68%; cyclist 32% to 62% and 25% to 41%; motorcycle 49% to 72% and 25% to 45%; truck 56% to 62% and 35% to 51%; bus 32% to 68% and recall 47% to 47%. Part of the precision gain is learning how nuScenes labels things.
+
+**Speed.** p95 per photo on CPU: 0.25 s at 24 threads, 0.44 s at 4 threads, 0.54 s at 2 threads (limit 2 s).
+
+**Verdict.** The tool reports `passed_all_checks_but_speed_and_sanity = true`, and the speed check also passes. Not done: the sanity check outside nuScenes (20 local images and the Stellenbosch photos), which is manual.
+
+**Limits.** Part 1 has no night scenes, so the result says nothing about night driving. It holds two city areas (59 Singapore One North scenes and 26 Boston Seaport scenes in part 1; 66 are used). Scenes are not equal in size, so per-fold scores are noisy and the pooled numbers are the ones to quote.
