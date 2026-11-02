@@ -1,0 +1,23 @@
+# Experiment settings for tools/finetune_nuscenes.py (fine-tune the chosen tile classifier on
+# hand-labeled nuScenes tiles). Paths are relative to the repo root. Weights and reports go to
+# out_dir, outside git. The chosen run's own recorded config is the base of every sidecar.
+baseline_checkpoint: runs/tile-fold0-hn2/fold0/best.pt   # SHA-256 starts 762f4b38
+train_config: data/rdd2022/derived/defects_tile_hn2.local.yaml
+extra_negatives: data/rdd2022/derived/extra_negatives_batch3.json   # hash pinned to best.json
+image_root: data/nuscenes_trainval/raw
+nuscenes_version: v1.0-part1
+annotations: data/nuscenes/derived/annotation_nuscenes4/annotations_labeled.csv
+key: data/nuscenes/derived/annotation_key_nuscenes4/key.json
+trainable: [blocks.6, conv_head, bn2, classifier]   # EfficientNet-B4 last block and head
+share: 0.005        # new tiles as a share of the samples in a round (about 5 views each per round)
+lr: 0.00001
+rounds: 3
+folds: 3
+seed: 42
+out_dir: runs/finetune-nuscenes-v1
+# Regression panel (final stage): the reviewed mini frames, reused, not an independent test.
+mini_root: data/nuscenes/raw
+mini_version: v1.0-mini
+reviews_dir: data/nuscenes/derived
+export_dir: data/nuscenes/derived/annotation_nuscenes5          # new alerts nobody reviewed
+export_key_dir: data/nuscenes/derived/annotation_key_nuscenes5
