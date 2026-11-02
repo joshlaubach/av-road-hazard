@@ -199,3 +199,14 @@ Run with all 5 fold models at score 0.5 on 37 local images (none committed): 27 
 - **Old classes (boxes at score 0.5, not checked against ground truth):** the zero-shot detector drew 167 boxes on the 18 day frames, the 5 fine-tuned models 110 to 126 (without barriers and cones); on the 9 night frames 48 against 13 to 17; on the 10 other images 30 against 14 to 16. The fine-tuned models draw fewer boxes, which fits their higher precision in the scored test, but I did not check which of the dropped boxes were real. One Boston frame still has a tall 0.61 "car" box on a building edge.
 
 So the detector did not invent barriers or cones on empty road in this set. The set is small (37 images), the model sees one false barrier on a truck, and the night frames contained no cones or barriers to find, so this says nothing about recall at night.
+
+## Final model and fusion wiring (2026-11-01)
+
+**Model.** One model on all 66 scenes (run `detector-final-v1`, same settings as `detector-ft-v2`: 12 epochs, 15,720 images, 15,064 barrier and 11,635 cone boxes; last-epoch loss 0.378; 6,546 s). SHA-256 `5e084aed6b3f3050ce0d98c1c25550321028af766f65fb6bb9ce06e2392b3d3d`. The file stays outside the repo (nuScenes terms). It has no held-out scenes, so it has no score of its own: the scores above belong to the 5 fold models, and this one is trusted to behave like them because it has the same recipe and 25% more scenes per model.
+
+**Cutoffs.** From the pooled held-out sweep of `detector-ft-v2`, the lowest cutoff with precision of at least 0.70 on the front camera: barrier 0.55, traffic cone 0.65 (all cameras would give 0.55 and 0.50). The same held-out data chose the cutoffs and reported the precision, so that precision is slightly optimistic. Old classes keep 0.5.
+
+**Wiring.** `perception.finetuned_checkpoint` (env `DETECTOR_CHECKPOINT`) plus `perception.finetuned_sha256` switch fusion to the 8-class detector. The default is null, so the zero-shot detector stays the default and nothing changes without the file. A wrong hash or a missing file raises `DetectorUnavailable`; it never falls back to zero-shot silently.
+
+**Check through the real pipeline.** The same 37 local images as above, through `perception.infer.detect()` with the final model: 0 barrier or cone boxes on the 10 RDD2022 and Stellenbosch images and the 9 night frames. On the 18 day frames, cones appeared in scenes 0103 and 0655 (the scenes where the fold models also found real cones); no barrier was drawn on the dump truck in scene-0757, so the one false barrier from the fold models did not repeat. This is a look at 37 images, not a score.
+
