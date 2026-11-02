@@ -1285,5 +1285,87 @@
     "found": 10,
     "extra_boxes": 15,
     "reproducible": false
+  },
+  "answers": {
+    "status": "measured",
+    "retrieved_per_question": 5,
+    "questions": 36,
+    "configurations": {
+      "claude-haiku-5-5 alone": {
+        "questions": 36,
+        "answerable": 23,
+        "failed": 0,
+        "answerable_all_citations_correct": 22,
+        "answerable_cited_nothing": 0,
+        "answerable_mean_recall": 1.0,
+        "unanswerable": 13,
+        "unanswerable_cited_a_photo": 9,
+        "answers_with_an_invented_id": 0,
+        "cost_usd_total": 0.00624,
+        "cost_usd_per_question": 0.00017
+      },
+      "claude-sonnet-5-5 alone": {
+        "questions": 36,
+        "answerable": 23,
+        "failed": 0,
+        "answerable_all_citations_correct": 20,
+        "answerable_cited_nothing": 0,
+        "answerable_mean_recall": 1.0,
+        "unanswerable": 13,
+        "unanswerable_cited_a_photo": 11,
+        "answers_with_an_invented_id": 0,
+        "cost_usd_total": 0.12165,
+        "cost_usd_per_question": 0.00338
+      },
+      "claude-haiku-5-5 then claude-sonnet-5-5": {
+        "questions": 36,
+        "answerable": 23,
+        "failed": 0,
+        "answerable_all_citations_correct": 22,
+        "answerable_cited_nothing": 0,
+        "answerable_mean_recall": 1.0,
+        "unanswerable": 13,
+        "unanswerable_cited_a_photo": 9,
+        "answers_with_an_invented_id": 0,
+        "cost_usd_total": 0.00624,
+        "cost_usd_per_question": 0.00017,
+        "escalated": 0
+      },
+      "qwen2.5:14b (local)": {
+        "questions": 36,
+        "answerable": 23,
+        "failed": 0,
+        "answerable_all_citations_correct": 23,
+        "answerable_cited_nothing": 0,
+        "answerable_mean_recall": 0.9623,
+        "unanswerable": 13,
+        "unanswerable_cited_a_photo": 6,
+        "answers_with_an_invented_id": 3,
+        "cost_usd_total": 0,
+        "cost_usd_per_question": 0.0
+      }
+    },
+    "provenance": {
+      "files": {
+        "checkpoint/defects": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8",
+        "detector": "f7731b02ff6365453ad4fb85c008f4dc86dea63a2d4d77377f986fa54b797e21",
+        "road_model": "8208672861ad1b111dc98f3a7c54196d29875b709c7353e2dd1b7614343fb3a8",
+        "config/default": "9869489f8cf5578eadebfb8907799de6a57614313e8352de8f2f949cde4046c2",
+        "config/fusion": "c52325399cc7c90432a2f8571c6df3e42b9adde37e13f7f69147b1982c53da17"
+      },
+      "thresholds": {
+        "object_score": 0.5,
+        "max_object_cover": 0.3,
+        "min_road_cover": 0.4,
+        "cutoff_D00": 0.9,
+        "cutoff_D10": 0.75,
+        "cutoff_D20": 0.65,
+        "cutoff_D40": 0.75
+      },
+      "git_commit": "6c4600e057f7398ccee81150960e2137c0257eaa",
+      "git_dirty": false,
+      "date_utc": "2026-11-02T06:00:58Z"
+    },
+    "caveat": "Each question is checked against the records the model was given, not against the photos: this measures whether the model reads and cites the records faithfully. Questions about weather, plates and similar facts have no record behind them, so they are counted separately. Cost is estimated from reported token counts at list prices."
   }
 }

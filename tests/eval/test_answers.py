@@ -104,3 +104,22 @@ def test_the_results_section_keeps_numbers_only() -> None:
     section = answers_section(report)
     assert "rows" not in section and section["status"] == "measured"
     assert "records" in section["caveat"]
+
+
+def test_answers_row_names_each_configuration_and_its_cost() -> None:
+    from eval.answers import answers_section
+    from eval.results import _answers_row
+
+    config = {
+        "answerable": 23,
+        "answerable_all_citations_correct": 22,
+        "cost_usd_per_question": 0.00017,
+    }
+    report = {
+        "top_k": 5,
+        "questions": 36,
+        "configurations": {"small alone": config},
+        "provenance": {},
+    }
+    row = _answers_row({"answers": answers_section(report)})
+    assert "36 questions" in row and "small alone: 22 of 23" in row and "$0.00017" in row

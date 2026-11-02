@@ -242,6 +242,22 @@ def _retrieval_row(results: Mapping[str, Any]) -> str:
     )
 
 
+def _answers_row(results: Mapping[str, Any]) -> str:
+    a = results["answers"]
+    parts = []
+    for name, c in a["configurations"].items():
+        part = (
+            f"{name}: {c['answerable_all_citations_correct']} of {c['answerable']} answerable "
+            f"questions cited exactly the right photos, ${c['cost_usd_per_question']:.5f} each"
+        )
+        parts.append(part)
+    return (
+        f"{a['questions']} questions, top {a['retrieved_per_question']} photos given; "
+        + "; ".join(parts)
+        + ". Checked against the records the model was given, not the photos"
+    )
+
+
 def _pct(x: float) -> str:
     return f"{100 * x:.2f}%" if 0 < x < 0.01 else f"{round(100 * x)}%"
 
@@ -374,6 +390,8 @@ def render_readme_table(results: Mapping[str, Any]) -> str:
             )
         )
     rows.append(("Retrieval (RAG)", _retrieval_row(results), "`retrieval`"))
+    if "answers" in results:
+        rows.append(("Written answers (RAG)", _answers_row(results), "`answers`"))
     lines = ["| Measure | Result | In `eval/results.json` |", "|---|---|---|"]
     lines += [f"| {m} | {r} | {k} |" for m, r, k in rows]
     return "\n".join(lines)
