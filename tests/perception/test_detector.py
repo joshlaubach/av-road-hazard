@@ -21,6 +21,7 @@ from perception.detector import (
     detect_objects,
     load_detector_model,
 )
+from perception.finetune import class_name
 
 torch = pytest.importorskip("torch")
 pytest.importorskip("torchvision")
@@ -144,3 +145,16 @@ def test_boxes_are_clamped_to_the_frame_and_empty_ones_dropped() -> None:
 def test_frames_must_be_rgb_uint8(frame: np.ndarray) -> None:
     with pytest.raises(ValueError, match="RGB uint8"):
         detect_objects(FakeDetector([], [], []), frame, score_threshold=0.5)
+
+
+def test_a_labeler_and_per_class_cutoffs_decide_what_is_kept() -> None:
+    # Class 7 is "barrier" and 8 "traffic_cone" in the 8-class model; barrier needs 0.55, cone 0.65.
+    model = FakeDetector([[0, 0, 5, 5]] * 4, [7, 7, 8, 4], [0.52, 0.6, 0.6, 0.5])
+    objects = detect_objects(
+        model,
+        FRAME,
+        score_threshold=0.5,
+        labeler=class_name,
+        cutoffs={"barrier": 0.55, "traffic_cone": 0.65},
+    )
+    assert [o.label for o in objects] == ["barrier", "car"]
