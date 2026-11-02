@@ -11,7 +11,7 @@ module loads only that safetensors file, and only after hashing it.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -114,13 +114,21 @@ def _model_device(model: Any) -> str:
 
 
 def detect_objects(
-    model: Any, frame: np.ndarray, *, score_threshold: float, device: str | None = None
+    model: Any,
+    frame: np.ndarray,
+    *,
+    score_threshold: float,
+    device: str | None = None,
+    labeler: Callable[[int], str | None] = coco_label,
+    cutoffs: Mapping[str, float] | None = None,
 ) -> list[Object]:
     """Objects in an RGB uint8 frame (H, W, 3), with fusion labels and boxes in frame pixels.
 
     Detections below score_threshold, and classes fusion does not weight (see
-    perception/labels.py), are dropped; a score equal to the threshold is kept. Boxes are clamped
-    to the frame, and any that end up empty are dropped.
+    perception/labels.py), are dropped; a score equal to the threshold is kept. labeler turns a
+    class index into a fusion label (the 8-class model passes its own), and cutoffs gives a class
+    its own threshold in place of score_threshold. Boxes are clamped to the frame, and any that
+    end up empty are dropped.
     """
     import torch
 
@@ -144,8 +152,8 @@ def detect_objects(
         output["scores"].cpu().tolist(),
         strict=True,
     ):
-        label = coco_label(int(category))
-        if label is None or score < score_threshold:
+        label = labeler(int(category))
+        if label is None or score < (cutoffs or {}).get(label, score_threshold):
             continue
         x1, y1 = max(0.0, box[0]), max(0.0, box[1])
         x2, y2 = min(float(width), box[2]), min(float(height), box[3])

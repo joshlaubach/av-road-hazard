@@ -110,3 +110,103 @@ Read this gain with care: the zero-shot detector never saw nuScenes, so part of 
 **Next step options (owner decides):** (1) more nuScenes scenes, free under the non-commercial terms (the full release has 700 scenes; barriers need several more scenes with road work), then repeat this same test; (2) a different source of barrier labels; (3) leave work-zone objects for later and continue with the next roadmap row (merged tiles and severity, done the same day, ADR 0016). Recommendation: (1), starting with a small slice of the full release, because the same code runs unchanged on more scenes.
 
 Limits of this result: 10 scenes from two cities, one split protocol, and the cutoffs and limits were fixed before any result was seen. The raw report is local only and contains no images; the 10 models stay on the owner's machine under the nuScenes terms.
+
+## Amendment 2026-10-30: more drives, and a fairer way to split them
+
+Written before any model of this second test was trained. The pass marks in items 1 to 4 above do not change, and nobody edits them after the results come in.
+
+**What happened last time.** The detector is a program that looks at a dashcam photo and draws boxes around things. It was taught on everyday objects, so it cannot name traffic cones or road barriers, the things that mark construction zones. We tried teaching it with the 10 drives in nuScenes mini. Barriers showed up in only 3 of those drives, so there was too little to learn from, and it flunked: on drives it had never seen, it found 2 of 1,511 barriers.
+
+**What we are doing now.** The same exam with a bigger lesson. We downloaded part 1 of the full nuScenes release: 85 more drives (59 in Singapore One North, 26 in Boston Seaport), all six cameras. The photos and the trained models stay on the owner's computer, because of the nuScenes license. The mini drives are not used (only scene-0061 is also in part 1). To keep memory small, `tools/trim_nuscenes.py` cuts the full label tables down to these 85 drives, so loading takes about 1 GB of memory instead of about 7.
+
+**Which drives, and why this rule.** Picking drives by hand would invite cherry-picking. So a fixed rule (`tools/plan_detector_scenes.py`) picks them using only the labels, never any results:
+- Keep a drive if it has at least 20 barriers or at least 20 traffic cones that are visible enough to count. "Visible enough" means at least 40% of the object can be seen, the same cutoff training and scoring already use.
+- Add the first 10 drives, in alphabetical order, that have neither. They check that the detector does not see cones and barriers that are not there.
+
+That gives 66 drives: 34 with 20 or more barriers, 52 with 20 or more cones, and 10 plain road. The counts are 3D labels, used only to rank drives; they are not test scores. The full list is `configs/detector_scenes.yaml`.
+
+**How the exam works.** Think of studying for a test where you are only graded on questions you have never seen.
+1. Split the 66 drives into 5 groups (folds).
+2. Train a model on 4 groups, then quiz it on the 5th.
+3. Do that 5 times, so every drive is a quiz question exactly once, always graded by a model that never saw it.
+
+We split by drive, never by photo. Photos half a second apart are nearly identical, so splitting by photo would be like finding the exam question in your homework. To keep the groups fair, drives are ranked richest first (most barriers plus cones) and dealt out like cards, so the richest drives do not all end up in one group.
+
+| Fold | Drives | Boston | Singapore | Barrier drives | Cone drives | Plain road |
+|---|---|---|---|---|---|---|
+| 0 | 14 | 4 | 10 | 7 | 11 | 2 |
+| 1 | 13 | 4 | 9 | 6 | 11 | 2 |
+| 2 | 13 | 5 | 8 | 7 | 9 | 2 |
+| 3 | 13 | 5 | 8 | 6 | 10 | 2 |
+| 4 | 13 | 4 | 9 | 8 | 11 | 2 |
+
+**Why 5 groups and not one drive at a time.** Quizzing one drive per model would need 66 models, each learning from about 65 drives: roughly 160 hours on the GPU. Five groups need about 10 hours: the first epoch of the real run measured 2.6 training steps per second, which is about 10 minutes per epoch, so about 2 hours for each group's 12 epochs over roughly 12,400 photos. The 160 hours is scaled from that speed. (The first draft of this plan said 3 hours; that was a guess from the mini run.)
+
+**The passing marks (unchanged).**
+1. **Cones and barriers.** Two scores, each worked out from the model's boxes:
+   - precision = correct boxes / all boxes it drew. It must be at least 70%.
+   - recall = real objects it found / all real objects. It must be at least 40%.
+
+   These are counted only over drives with at least 20 visible examples of that object. Precision is the stricter mark on purpose: a missed cone leaves us where we are today, but a made-up one raises a hazard score for no reason. Barriers must also pass by themselves on at least two held-out drives.
+2. **No forgetting.** For the six old kinds of object (people, cars, bikes and so on), recall may drop at most 3 points and precision at most 5 points compared with the original detector.
+3. **Speed.** On an ordinary CPU, the slowest 5% of photos (p95) take at most 2 seconds, at 24, 4 and 2 threads.
+4. **Sanity check outside nuScenes.** On the 20 local test images and the Stellenbosch photos, the model must not invent objects on empty road. These are counted and shown to the owner, not scored.
+
+If any mark fails, the original detector stays, and the numbers are recorded in the roadmap.
+
+**What this test cannot tell us.** It covers only two city areas, about 70% of the drives are Singapore, and none are from Queenstown or Holland Village. So a pass means "works on these drives", not "works everywhere". A per-city breakdown is not built yet; if it is added, it changes none of the marks.
+
+## Results 2026-10-31: the automatic checks pass; the outside-nuScenes check is still manual
+
+Run `detector-ft-v2`: 5 models (12 epochs each, about 1.5 hours per model), one per fold of the grouped plan above, trained on nuScenes trainval part 1 (66 scenes). Each scene was scored only by the model that left its fold out, with `python -m tools.eval_finetune --plan configs/detector_scenes.yaml --run-dir runs/detector-ft-v2 --version v1.0-part1` on commit `7bf2e17` (clean tree). The marks were not changed. The scores file is `runs/detector-ft-v2/scores.json` (not committed).
+
+**Cones and barriers (all six cameras, pooled over the scenes that qualify).**
+
+| Class | Precision | Recall | Scenes that qualify | Scenes that pass both marks |
+|---|---|---|---|---|
+| barrier | 72% (90% range 72-73) | 55% (54-55) | 35 | 14 |
+| traffic cone | 73% (72-74) | 66% (65-67) | 50 | 27 |
+
+The front camera alone gives barrier 72% / 55% (24 scenes qualify, 10 pass) and cone 74% / 55% (18 qualify, 12 pass). Both classes pass the pooled marks (70% precision, 40% recall) on both camera sets, and barriers pass by themselves on well over two held-out scenes.
+
+**Per fold (all cameras, F1 = 2 x precision x recall / (precision + recall)).** This is not a mark; it shows how much the answer depends on which scenes are held out.
+
+| Fold | Barrier | Cone |
+|---|---|---|
+| 0 | 0.62 | 0.67 |
+| 1 | 0.68 | 0.61 |
+| 2 | 0.47 | 0.77 |
+| 3 | 0.71 | 0.64 |
+| 4 | 0.51 | 0.73 |
+
+Barriers swing from 0.47 to 0.71. Fold 2 is weakest (barrier recall 36%) and holds the fewest barrier labels (1,709 against 3,246 in fold 1), so its score is the noisiest. Cones are steadier (0.61 to 0.77).
+
+**No forgetting.** All six old classes pass at score 0.5 on both camera sets. Pooled, all cameras, zero-shot to fine-tuned: pedestrian precision 48% to 76%, recall 43% to 58%; car 44% to 80% and 62% to 68%; cyclist 32% to 62% and 25% to 41%; motorcycle 49% to 72% and 25% to 45%; truck 56% to 62% and 35% to 51%; bus 32% to 68% and recall 47% to 47%. Part of the precision gain is learning how nuScenes labels things.
+
+**Speed.** p95 per photo on CPU: 0.25 s at 24 threads, 0.44 s at 4 threads, 0.54 s at 2 threads (limit 2 s).
+
+**Verdict.** The tool reports `passed_all_checks_but_speed_and_sanity = true`, and the speed check also passes. Not done: the sanity check outside nuScenes (20 local images and the Stellenbosch photos), which is manual.
+
+**Limits.** Part 1 has no night scenes, so the result says nothing about night driving. It holds two city areas (59 Singapore One North scenes and 26 Boston Seaport scenes in part 1; 66 are used). Scenes are not equal in size, so per-fold scores are noisy and the pooled numbers are the ones to quote.
+
+### Sanity check outside the scored scenes (2026-10-31)
+
+Run with all 5 fold models at score 0.5 on 37 local images (none committed): 27 nuScenes front frames from the 9 mini scenes that are not in the 66-scene plan (3 per scene, 9 of them night), 8 RDD2022 images (2 each from Japan, Czech, Norway, India) and the 2 Stellenbosch photos. Counted and looked at by eye; not scored. The old 20-image set no longer exists on disk, so this is a new set.
+
+- **RDD2022 and Stellenbosch (10 images, no barriers or cones in them):** 0 barrier or cone boxes from any of the 5 models.
+- **nuScenes night (9 frames):** 0 barrier or cone boxes.
+- **nuScenes day (18 frames):** 4 frames got a barrier or cone box. In 3 the boxes sit on real cones (checked by eye; in one frame the 5 models drew 6 to 10 cones, in another 1 to 3 small distant ones). In 1 frame (scene-0757, 2 of 5 models, scores 0.65 and 0.84) a "barrier" box sits on the back of a dump truck, so that one is a false box.
+- **Old classes (boxes at score 0.5, not checked against ground truth):** the zero-shot detector drew 167 boxes on the 18 day frames, the 5 fine-tuned models 110 to 126 (without barriers and cones); on the 9 night frames 48 against 13 to 17; on the 10 other images 30 against 14 to 16. The fine-tuned models draw fewer boxes, which fits their higher precision in the scored test, but I did not check which of the dropped boxes were real. One Boston frame still has a tall 0.61 "car" box on a building edge.
+
+So the detector did not invent barriers or cones on empty road in this set. The set is small (37 images), the model sees one false barrier on a truck, and the night frames contained no cones or barriers to find, so this says nothing about recall at night.
+
+## Final model and fusion wiring (2026-11-01)
+
+**Model.** One model on all 66 scenes (run `detector-final-v1`, same settings as `detector-ft-v2`: 12 epochs, 15,720 images, 15,064 barrier and 11,635 cone boxes; last-epoch loss 0.378; 6,546 s). SHA-256 `5e084aed6b3f3050ce0d98c1c25550321028af766f65fb6bb9ce06e2392b3d3d`. The file stays outside the repo (nuScenes terms). It has no held-out scenes, so it has no score of its own: the scores above belong to the 5 fold models, and this one is trusted to behave like them because it has the same recipe and 25% more scenes per model.
+
+**Cutoffs.** From the pooled held-out sweep of `detector-ft-v2`, the lowest cutoff with precision of at least 0.70 on the front camera: barrier 0.55, traffic cone 0.65 (all cameras would give 0.55 and 0.50). The same held-out data chose the cutoffs and reported the precision, so that precision is slightly optimistic. Old classes keep 0.5.
+
+**Wiring.** `perception.finetuned_checkpoint` (env `DETECTOR_CHECKPOINT`) plus `perception.finetuned_sha256` switch fusion to the 8-class detector. The default is null, so the zero-shot detector stays the default and nothing changes without the file. A wrong hash or a missing file raises `DetectorUnavailable`; it never falls back to zero-shot silently.
+
+**Check through the real pipeline.** The same 37 local images as above, through `perception.infer.detect()` with the final model: 0 barrier or cone boxes on the 10 RDD2022 and Stellenbosch images and the 9 night frames. On the 18 day frames, cones appeared in scenes 0103 and 0655 (the scenes where the fold models also found real cones); no barrier was drawn on the dump truck in scene-0757, so the one false barrier from the fold models did not repeat. This is a look at 37 images, not a score.
+
