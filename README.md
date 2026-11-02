@@ -2,19 +2,36 @@ Purpose: entry point for av-road-hazard, a system that fuses road-object detecti
 
 # av-road-hazard
 
-> **Status (2026-10-27): the core is built and measured, with honest limits.** The object detector, road finder, crack-and-pothole finder, fusion step and evaluation tools run on real models, and every number below comes from `eval/results.json`. The pipeline finds large, near damage and mostly misses small, far damage. Search (RAG) and the hosted demo are not built yet; the web page for trying a photo is. [docs/ROADMAP.md](docs/ROADMAP.md) is the live list of what is done and what comes next.
+> **Status (2026-11-02): the core pipeline works and has been measured. The search feature is built but not shown to the public yet.**
+>
+> - **Built and measured:** the object finder, the road finder, the crack-and-pothole finder, the step that combines them, and the tools that grade them. They run on real models, and every number below comes from `eval/results.json`.
+> - **Built, with a web page for trying a photo:** the "Analyze" page (upload a photo, see boxes and a 0 to 100 gauge).
+> - **Built and tested, but only on 404 test photos:** search. You can ask "which photos have a pothole near a person?" and get an answer that points to real photos. A check in the code rejects any answer that cites a photo that was not found.
+> - **Not built yet:** the Search and Settings pages in the web UI, running the Docker setup for real, and the hosted public demo.
+> - **The honest limit:** the pipeline finds large, close damage and mostly misses small, far-away damage.
+>
+> [docs/ROADMAP.md](docs/ROADMAP.md) is the live list of what is done and what comes next.
 
-New words are explained the first time they appear, in **bold**. Every term is also in [docs/GLOSSARY.md](docs/GLOSSARY.md). Math sits in short "The math" notes, so you can skip them and still follow the story.
+**How to read this page.** New words are explained the first time they appear, in **bold**. Every term is also in [docs/GLOSSARY.md](docs/GLOSSARY.md). The math sits in short "The math" boxes. You can skip them and still follow the story.
 
 ## The idea in one minute
 
-Imagine a passenger who watches the road through the windshield and warns the driver. A good passenger notices two things: *what is out there* (a person walking, a parked truck, a traffic cone) and *what is wrong with the road* (a pothole, a crack). A good passenger also knows that a pothole in the lane where someone is walking is more urgent than the same pothole on an empty shoulder.
+Picture a passenger who watches the road through the windshield and warns the driver. A good passenger notices two things:
 
-This project is that passenger, as software. It takes one photo from a car's front camera and produces one **hazard record**: a small JSON file listing the objects, the road damage, whether each damage spot is on the road, which objects are near it, and one **hazard score** from 0 to 100.
+- **What is out there:** a person walking, a parked truck, a traffic cone.
+- **What is wrong with the road:** a pothole, a crack.
+
+A good passenger also knows that a pothole in the lane where someone is walking is more urgent than the same pothole on an empty shoulder.
+
+This project is that passenger, written as software. You give it one photo from a car's front camera. It gives back one **hazard record**. That is a small file that lists the objects, the road damage, whether each damage spot is really on the road, which objects are close to it, and one **hazard score** from 0 to 100.
 
 It joins two earlier projects, `nuscenes-stability` (finds objects) and `defect-detector` (finds road damage), into one pipeline instead of two separate demos.
 
+**What the score means.** A higher score means "look at this sooner". It ranks urgency. It is not the chance of a crash, and it is not a safety certificate. This project is a research and portfolio demo. It does not run on live video, and a self-driving car would need much more work before it could rely on it.
+
 ## How it works, step by step
+
+Four steps. Steps 1 to 3 each use a neural network (a program that learned from many labeled examples). Step 4 is a short list of fixed rules.
 
 ```
 photo ─► 1. objects      (detector)   ─► boxes: "pedestrian here, car there"
@@ -28,62 +45,91 @@ photo ─► 1. objects      (detector)   ─► boxes: "pedestrian here, car th
 
 ### 1. Objects: a **detector** draws boxes
 
-A **detector** is a neural network that looks at a photo and returns **boxes** (rectangles) around things, each with a **label** ("car") and a **confidence** between 0 and 1. We use a pretrained COCO detector (a Faster R-CNN with a MobileNet backbone, [ADR 0014](docs/adr/0014-object-detector.md)) and keep boxes with confidence at least 0.5.
+A **detector** is a neural network that looks at a photo and draws **boxes** (rectangles) around things. Each box gets a **label** ("car") and a **confidence**, a number from 0 to 1 that says how sure the network is. We throw away boxes below 0.5, because they are too likely to be mistakes.
 
-Its weakness: it only knows the 80 things in COCO. It has no word for traffic cones or barriers, which is about 20% of everything annotated in the nuScenes test images. We tried fine-tuning it on nuScenes to name those two things. Cones mostly worked, barriers did not, so the original detector stays ([ADR 0015](docs/adr/0015-detector-finetune.md)).
+Our detector is a standard one called Faster R-CNN, trained by others on a public set of everyday photos called COCO ([ADR 0014](docs/adr/0014-object-detector.md)). We use it as it comes, which people call **zero-shot**: we did not teach it anything about roads.
 
-> **The math.** Two boxes $A$ and $B$ overlap by their **intersection over union**:
+Its weakness is that it only knows the 80 things in COCO. It has no word for traffic cones or barriers. Those make up about 20% of everything marked in the nuScenes test photos, and they matter on a road.
+
+So we tried teaching it. We **fine-tuned** it, meaning we kept training it on nuScenes photos where cones and barriers were marked. The result was mixed ([ADR 0015](docs/adr/0015-detector-finetune.md)):
+
+- Cones were found well enough in most scenes.
+- Barriers were hard. In new scenes the model almost never found them.
+- The project owner decided to ship the fine-tuned model anyway, but **switched off by default**. The pipeline uses the plain detector unless you set the path to the fine-tuned weights file. A wrong or missing file stops the program with an error instead of quietly using the other model.
+- The weights stay on this machine because the nuScenes license does not allow sharing them.
+
+> **The math.** To decide whether a box is right, we measure how much two boxes overlap. For boxes $A$ and $B$, the **intersection over union** is
 > $$\mathrm{IoU}(A,B)=\frac{|A\cap B|}{|A\cup B|}\in[0,1].$$
-> A detection counts as correct when its label matches and its $\mathrm{IoU}$ with a true box is high enough.
+> That is the area they share divided by the area they cover together. 0 means they do not touch and 1 means they are identical. A detection counts as correct when its label matches and its $\mathrm{IoU}$ with a true box is high enough.
 
 ### 2. Road: a **segmentation** model colors the road
 
-**Segmentation** means labeling every pixel. Our road finder ([ADR 0013](docs/adr/0013-road-mask-model.md)) outputs a **road mask**: a picture the same size as the photo, where each pixel is 1 if road and 0 if not. Without it, we would call the damage on a building wall or a car roof a "pothole".
+**Segmentation** means giving every single pixel a label. Our road finder ([ADR 0013](docs/adr/0013-road-mask-model.md)) makes a **road mask**. That is a black-and-white copy of the photo where white means "road" and black means "not road". Without it, the pipeline would call a stain on a building wall or a car roof a "pothole".
 
-### 3. Damage: cut the road into **tiles**, ask a **classifier** about each
+### 3. Damage: cut the road into **tiles** and ask a **classifier** about each
 
-A **classifier** is a neural network that looks at one image and returns a probability for each category. We cut the photo into overlapping square **tiles** (384 pixels wide) and skip tiles that are less than 40% road or are mostly covered by an object. The remaining tiles go to an EfficientNet-B4 classifier trained on RDD2022 road-damage photos. For each tile it returns one probability per damage type:
+A **classifier** is a neural network that looks at one small image and says how likely each category is. We cannot show it the whole photo, because the damage is tiny compared with the full view. So we cut the photo into overlapping squares called **tiles**, each 384 pixels wide, and we only look at tiles that matter:
+
+- We skip any tile that is less than 40% road.
+- We skip any tile that is mostly covered by an object, such as a car.
+
+The remaining tiles go to a classifier called EfficientNet-B4, which learned from a public set of road-damage photos called RDD2022. For each tile it gives one probability per damage type. We flag the tile when the probability passes a cutoff:
 
 | Code | Damage | Flag the tile when probability is at least |
 |---|---|---|
-| D00 | longitudinal crack (along the road) | 0.90 |
-| D10 | transverse crack (across the road) | 0.75 |
-| D20 | alligator crack (a web of cracks) | 0.65 |
+| D00 | longitudinal crack (runs along the road) | 0.90 |
+| D10 | transverse crack (runs across the road) | 0.75 |
+| D20 | alligator crack (a web of cracks, like reptile skin) | 0.65 |
 | D40 | pothole | 0.75 |
 
-The cutoffs differ per class and are provisional, not final. A **false alarm** (false positive) is a flag where nothing is wrong.
+The cutoffs differ per type, and they are provisional, not final. If a cutoff is too low, the classifier cries wolf. If it is too high, it misses real damage. A flag where nothing is wrong is a **false alarm** (also called a false positive).
 
-One long crack lights up several overlapping tiles, so flagged tiles of the same damage type that touch are merged into one defect: the box covers the group and the confidence is the strongest tile's ([ADR 0016](docs/adr/0016-defect-merge-and-severity.md)). On one Norwegian photo this turned 15 boxes into 2.
+**Merging.** One long crack lights up several overlapping tiles. So flagged tiles of the same type that touch are merged into one defect. The merged box covers the whole group, and its confidence is the strongest tile's ([ADR 0016](docs/adr/0016-defect-merge-and-severity.md)). On one Norwegian photo, this turned 15 boxes into 2.
 
-We also trained on **hard negatives**: tiles of ordinary road that the classifier wrongly flagged, shown again with the label "no damage". Repeating them 10 times cut false alarms on nuScenes photos from 80 to 53, with no class losing more than 3 points of recall (details in the Done table of [docs/ROADMAP.md](docs/ROADMAP.md)).
+**Teaching it what is not damage.** We also trained on **hard negatives**. These are tiles of ordinary road that the classifier wrongly flagged. We showed them to it again with the label "no damage", repeating each one 10 times. That cut false alarms on nuScenes driving photos from 80 to 53, and no damage type lost more than 3 points of recall. (**Recall** is the share of real damage that gets found. The next box explains it.) Details are in the Done table of [docs/ROADMAP.md](docs/ROADMAP.md).
 
-> **The math.** Flag a tile for damage type $c$ when its probability $p_c\ge\tau_c$, where $\tau_c$ is the cutoff in the table. Raising $\tau_c$ trades **recall** for **precision**:
-> $$\text{precision}=\frac{TP}{TP+FP},\qquad \text{recall}=\frac{TP}{TP+FN},$$
-> where $TP$ counts correct flags (true positives), $FP$ false alarms, and $FN$ misses (false negatives). Precision answers "when it says damage, how often is it right?". Recall answers "of the real damage, how much did it find?".
+> **The math.** Flag a tile for damage type $c$ when its probability $p_c\ge\tau_c$, where $\tau_c$ is the cutoff in the table. Moving $\tau_c$ trades two things against each other:
+> $$\text{precision}=\frac{TP}{TP+FP},\qquad \text{recall}=\frac{TP}{TP+FN}.$$
+> Here $TP$ counts correct flags (true positives), $FP$ counts false alarms, and $FN$ counts misses (false negatives). **Precision** answers "when it says damage, how often is it right?". **Recall** answers "of the real damage, how much did it find?". A higher cutoff raises precision and lowers recall. For this project, a miss is worse than a false alarm, so we only accept a new model if recall drops by no more than 3 points for every damage type.
 
-### 4. Fusion: plain rules that combine the answers
+### 4. Fusion: fixed rules that combine the answers
 
-**Fusion** takes the objects, the damage tiles and the road mask and applies fixed rules (no learning, same input gives same output). For each damage box $k$:
+**Fusion** takes the objects, the damage tiles and the road mask and applies fixed rules. It does no learning, and the same input always gives the same output. For each damage box $k$, it does three things:
 
-1. **On the road?** If at least half of the box lies on the road mask, it is on the road. If the mask is missing, the answer is "unknown" and we treat it as on the road, so a possible hazard is never hidden.
-2. **Which objects are near?** Distance is measured in object heights, so a person far away (small box) and a person close up (big box) are judged fairly. Objects within 3 object heights are listed in `near_objects`.
-3. **Score.** Each object has a **vulnerability** $v$ (a person is 1.0, a car is 0.3, a cone is 0.5). These weights are guesses, not measured.
+1. **Is it on the road?** If at least half of the box lies on the road mask, it is on the road. If the road mask is missing, the answer is "unknown", and we treat it as on the road. That way a possible hazard is never hidden.
+2. **Which objects are close?** We measure distance in "object heights". A person far away has a small box and a person nearby has a big one, so measuring in heights treats both fairly. Objects within 3 heights are listed in `near_objects`.
+3. **How urgent is it?** Each object type gets a **vulnerability** number $v$ that says how much harm a hazard could do to it. A person is 1.0, a car is 0.3 and a cone is 0.5. These weights are educated guesses, not measured.
 
-> **The math.** For object $j$ and damage box $k$, the distance and relevance are
+> **The math.** For object $j$ and damage box $k$, the distance and the relevance are
 > $$d_{jk}=\frac{\text{pixel gap between object bottom-center and damage box}}{\max(h_j,\,16)},\qquad r_{jk}=v_j\,c_j\,e^{-d_{jk}},$$
-> with $h_j$ the object's box height in pixels and $c_j$ its detector confidence. The closeness of the most relevant object is $\pi_k=\max_j r_{jk}$ (the **maximum**, not the sum, so a crowd cannot inflate the score). The damage score and the frame's **hazard score** are
+> where $h_j$ is the object's box height in pixels and $c_j$ is the detector's confidence. The $e^{-d}$ part makes relevance fade quickly as the object gets farther away. The closeness of the most relevant object is $\pi_k=\max_j r_{jk}$. We take the **maximum**, not the sum, so a crowd cannot inflate the score. The damage score and the frame's **hazard score** are
 > $$s_k=m_k\,w_k\,c_k\,\Bigl(\tfrac12+\tfrac12\pi_k\Bigr),\qquad H=\min\Bigl(1,\ \max_k s_k\Bigr)\ \ (H=0\text{ with no damage}).$$
-> Here $m_k=0$ if the box is confidently off-road and $1$ otherwise, $w_k$ is the severity weight (0.3 for a single crack, 0.6 for an alligator crack, 1.0 for a pothole; a first draft chosen by judgment, not measured), and $c_k$ is the classifier probability.
+> Here $m_k=0$ if the box is confidently off the road and $1$ otherwise. $w_k$ is the **severity weight**: 0.3 for a single crack, 0.6 for an alligator crack and 1.0 for a pothole. These are a first draft chosen by judgment, not measured. $c_k$ is the classifier's probability.
 >
-> **Worked example.** A pothole with $c_k=0.8$, on the road ($m_k=1$), severity high ($w_k=1.0$). With nobody near, $\pi_k=0$ and $s_k=1.0\cdot0.8\cdot0.5=0.40$. With a pedestrian ($v=1$, $c=0.9$) half an object height away, $r=0.9\,e^{-0.5}\approx0.55$, so $s_k=0.8\cdot(0.5+0.27)\approx0.62$. The same pothole scores 40 alone and 62 with a person beside it. The record stores $H$ in $[0,1]$ and the UI shows $\mathrm{round}(100H)$.
+> **Worked example.** Take a pothole with $c_k=0.8$ on the road ($m_k=1$) and severity high ($w_k=1.0$). With nobody near, $\pi_k=0$, so $s_k=1.0\cdot0.8\cdot0.5=0.40$. Now put a pedestrian ($v=1$, $c=0.9$) half an object height away. Then $r=0.9\,e^{-0.5}\approx0.55$, so $s_k=0.8\cdot(0.5+0.27)\approx0.62$. The same pothole scores 40 alone and 62 with a person beside it. The record stores $H$ between 0 and 1, and the web page shows $\mathrm{round}(100H)$.
+
+Because the frame's score is the **maximum** over all damage, one dangerous pothole outweighs ten harmless cracks. That was a deliberate choice.
 
 The score ranks urgency. It is not the probability of a crash.
 
+## Search: ask questions about saved photos
+
+Each analyzed photo becomes a record. The search part lets you ask questions across many records. It works in four steps ([ADR 0017](docs/adr/0017-search-core.md), [ADR 0018](docs/adr/0018-grounded-answers.md), [ADR 0019](docs/adr/0019-search-api.md)):
+
+1. **Embed.** An **embedding** turns a photo, or a sentence, into a list of numbers so that similar things get similar numbers. We use a model called OpenCLIP, which can do this for both photos and text.
+2. **Find.** A database called Qdrant stores the lists of numbers and finds the closest ones. A search can use the photo's numbers, the description's numbers, or both fused together, plus filters such as "only frames with a pothole".
+3. **Answer.** A language model (Claude, or a model running on your own computer) reads only the question and the records that were found. It must cite photo ids in brackets.
+4. **Check.** The code checks every cited id against the records that were found. A made-up id is reported and hidden. If nothing was found, the language model is not called at all.
+
+This is called **grounded** answering: the answer may only use what search found. Each visitor has a private session, so one visitor can never see another visitor's uploaded photos. The measured results are in the table below. In short, among the top 5 results, search finds about half of the photos it should (0.54 when text and photo are fused; random order finds 0.18), and the written answers cite exactly the right photos on most of the questions that have an answer. The questions come from the nuScenes labels, so the match against how real people phrase questions is untested.
+
 ## What we have measured so far
 
-All numbers below come from our own evaluation code (`eval/`), with a 90% range where it counts something. A **90% range** is a Wilson interval: if we saw $k$ successes in $n$ tries with observed rate $\hat p=k/n$, the true rate is probably between
-$$\frac{\hat p+\frac{z^2}{2n}\pm z\sqrt{\frac{\hat p(1-\hat p)}{n}+\frac{z^2}{4n^2}}}{1+\frac{z^2}{n}},\qquad z\approx1.645.$$
-Few tries means a wide range, so a range is more honest than a single number. The search rows are different: their range comes from re-drawing the set of queries many times (resampling), because each query gets a score between 0 and 1, not a success or a failure.
+All numbers below come from our own evaluation code (`eval/`). Where a number counts something, it comes with a 90% range. A **90% range** (a Wilson interval) says: "if we saw $k$ successes in $n$ tries, the true rate is probably between these two values." Few tries make a wide range, so a range is more honest than a single number.
+
+> **The math.** With $k$ successes in $n$ tries and observed rate $\hat p=k/n$, the range is
+> $$\frac{\hat p+\frac{z^2}{2n}\pm z\sqrt{\frac{\hat p(1-\hat p)}{n}+\frac{z^2}{4n^2}}}{1+\frac{z^2}{n}},\qquad z\approx1.645.$$
+> The search rows are different. Each question gets a score between 0 and 1, not a pass or fail, so their range comes from re-drawing the set of questions many times (resampling).
 
 <!-- results:start -->
 | Measure | Result | In `eval/results.json` |
@@ -106,35 +152,38 @@ Few tries means a wide range, so a range is more honest than a single number. Th
 | Written answers (RAG) | 36 questions, top 5 photos given; claude-haiku-5-5 alone: 22 of 23 answerable questions cited exactly the right photos, $0.00017 each; claude-sonnet-5-5 alone: 20 of 23 answerable questions cited exactly the right photos, $0.00338 each; claude-haiku-5-5 then claude-sonnet-5-5: 22 of 23 answerable questions cited exactly the right photos, $0.00017 each; qwen2.5:14b (local): 23 of 23 answerable questions cited exactly the right photos, $0.00000 each. Checked against the records the model was given, not the photos | `answers` |
 <!-- results:end -->
 
-Rows marked *pasted-patch* come from a test that pastes real damage patches onto driving photos. It is easier than real damage, so those numbers are not real-world accuracy.
+Rows marked *pasted-patch* come from a test that pastes real damage patches onto driving photos, because no dataset has both objects and road damage labeled. It is easier than real damage, so those numbers are not real-world accuracy.
 
-The pattern: **large damage close to the camera is found; small, far damage mostly is not.** A pothole 30 meters away is only a few pixels wide. We report this as a limit, not a fixable detail: the effective range row above says how large a defect must look to be found.
+The pattern: **large damage close to the camera is found, and small, far damage mostly is not.** A pothole 30 meters away is only a few pixels wide. We report this as a limit, not a detail we can easily fix. The "effective range" row above says how large a defect must look to be found.
 
 ## What did not work
 
-The detector fine-tune ([ADR 0015](docs/adr/0015-detector-finetune.md)) trained 10 models, each holding out one nuScenes scene, and graded each only on the scene it never saw. Cones were found and judged right often enough across scenes, but only one scene cleared the limits on its own, and barriers were almost never found in a new scene (they appear in only 3 of the 10 scenes). By the plan, the original detector stays. More scenes are the next step if work-zone objects matter.
+- **The first detector fine-tune.** We trained 10 models, each holding out one nuScenes scene, and graded each only on the scene it never saw. Cones were found and judged right often enough across scenes. But only one scene cleared the limits on its own, and barriers were almost never found in a new scene (they appear in only 3 of the 10 scenes). By the plan, the plain detector stayed. A second round with 66 scenes passed the automatic checks, and the owner then chose to ship the result switched off by default ([ADR 0015](docs/adr/0015-detector-finetune.md)).
+- **The pasted-patch test failed one of its four checks.** Large patches were found 60% of the time, and the minimum was 70%.
+- **Real dashboard photos.** On 14 photos from a South African pothole dataset, the pipeline found 10 of 44 marked potholes. It did best when the damage was large in the frame.
 
 ## Limits and open problems
 
-- **Small data.** nuScenes mini has 10 scenes (about 400 front-camera frames). In it, night driving and the Singapore district Holland Village are the same scenes, so you cannot separate "night" from "that place". It is for checking the pipeline, not for sweeping conclusions.
+- **Small data.** nuScenes mini has 10 scenes (about 400 front-camera frames). In it, night driving and the Singapore district Holland Village are the same scenes, so you cannot tell "night" apart from "that place". It is for checking that the pipeline works, not for sweeping conclusions.
 - **Domain gap.** The classifier learned from close-up road photos, but a windshield frame is a wide view. Tiling only the road ([ADR 0002](docs/adr/0002-road-masked-tiling.md)) is our fix, and the numbers above show it is only partly working.
+- **Painted markings.** The most common false alarm is painted road markings (crosswalks, lane dashes and arrows) that the classifier mistakes for transverse cracks. We kept the cutoff for that class where it is, because only two real cracks were available to tune it, which is too few.
 - **Label names.** The original `defect-detector` repo had the four damage codes mapped to the wrong names. The mapping above matches the RDD2022 paper and the annotation files, and `tests/defects/test_label_mapping.py` pins it.
-- **No ground truth for fusion.** No dataset has both objects and road damage labeled. The paste test is the substitute and is easier than real damage, so its results are not real-world accuracy.
+- **No ground truth for fusion.** No dataset has both objects and road damage labeled. The paste test is the substitute, and it is easier than real damage.
 - **Severity is a guess from the damage type** (single cracks low, alligator crack medium, pothole high). It ignores the size and depth of the damage, and the weights were chosen by judgment, not measured.
-- **Licenses.** nuScenes images and any model fine-tuned on them stay local and non-commercial. RDD2022 names no license in one source and CC BY-SA 4.0 in another, so we use the strictest reading, never use its US subset, and publish none of its images. See [docs/DATA_AND_LICENSES.md](docs/DATA_AND_LICENSES.md).
+- **Photos, not video.** One photo at a time. There is no tracking over time and no live camera input.
+- **Licenses.** nuScenes images and any model trained on them stay on this machine and are non-commercial. RDD2022 names no license in one source and CC BY-SA 4.0 in another, so we use the strictest reading, never use its US subset, and publish none of its images. See [docs/DATA_AND_LICENSES.md](docs/DATA_AND_LICENSES.md).
 - **Evaluation is mostly, not fully, automatic** ([ADR 0007](docs/adr/0007-no-hand-labeling-eval.md)). The two hand steps are the road outlines drawn on 30 photos for the paste test and one person's review of flagged tiles.
 
 ## Not built yet
 
-- **RAG** (retrieval-augmented generation): search over saved records, for example "frames with a pothole near a pedestrian", answered by a language model using the retrieved records as its source.
-- **Web UI, the rest:** a Search view and a Settings view. The Analyze view (photo, boxes, a 0-100 gauge, plain-language explanations and an animated walkthrough) exists.
-- **Hosted demo** (Hugging Face Spaces plus Qdrant Cloud free tier, about $20 a month at most).
-
-By rule ([ADR 0011](docs/adr/0011-core-first-gate.md)) these stay at stub level until the core produces numbers worth reporting.
+- **Web UI, the rest.** A Search page and a Settings page. The Analyze page (photo, boxes, a 0 to 100 gauge, plain-language explanations and an animated walkthrough) exists.
+- **Docker for real.** The Docker files have never been run with the real models, so treat them as a sketch.
+- **Hardening for the public.** Request size limits and a security review of the exact bundle that will go online.
+- **Hosted demo.** Hugging Face Spaces plus the free tier of Qdrant Cloud, about $20 a month at most. A set of 40 non-US RDD2022 photos and 20 CC0 pothole photos from Stellenbosch is ready for it. The RDD2022 photos stay on this machine until their license is verified.
 
 ## Try it
 
-This runs the stub API (fixed fake answers, no models needed):
+This runs the stub API, which gives fixed fake answers and needs no models:
 
 ```
 pip install -r requirements-dev.lock && pip install --no-deps -e .
