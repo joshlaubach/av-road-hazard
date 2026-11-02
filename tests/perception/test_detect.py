@@ -13,7 +13,7 @@ from common import config
 from common.config import load_config
 from perception import infer
 from perception.detector import DETECTORS, DetectorUnavailable
-from perception.infer import detect, detector_settings
+from perception.infer import detect, detector_settings, tuned_settings
 
 FRAME = np.full((100, 200, 3), 255, dtype=np.uint8)  # (height, width, channels)
 
@@ -107,3 +107,40 @@ def test_real_path_uses_the_model_and_the_configured_threshold() -> None:
     pytest.importorskip("torch")
     objects = detect(FRAME, model=FakeModel())
     assert [(o.label, o.box) for o in objects] == [("car", (10.0, 20.0, 50.0, 80.0))]
+
+
+def _tuned_cfg(**changes: Any) -> dict[str, Any]:
+    cfg = load_config()
+    cfg["perception"].update(
+        {"finetuned_checkpoint": "x.safetensors", "finetuned_sha256": "a" * 64}
+    )
+    cfg["perception"].update(changes)
+    return cfg
+
+
+def test_the_shipped_config_uses_the_zero_shot_detector() -> None:
+    assert tuned_settings(load_config()) is None
+
+
+def test_the_tuned_detector_needs_its_hash_and_both_cutoffs() -> None:
+    assert tuned_settings(_tuned_cfg()).cutoffs == {"barrier": 0.55, "traffic_cone": 0.65}  # type: ignore[union-attr]
+    with pytest.raises(ValueError, match="finetuned_sha256"):
+        tuned_settings(_tuned_cfg(finetuned_sha256=None))
+    with pytest.raises(ValueError, match="new_class_cutoffs"):
+        tuned_settings(_tuned_cfg(new_class_cutoffs={"barrier": 0.5}))
+    with pytest.raises(ValueError, match="traffic_cone"):
+        tuned_settings(_tuned_cfg(new_class_cutoffs={"barrier": 0.5, "traffic_cone": 1.5}))
+
+
+@pytest.mark.usefixtures("stubs_off")
+def test_a_missing_tuned_file_is_unavailable_not_silently_zero_shot(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("DETECTOR_CHECKPOINT", str(tmp_path / "gone.safetensors"))
+    monkeypatch.setattr(
+        infer,
+        "tuned_settings",
+        lambda cfg: infer.TunedSettings(tmp_path / "gone.safetensors", "a" * 64, {}),
+    )
+    with pytest.raises(DetectorUnavailable):
+        detect(FRAME)
