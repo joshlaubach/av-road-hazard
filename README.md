@@ -103,6 +103,7 @@ Few tries means a wide range, so a range is more honest than a single number. Th
 | Fine-tune for cones and barriers, held-out nuScenes scenes | cones: precision 74%, recall 58% over 4 scenes, but only 1 scene reaches both limits alone; barriers: 2 of 1511 found. FAIL: the zero-shot detector stays | `detector.fine_tune` |
 | Real dashboard photos (14 dashboard photos, Stellenbosch pothole dataset, South Africa) | 10 of 44 marked potholes found; 15 other boxes (not necessarily mistakes). Run by hand, not reproducible from this repo | `real_photo_check` |
 | Retrieval (RAG) | Recall at 5 on 404 nuScenes frames and 21 queries made from the annotations: description 0.41, photo 0.43, both fused 0.54, random order 0.18 (1.0 is perfect) | `retrieval` |
+| Written answers (RAG) | 36 questions, top 5 photos given; claude-haiku-5-5 alone: 22 of 23 answerable questions cited exactly the right photos, $0.00017 each; claude-sonnet-5-5 alone: 20 of 23 answerable questions cited exactly the right photos, $0.00338 each; claude-haiku-5-5 then claude-sonnet-5-5: 22 of 23 answerable questions cited exactly the right photos, $0.00017 each; qwen2.5:14b (local): 23 of 23 answerable questions cited exactly the right photos, $0.00000 each. Checked against the records the model was given, not the photos | `answers` |
 <!-- results:end -->
 
 Rows marked *pasted-patch* come from a test that pastes real damage patches onto driving photos. It is easier than real damage, so those numbers are not real-world accuracy.
