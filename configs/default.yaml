@@ -16,6 +16,15 @@ perception:
   # phase-3 measurement on nuScenes picks a model and a threshold.
   model: fasterrcnn_mobilenet_v3_large_fpn   # or fasterrcnn_resnet50_fpn_v2 (heavier, slower on CPU)
   score_threshold: 0.5
+  # Fine-tuned 8-class detector (ADR 0015). null = the zero-shot detector above. Set the path (env
+  # DETECTOR_CHECKPOINT) to the model's .safetensors; its SHA-256 must equal finetuned_sha256.
+  # The weights are not in the repo and carry the nuScenes terms. Cutoffs for the two new classes
+  # come from the pooled held-out front-camera sweep (lowest cutoff with precision >= 0.70).
+  finetuned_checkpoint: null
+  finetuned_sha256: null
+  new_class_cutoffs:
+    barrier: 0.55
+    traffic_cone: 0.65
 
 defects:
   # Tile classifier checkpoint (best.pt with its best.json beside it); env DEFECT_CHECKPOINT overrides.
