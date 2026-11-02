@@ -188,3 +188,14 @@ Barriers swing from 0.47 to 0.71. Fold 2 is weakest (barrier recall 36%) and hol
 **Verdict.** The tool reports `passed_all_checks_but_speed_and_sanity = true`, and the speed check also passes. Not done: the sanity check outside nuScenes (20 local images and the Stellenbosch photos), which is manual.
 
 **Limits.** Part 1 has no night scenes, so the result says nothing about night driving. It holds two city areas (59 Singapore One North scenes and 26 Boston Seaport scenes in part 1; 66 are used). Scenes are not equal in size, so per-fold scores are noisy and the pooled numbers are the ones to quote.
+
+### Sanity check outside the scored scenes (2026-10-31)
+
+Run with all 5 fold models at score 0.5 on 37 local images (none committed): 27 nuScenes front frames from the 9 mini scenes that are not in the 66-scene plan (3 per scene, 9 of them night), 8 RDD2022 images (2 each from Japan, Czech, Norway, India) and the 2 Stellenbosch photos. Counted and looked at by eye; not scored. The old 20-image set no longer exists on disk, so this is a new set.
+
+- **RDD2022 and Stellenbosch (10 images, no barriers or cones in them):** 0 barrier or cone boxes from any of the 5 models.
+- **nuScenes night (9 frames):** 0 barrier or cone boxes.
+- **nuScenes day (18 frames):** 4 frames got a barrier or cone box. In 3 the boxes sit on real cones (checked by eye; in one frame the 5 models drew 6 to 10 cones, in another 1 to 3 small distant ones). In 1 frame (scene-0757, 2 of 5 models, scores 0.65 and 0.84) a "barrier" box sits on the back of a dump truck, so that one is a false box.
+- **Old classes (boxes at score 0.5, not checked against ground truth):** the zero-shot detector drew 167 boxes on the 18 day frames, the 5 fine-tuned models 110 to 126 (without barriers and cones); on the 9 night frames 48 against 13 to 17; on the 10 other images 30 against 14 to 16. The fine-tuned models draw fewer boxes, which fits their higher precision in the scored test, but I did not check which of the dropped boxes were real. One Boston frame still has a tall 0.61 "car" box on a building edge.
+
+So the detector did not invent barriers or cones on empty road in this set. The set is small (37 images), the model sees one false barrier on a truck, and the night frames contained no cones or barriers to find, so this says nothing about recall at night.
