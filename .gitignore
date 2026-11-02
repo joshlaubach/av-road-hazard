@@ -70,3 +70,11 @@ notebooks/*
 
 # Git worktrees that Claude Code creates for parallel agents (local, disposable)
 .claude/worktrees/
+
+# Local-only folders that sit in the repository root: a second checkout (wt-gap), the hand-off
+# bundle, tool notes and logs, and screenshots from checking the web UI. runs/ is above.
+/wt-gap/
+/handoff/
+/.vibe-wise/
+/.playwright-mcp/
+/scratch_*.png
