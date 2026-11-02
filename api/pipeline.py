@@ -81,7 +81,12 @@ def model_status(cfg: Mapping[str, Any]) -> dict[str, str]:
     if cfg["pipeline"]["use_stubs"]:
         return {"perception": "stub", "defects": "stub", "fusion": "stub", "rag": "stub"}
     checkpoints = Path(cfg["paths"]["checkpoint_dir"])
-    detector = checkpoints / DETECTOR_SUBDIR / f"{cfg['perception']['model']}.safetensors"
+    tuned = cfg["perception"].get("finetuned_checkpoint")
+    detector = (
+        Path(tuned)
+        if tuned
+        else checkpoints / DETECTOR_SUBDIR / f"{cfg['perception']['model']}.safetensors"
+    )
     classifier = cfg["defects"]["classifier_checkpoint"]
     classifier_ok = bool(classifier) and (
         Path(classifier).is_file() and Path(classifier).with_suffix(".json").is_file()

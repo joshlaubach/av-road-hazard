@@ -139,3 +139,12 @@ def test_analysis_says_whether_a_road_mask_was_used(
     assert result.road_mask_used is expected
     assert result.record.image_size == (640, 360)
     assert pipeline.analyze(frame_bytes).frame_id == result.record.frame_id
+
+
+def test_status_looks_for_the_tuned_detector_file_when_one_is_configured(tmp_path: Path) -> None:
+    tuned = tmp_path / "tuned.safetensors"
+    cfg = _cfg(tmp_path, stubs=False)
+    cfg["perception"]["finetuned_checkpoint"] = str(tuned)
+    assert model_status(cfg)["perception"] == "unavailable"
+    _touch(tuned)
+    assert model_status(cfg)["perception"] == "available"
