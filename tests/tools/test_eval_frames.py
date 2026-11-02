@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from defects.infer import find_tile_defects
@@ -78,6 +79,26 @@ def test_export_writes_each_unreviewed_tile_once_with_a_blank_sheet_and_a_key(
     key = json.loads((tmp_path / "key" / "key.json").read_text())
     assert key["n2_001"]["frame"] == "s/a.jpg"
     assert key["n2_001"]["classes"] == {"D00": 0.95, "D10": 0.8}
+
+
+def test_export_refuses_to_overwrite_an_existing_batch_and_leaves_it_untouched(
+    tmp_path: Path,
+) -> None:
+    _frame(tmp_path / "raw", "s/a.jpg")
+    alerts = [Alert("s/a.jpg", (0, 0, 8, 8), "D00", 0.95, False, 1.0)]
+    export_unreviewed(alerts, tmp_path / "raw", tmp_path / "out", tmp_path / "key", {}, prefix="n2")
+    sheet = (tmp_path / "out" / "annotations.csv").read_bytes()
+    key = (tmp_path / "key" / "key.json").read_bytes()
+
+    # a new picture folder but the same key folder must not replace the key either
+    for out, keys in ((tmp_path / "out", tmp_path / "key2"), (tmp_path / "out2", tmp_path / "key")):
+        with pytest.raises(FileExistsError):
+            export_unreviewed(alerts, tmp_path / "raw", out, keys, {}, prefix="n3")
+
+    assert (tmp_path / "out" / "annotations.csv").read_bytes() == sheet
+    assert (tmp_path / "key" / "key.json").read_bytes() == key
+    assert not (tmp_path / "out2").exists()
+    assert not (tmp_path / "key2").exists()
 
 
 def test_alerts_are_counted_per_tile_so_they_match_the_reviewed_tile_boxes() -> None:

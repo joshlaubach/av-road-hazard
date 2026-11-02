@@ -117,7 +117,12 @@ def export_unreviewed(
 
     One tile per (frame, box) in a seeded shuffled order: PNGs and a blank answer sheet in out_dir
     (annotator-facing), the answer key in key_dir. Both stay under the gitignored data/ folder.
+    Raises FileExistsError, before writing anything, if either file already exists: a rerun must
+    not erase a batch someone is labeling or the key that maps their calls to tiles.
     """
+    for existing in (out_dir / "annotations.csv", key_dir / "key.json"):
+        if existing.exists():
+            raise FileExistsError(f"{existing} already exists; refusing to overwrite a batch")
     tiles: dict[tuple[str, Box], dict[str, float]] = {}
     for alert in alerts:
         if (alert.frame, alert.box) not in reviewed:

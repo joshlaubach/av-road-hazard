@@ -87,7 +87,12 @@ module = [
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["defects.dataset", "defects.tile_dataset", "defects.tile_predict"]
+module = [
+  "defects.dataset",
+  "defects.tile_dataset",
+  "defects.tile_predict",
+  "test_finetune_nuscenes",  # tests/ has no __init__.py, so mypy names the file by its stem
+]
 disallow_subclassing_any = false
 
 [tool.pytest.ini_options]
