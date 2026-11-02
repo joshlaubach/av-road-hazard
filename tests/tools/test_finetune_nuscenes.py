@@ -6,11 +6,13 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import torch
-from torch import nn
-from torch.utils.data import DataLoader, Dataset
 
-from tools.finetune_nuscenes import (
+torch = pytest.importorskip("torch")
+
+from torch import nn  # noqa: E402
+from torch.utils.data import DataLoader, Dataset  # noqa: E402
+
+from tools.finetune_nuscenes import (  # noqa: E402
     NewTile,
     RoundSampler,
     check_pins,
