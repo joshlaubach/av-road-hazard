@@ -1,0 +1,191 @@
+{
+  "dataset": "Road Pothole Images for Pothole Detection, Stellenbosch University, 2015 (Subset 2 (Complex), TrainData)",
+  "authors": "S. Nienaber, R.S. Kroon, M.J. Booysen (Electrical and Electronic Engineering, Stellenbosch University)",
+  "source": "https://drive.google.com/drive/folders/1vUmCvdW3-2lMrhsMbXdMWeLcEz__Ocuy (also https://www.kaggle.com/datasets/sovitrath/road-pothole-images-for-pothole-detection)",
+  "license": "CC0 1.0 per the Kaggle and Dataset Ninja listings. NOT verified at the authors' own page; the owner states the authors approved non-commercial use (docs/DATA_AND_LICENSES.md).",
+  "cite": "The authors ask for their two 2015 papers (SATC and IEEE CIVTS); see the dataset README.txt.",
+  "changes": "Top 1760 of 2760 rows kept (dashboard removed), resized to 1280 px wide, re-saved as JPEG quality 85 with no EXIF. Fixtures test plumbing, not detection: the pipeline needs full-size photos to find small potholes.",
+  "shows": "'pothole' = taken from the dataset's Positive folder, 'clean' = from its Negative folder (the folder name is the label; not checked image by image).",
+  "images": [
+    {
+      "file": "G0011493.jpg",
+      "shows": "pothole",
+      "source_file": "G0011493.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011494.jpg",
+      "shows": "pothole",
+      "source_file": "G0011494.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011472.jpg",
+      "shows": "pothole",
+      "source_file": "G0011472.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011475.jpg",
+      "shows": "pothole",
+      "source_file": "G0011475.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011489.jpg",
+      "shows": "pothole",
+      "source_file": "G0011489.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011488.jpg",
+      "shows": "pothole",
+      "source_file": "G0011488.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011477.jpg",
+      "shows": "pothole",
+      "source_file": "G0011477.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011495.jpg",
+      "shows": "pothole",
+      "source_file": "G0011495.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011504.jpg",
+      "shows": "pothole",
+      "source_file": "G0011504.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011476.jpg",
+      "shows": "pothole",
+      "source_file": "G0011476.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011474.jpg",
+      "shows": "pothole",
+      "source_file": "G0011474.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0011491.jpg",
+      "shows": "pothole",
+      "source_file": "G0011491.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0016087.jpg",
+      "shows": "clean",
+      "source_file": "G0016087.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0016094.jpg",
+      "shows": "clean",
+      "source_file": "G0016094.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0016185.jpg",
+      "shows": "clean",
+      "source_file": "G0016185.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0016071.jpg",
+      "shows": "clean",
+      "source_file": "G0016071.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0016163.jpg",
+      "shows": "clean",
+      "source_file": "G0016163.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0016180.jpg",
+      "shows": "clean",
+      "source_file": "G0016180.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0016139.jpg",
+      "shows": "clean",
+      "source_file": "G0016139.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    },
+    {
+      "file": "G0016173.jpg",
+      "shows": "clean",
+      "source_file": "G0016173.JPG",
+      "source_size": [
+        3680,
+        2760
+      ]
+    }
+  ]
+}
