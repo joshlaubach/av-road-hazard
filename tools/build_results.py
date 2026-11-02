@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from eval.answers import answers_section
 from eval.provenance import provenance
 from eval.results import (
     build_results,
@@ -44,6 +45,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="only replace the retrieval section of an existing results file",
     )
+    parser.add_argument("--answers", type=Path, default=None)
+    parser.add_argument(
+        "--add-answers",
+        action="store_true",
+        help="only replace the answers section of an existing results file",
+    )
     parser.add_argument("--real-photo-check", type=Path, default=None)
     parser.add_argument("--chosen", default="hn2-repeat10")
     parser.add_argument("--out", type=Path, default=REPO / "eval" / "results.json")
@@ -55,6 +62,12 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--add-retrieval needs --retrieval")
         results = _load(args.out)
         results["retrieval"] = retrieval_section(_load(args.retrieval))
+        return _write(results, args)
+    if args.add_answers:
+        if args.answers is None:
+            parser.error("--add-answers needs --answers")
+        results = _load(args.out)
+        results["answers"] = answers_section(_load(args.answers))
         return _write(results, args)
     needed = ("classifier", "non_road", "detector_gap", "fine_tune", "fusion")
     if any(getattr(args, n) is None for n in needed):
