@@ -34,5 +34,5 @@ The monthly budget is about $20 (Claude is billed separately from any subscripti
 ## Open before this can go live
 
 - **Weights, decided 2026-11-03:** with `USE_STUBS=0`, `docker/space/start.sh` fetches the public COCO detector and the comma10k road model from their original sources and the classifier from your private repo, each checked against a pinned SHA-256, and stops the container on any failure. OpenCLIP downloads itself from the Hub. No nuScenes-derived weights are used (`docs/DATA_AND_LICENSES.md`, Hosted model weights). The classifier repo is `joshlaubach/road-hazard-classifier` (private); a real fetch from it passed the pinned hashes on 2026-11-03. Not tried: the real-model image (`WITH_ML=1`) running on a Space.
-- **Cached records are made but not served.** `--records-out` writes them; nothing in the Space reads them yet, so the demo still computes on CPU.
+- **Cached outputs need no extra serving.** The two example photos are static files (`web/public/examples/*/example.json`, a saved trace of the real pipeline), and the 60 corpus records live in Qdrant, which Search reads without running any model. Only a visitor's own upload runs the pipeline on CPU, and that cannot be cached. The `--records-out` files are a local backup of what was indexed, not something the Space reads.
 - **Release review** of the exact bundle (ROADMAP Next row 2).
