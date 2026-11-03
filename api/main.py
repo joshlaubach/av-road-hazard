@@ -62,9 +62,21 @@ def create_app() -> FastAPI:
     pipeline = Pipeline()
     loaded: dict[str, str] = {}  # what the startup check found, per model; empty with stubs on
 
+    def warm_search() -> dict[str, str]:
+        """Load the photo embedder now (CLIP) and say if Search can work. Empty with stubs on."""
+        if cfg["pipeline"]["use_stubs"]:
+            return {}
+        try:
+            rag().embedder  # noqa: B018  (building it loads the model)
+        except (OSError, ImportError, RuntimeError, ValueError) as exc:
+            log.error("search embedder did not load: %s", exc)
+            return {"rag": "unavailable"}
+        return {"rag": "ready"}
+
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         loaded.update(pipeline.warm_up())  # models load now, before the first request
+        loaded.update(warm_search())
         yield
 
     app = FastAPI(title="av-road-hazard", version="0.1.0", lifespan=lifespan)
