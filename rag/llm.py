@@ -47,6 +47,21 @@ class LLM(Protocol):
     def generate(self, system: str, prompt: str) -> str: ...
 
 
+class StubLLM:
+    """A deterministic, cost-free answer for searches against stub records."""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def generate(self, system: str, prompt: str) -> str:
+        ids = re.findall(r"(?m)^\[([A-Za-z0-9_.:+-]{1,128})\]", prompt)[:2]
+        if len(ids) == 2:
+            return f"The closest photos are [{ids[0]}] and [{ids[1]}]."
+        if ids:
+            return f"The closest photo is [{ids[0]}]."
+        return NO_MATCH
+
+
 @dataclass(frozen=True)
 class Answer:
     text: str
