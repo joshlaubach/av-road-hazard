@@ -63,8 +63,8 @@ Status of every item is open. No due date has been set by the owner, so the Due 
 
 | # | Question | Owner | Due | Status | Recommendation (not a decision) |
 |---|---|---|---|---|---|
-| R1 | Legal review of the road-model licence chain (smp MIT, weights MIT, comma10k MIT; UNVERIFIED: timm licence, third-party image rights in comma10k) | Owner (counsel) | Not set | Open | Review before the road-mask PR is treated as final; no change to the pinned weights until then |
-| R2 | Provenance and licence of the encoder's ImageNet pre-training (the model card does not say) | Owner | Not set | Open | Find the source of the pre-training weights; record the result in DATA_AND_LICENSES.md |
+| R1 | Legal review of the road-model licence chain (smp MIT, weights MIT, comma10k MIT; UNVERIFIED: timm licence, third-party image rights in comma10k) | Owner (counsel) | Not set | Accepted 2026-11-03 as an assumption (owner), not verified; fine for the non-commercial demo, ask counsel before any wider use | Review before the road-mask PR is treated as final; no change to the pinned weights until then |
+| R2 | Provenance and licence of the encoder's ImageNet pre-training (the model card does not say) | Owner | Not set | Accepted 2026-11-03 as an assumption (owner), not verified; fine for the non-commercial demo, ask counsel before any wider use | Find the source of the pre-training weights; record the result in DATA_AND_LICENSES.md |
 | R3 | Shoulder-edge crack loss (2 of 51 crack tiles lost at min_road 0.5) and mask dilation as a fix | Owner | Not set | Open | Measure dilation on the same 148 tiles before changing the mask |
 | R4 | Set `min_road` from more human-annotated tiles (the current 0.4 is provisional, from 148 tiles) | Owner | Not set | Open | Annotate more tiles and re-measure drop and crack-loss rates before changing the default |
 | R5 | Nordic snow robustness check (model trained mostly on US and highway frames) | Owner | Not set | Open | Test on Nordic snow frames before relying on the mask there |
@@ -77,7 +77,7 @@ Status of every item is open. No due date has been set by the owner, so the Due 
 
 | # | Question | Owner | Due | Status | Recommendation (not a decision) |
 |---|---|---|---|---|---|
-| D1 | Licence of the COCO-trained torchvision weights (BSD-3 code; COCO training data terms not verified by counsel) | Owner (counsel) | Before any hosted release | Open | Review before the hosted demo; no change to the pinned weights until then |
+| D1 | Licence of the COCO-trained torchvision weights (BSD-3 code; COCO training data terms not verified by counsel) | Owner (counsel) | Before any hosted release | Accepted 2026-11-03 as an assumption (owner), not verified; fine for the non-commercial demo, ask counsel before any wider use | Review before the hosted demo; no change to the pinned weights until then |
 | D2 | Fine-tuning on nuScenes: the terms (read 2026-10-26) allow non-commercial use and say nothing about trained models; weights should be treated as under the same terms. The owner chose to fine-tune for the construction labels. Open: whether a portfolio is non-commercial and whether a public demo may serve the weights | Owner | Not set | Partly closed | Email nuScenes@motional.com before the hosted demo serves fine-tuned weights; keep weights out of the repo; measure the gap first (ADR 0014) |
 | D3 | Detection on Norwegian RDD2022 photos, where vehicles are masked as grey blobs | Owner | Not set | Open | Check a sample of Norwegian images before relying on object masking there |
 | D4 | The score threshold 0.5 is provisional; nuScenes mini has 10 scenes and the held-out split has 2 | Owner | Not set | Open | Re-measure on more scenes (v1.0-full) before changing it; on this data 0.3 and 0.5 give the same tile defects |

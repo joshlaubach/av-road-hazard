@@ -44,8 +44,8 @@ RUN pip install --no-cache-dir --no-deps -e .
 COPY --from=web /web /app/web
 COPY docker/space/start.sh /app/start.sh
 
-# Spaces run the container as user 1000. Nothing but the web cache and the weights folder is written.
-RUN useradd -m -u 1000 user && mkdir -p /app/checkpoints && chown -R user /app/web/.next /app/checkpoints
+# Spaces run the container as user 1000. Nothing but the web cache and the weights folders is written.
+RUN useradd -m -u 1000 user && mkdir -p /app/checkpoints /app/classifier && chown -R user /app/web/.next /app/checkpoints /app/classifier
 USER user
 ENV USE_STUBS=1 PORT=7860
 EXPOSE 7860
