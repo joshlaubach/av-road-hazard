@@ -15,6 +15,8 @@ from api.pipeline import Pipeline
 from common import config
 from defects.infer import DefectsUnavailable
 from fusion.fuse import RoadMask
+from rag.embed import Embedder, HashEmbedder
+from rag.service import RagService
 
 
 @pytest.fixture
@@ -104,4 +106,36 @@ def test_health_reports_what_the_startup_check_found(monkeypatch: pytest.MonkeyP
         body = client.get("/health").json()
     assert body["models"]["perception"] == "ready"
     assert body["models"]["road_mask"] == "unavailable"
+    assert body["status"] == "degraded"
+
+
+def _all_models_ready(monkeypatch: pytest.MonkeyPatch) -> None:
+    ready = {"perception": "ready", "defects": "ready", "road_mask": "ready"}
+    monkeypatch.setattr(Pipeline, "warm_up", lambda self: ready)
+
+
+@pytest.mark.usefixtures("stubs_off")
+def test_health_says_search_is_ready_once_the_embedder_loads(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _all_models_ready(monkeypatch)
+    monkeypatch.setattr(RagService, "embedder", property(lambda self: HashEmbedder()))
+    with TestClient(main_module.create_app()) as client:
+        body = client.get("/health").json()
+    assert body["models"]["rag"] == "ready"
+    assert body["status"] == "ok"
+
+
+@pytest.mark.usefixtures("stubs_off")
+def test_health_says_search_is_unavailable_when_the_embedder_cannot_load(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def no_package(self: RagService) -> Embedder:
+        raise ImportError("No module named 'open_clip'")
+
+    _all_models_ready(monkeypatch)
+    monkeypatch.setattr(RagService, "embedder", property(no_package))
+    with TestClient(main_module.create_app()) as client:
+        body = client.get("/health").json()
+    assert body["models"]["rag"] == "unavailable"
     assert body["status"] == "degraded"
