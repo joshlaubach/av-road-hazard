@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -122,20 +123,36 @@ def frame_facts(frames: list[Any]) -> list[FrameFacts]:
     ]
 
 
-def rankers(index: Index, embedder: Embedder, frame_ids: list[str]) -> dict[str, Ranker]:
-    def search(names: tuple[str, ...]) -> Ranker:
+def rankers(
+    index: Index,
+    embedder: Embedder,
+    frame_ids: list[str],
+    photo_weights: Sequence[float] = (),
+) -> dict[str, Ranker]:
+    """The three searches, plus one fused search per photo weight (description weight stays 1)."""
+
+    def search(names: tuple[str, ...], weights: Mapping[str, float] | None = None) -> Ranker:
         def rank(query: Query) -> list[str]:
             vector = embedder.embed_texts([query.text])[0]
-            hits = index.search({n: vector for n in names}, [CORPUS], top_k=len(frame_ids))
+            hits = index.search(
+                {n: vector for n in names}, [CORPUS], top_k=len(frame_ids), weights=weights
+            )
             return [h.record.frame_id for h in hits]
 
         return rank
 
+    both = (IMAGE_VECTOR, TEXT_VECTOR)
     return {
         "photo_vector": search((IMAGE_VECTOR,)),
         "description_vector": search((TEXT_VECTOR,)),
-        "fused": search((IMAGE_VECTOR, TEXT_VECTOR)),
+        "fused": search(both),
+        **{f"fused_photo_weight_{w}": search(both, {IMAGE_VECTOR: w}) for w in photo_weights},
     }
+
+
+def parse_weights(text: str) -> list[float]:
+    """'1,0.5,0.25' -> [1.0, 0.5, 0.25]; the empty string means no extra searches."""
+    return [float(part) for part in text.split(",") if part.strip()]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -149,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
         help="stop instead of re-running the pipeline when the cached records do not match",
     )
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--photo-weights", default="", help="e.g. 0.5,0.25: extra fused searches")
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args(argv)
     from nuscenes.nuscenes import NuScenes
@@ -175,7 +193,9 @@ def main(argv: list[str] | None = None) -> int:
         "methods": {
             **{
                 name: summarize(score_ranker(ranker, queries), queries, seed)
-                for name, ranker in rankers(index, embedder, frame_ids).items()
+                for name, ranker in rankers(
+                    index, embedder, frame_ids, parse_weights(args.photo_weights)
+                ).items()
             },
             "random": summarize(random_expectation(queries, len(frame_ids)), queries, seed),
         },

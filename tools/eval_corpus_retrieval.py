@@ -32,7 +32,7 @@ from rag.embed import MODEL, PRETRAINED, ClipEmbedder
 from rag.index import Index
 from rag.text import describe
 from tools.eval_detector import _rgb
-from tools.eval_retrieval import pipeline_provenance, rankers
+from tools.eval_retrieval import parse_weights, pipeline_provenance, rankers
 
 MIN_MARGIN = 0.15  # fused recall@5 must beat random by at least this
 DAMAGE_PHRASES = {
@@ -77,6 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--corpus", type=Path, default=Path("data/demo_corpus"))
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--photo-weights", default="", help="e.g. 0.5: extra fused searches")
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args(argv)
     prov = pipeline_provenance()
@@ -100,7 +101,9 @@ def main(argv: list[str] | None = None) -> int:
     methods = {
         **{
             name: summarize(score_ranker(ranker, queries), queries, seed)
-            for name, ranker in rankers(index, embedder, frame_ids).items()
+            for name, ranker in rankers(
+                index, embedder, frame_ids, parse_weights(args.photo_weights)
+            ).items()
         },
         "random": summarize(random_expectation(queries, len(frame_ids)), queries, seed),
     }

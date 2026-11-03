@@ -11,7 +11,7 @@ import json
 import re
 import secrets
 import uuid
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -199,11 +199,14 @@ class Index:
         sessions: Collection[str],
         filters: Filters | None = None,
         top_k: int = 5,
+        weights: Mapping[str, float] | None = None,
     ) -> list[Hit]:
         """Filter first, search each named vector with its query vector, then fuse the rankings.
 
         `queries` maps a vector name to a query vector; each one gives a ranked list, and the lists
-        are combined by reciprocal rank: a photo scores the sum of 1/(60 + rank) over the lists.
+        are combined by reciprocal rank: a photo scores the sum of weight / (60 + rank) over the
+        lists. `weights` maps a vector name to its weight; a name left out counts 1.0, so no
+        weights means every list votes equally.
         """
         flt = build_filter(sessions, filters)
         fused: dict[str, float] = {}
@@ -219,7 +222,7 @@ class Index:
             )
             for rank, point in enumerate(result.points, start=1):
                 key = str(point.id)
-                fused[key] = fused.get(key, 0.0) + 1.0 / (RRF_K + rank)
+                fused[key] = fused.get(key, 0.0) + (weights or {}).get(name, 1.0) / (RRF_K + rank)
                 ranks.setdefault(key, {})[name] = rank
                 payloads[key] = point.payload or {}
         best = sorted(fused, key=lambda k: (-fused[k], k))[:top_k]

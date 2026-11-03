@@ -99,6 +99,41 @@ def test_two_rankings_are_fused() -> None:
     assert hits[0].record.frame_id in {"a", "b"}
 
 
+def two_lists_that_disagree() -> Index:
+    """Photo vector ranks 'p' first; text vector ranks 't' first."""
+    index = Index(DIM)
+    index.add(
+        [record("p"), record("t")], np.stack([unit(0), unit(1)]), np.stack([unit(1), unit(0)])
+    )
+    return index
+
+
+def test_weights_default_to_equal_votes() -> None:
+    index = two_lists_that_disagree()
+    plain = index.search({"image": unit(0), "text": unit(0)}, [CORPUS], top_k=2)
+    equal = index.search(
+        {"image": unit(0), "text": unit(0)}, [CORPUS], top_k=2, weights={"image": 1.0, "text": 1.0}
+    )
+    assert ids(plain) == ids(equal)
+    assert [h.score for h in plain] == pytest.approx([h.score for h in equal])
+
+
+def test_a_heavier_vector_decides_a_disagreement() -> None:
+    index = two_lists_that_disagree()
+    queries = {"image": unit(0), "text": unit(0)}
+    photo_heavy = index.search(queries, [CORPUS], top_k=2, weights={"image": 3.0})
+    text_heavy = index.search(queries, [CORPUS], top_k=2, weights={"text": 3.0})
+    assert ids(photo_heavy)[0] == "p" and ids(text_heavy)[0] == "t"
+
+
+def test_a_zero_weight_removes_a_vectors_vote() -> None:
+    index = two_lists_that_disagree()
+    hits = index.search(
+        {"image": unit(0), "text": unit(0)}, [CORPUS], top_k=2, weights={"image": 0.0}
+    )
+    assert ids(hits) == ["t", "p"]
+
+
 def test_a_session_cannot_see_another_sessions_photos() -> None:
     index = filled()
     index.add([record("mine")], unit(3)[None, :], unit(3)[None, :], session=S1)
