@@ -17,6 +17,7 @@ import numpy as np
 from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import JSONResponse
 
+from api.limits import BodyLimitMiddleware
 from api.models import (
     HealthResponse,
     IndexResponse,
@@ -139,6 +140,8 @@ def create_app() -> FastAPI:
         finally:
             # Always restore, even if the route raised, so an id never leaks into the next request.
             request_id_var.reset(token)
+
+    app.add_middleware(BodyLimitMiddleware, api_cfg=api_cfg)  # added last, so it runs first
 
     async def _read_image(file: UploadFile) -> bytes:
         """Validate an upload and return its bytes: allowed content type, and not over the size cap.
@@ -265,7 +268,8 @@ def create_app() -> FastAPI:
     # visitor's record is a 404, the same as one that does not exist.
     @app.get("/records/{record_id}", response_model=HazardRecord)
     def get_record(record_id: str, request: Request, response: Response) -> HazardRecord:
-        found = rag().get_record(record_id, session_for(request, response))
+        svc, session = caller(request, response, "query")
+        found = svc.get_record(record_id, session)
         if found is None:
             raise HTTPException(404, "record not found")
         return found
