@@ -232,11 +232,12 @@ def _stub_trace(frame: np.ndarray, chosen: DefectSettings) -> TracedDefects:
 
 def _stub_defects(frame: np.ndarray) -> list[Defect]:
     h, w = frame.shape[:2]  # shape is (height, width, channels)
-    # Stub only: class names/ids are placeholders, not the RDD2022 label map (defects/labels.py).
+    # Stub only: the box and confidence are made up, but the class is a real RDD2022 one (D40, class
+    # 4 as in tile_defects.py), so Search filters and descriptions treat it like real output.
     return [
         Defect(
             cls=4,
-            name="pothole",
+            name="D40",
             confidence=0.84,
             box=(0.42 * w, 0.78 * h, 0.52 * w, 0.88 * h),
             patch_row=6,

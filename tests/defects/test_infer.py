@@ -92,7 +92,7 @@ def test_stubs_on_still_returns_the_stub(monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.setenv("USE_STUBS", "1")
     config.get_config.cache_clear()
     try:
-        assert find_defects(white_frame())[0].name == "pothole"
+        assert find_defects(white_frame())[0].name == "D40"
     finally:
         config.get_config.cache_clear()
 
@@ -198,7 +198,7 @@ def test_the_stub_trace_has_a_tile_grid_and_the_stub_defect(
     try:
         traced = trace_defects(white_frame())
         assert traced.tiles and all(t.status == "scored" for t in traced.tiles)
-        assert [d.name for d in traced.merged()] == ["pothole"]
+        assert [d.name for d in traced.merged()] == ["D40"]
         assert find_defects(white_frame())[0] == traced.merged()[0]
     finally:
         config.get_config.cache_clear()
