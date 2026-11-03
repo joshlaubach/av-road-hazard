@@ -6,12 +6,13 @@ Purpose: entry point for av-road-hazard, a system that fuses road-object detecti
 
 *Photo: Nienaber, Kroon and Booysen, Stellenbosch University (CC0).*
 
-> **Status (2026-11-02): the core pipeline works and has been measured. The search feature is built but not shown to the public yet.**
+> **Status (2026-11-03): the pipeline, the three web pages, the hardened API and the Docker setup are built and tested. The hosted demo runs on a private Hugging Face Space and is not public yet.**
 >
-> - **Built and measured:** the object finder, the road finder, the crack-and-pothole finder, the step that combines them, and the tools that grade them. They run on real models, and every number below comes from `eval/results.json`.
-> - **Built, with a web page for trying a photo:** the "Analyze" page (upload a photo, see boxes and a 0 to 100 gauge).
-> - **Built and tested, but only on 404 test photos:** search. You can ask "which photos have a pothole near a person?" and get an answer that points to real photos. A check in the code rejects any answer that cites a photo that was not found.
-> - **Not built yet:** the Search and Settings pages in the web UI, running the Docker setup for real, and the hosted public demo.
+> - **Built and measured:** the object finder, the road finder, the crack-and-pothole finder, the step that combines them, and the tools that grade them. They run on real models, and every number in the table below comes from `eval/results.json`.
+> - **Built, with web pages:** "Analyze" (upload a photo, see boxes and a 0 to 100 gauge, replay how it was found), "Search" (ask questions about saved photos) and "Settings" (choose who writes the answers).
+> - **Search, measured twice:** on 404 nuScenes test photos (in the table) and on a set of 40 road-damage photos (one check run by hand, described under the table). A check in the code rejects any answer that cites a photo that was not found.
+> - **Runs in Docker with the real models,** on a CPU and on an NVIDIA graphics card, tested on one PC.
+> - **Hosted demo:** a Hugging Face Space plus Qdrant Cloud, private for now. It goes public only after a release review by someone who has not seen the build.
 > - **The honest limit:** the pipeline finds large, close damage and mostly misses small, far-away damage.
 >
 > [docs/ROADMAP.md](docs/ROADMAP.md) is the live list of what is done and what comes next.
@@ -119,7 +120,19 @@ Each analyzed photo becomes a record. The search part lets you ask questions acr
 3. **Answer.** A language model (Claude, or a model running on your own computer) reads only the question and the records that were found. It must cite photo ids in brackets.
 4. **Check.** The code checks every cited id against the records that were found. A made-up id is reported and hidden. If nothing was found, the language model is not called at all.
 
-This is called **grounded** answering: the answer may only use what search found. Each visitor has a private session, so one visitor can never see another visitor's uploaded photos. The measured results are in the table below. In short, among the top 5 results, search finds about half of the photos it should (0.54 when text and photo are fused; random order finds 0.18), and the written answers cite exactly the right photos on most of the questions that have an answer. The questions come from the nuScenes labels, so the match against how real people phrase questions is untested.
+This is called **grounded** answering: the answer may only use what search found. Each visitor has a private session, so one visitor can never see another visitor's uploaded photos. The measured results are in the table below. In short, among the top 5 results, search finds about half of the photos it should (0.54 when text and photo are fused; random order finds 0.18), and the written answers cite exactly the right photos on most of the questions that have an answer. The questions come from the nuScenes labels, so the match against how real people phrase questions is untested. A second search check on 40 road-damage photos is described under the results table.
+
+## The hosted demo
+
+The demo is one container on a Hugging Face Space (CPU only), with the photo index kept in Qdrant Cloud. It is private while the release review is pending, so there is no public link yet.
+
+- **The photos.** 60 demo photos: 40 road photos from outside the United States (the Czech Republic, India, Japan and Norway) from the RDD2022 dataset, and 20 pothole photos from Stellenbosch University in South Africa. The site's `/credits` page names the authors. Visitors can also upload their own photo, which stays in their private session.
+- **The models.** The object finder (COCO weights), the road finder (comma10k weights) and the photo-search model (OpenCLIP) are public downloads. The damage classifier is ours, trained on RDD2022 road tiles, kept in a private repo and fetched at start. Every file is checked against a fixed fingerprint (a SHA-256 hash), and the container stops if one does not match. No nuScenes photos and no detector fine-tuned on nuScenes are in the demo.
+- **Limits.** The Space runs on a free-tier CPU, so analyzing a new photo takes seconds, and the Space may go to sleep when nobody visits. The time on the hosted Space has not been measured yet; in Docker on a CPU it was about 5 to 6 seconds. With no language model on the Space, Search shows the matching photos and says the written answer is unavailable, unless the visitor supplies their own Claude key.
+- **Safety.** Uploads are size-limited and rate-limited. A photo is turned into pixels and dropped, so any location data in it is never stored.
+- **Licenses.** The demo is non-commercial. The photo licenses rest on the owner's assumption, not a verified license (see Limits below).
+
+How it is put together and how to deploy it: [docs/DEPLOY.md](docs/DEPLOY.md). What a reviewer checks before it goes public: [docs/RELEASE_REVIEW.md](docs/RELEASE_REVIEW.md).
 
 ## What we have measured so far
 
@@ -152,6 +165,8 @@ All numbers below come from our own evaluation code (`eval/`). Where a number co
 
 Rows marked *pasted-patch* come from a test that pastes real damage patches onto driving photos, because no dataset has both objects and road damage labeled. It is easier than real damage, so those numbers are not real-world accuracy.
 
+**Search on 40 road-damage photos (run by hand with `python -m tools.eval_corpus_retrieval`, not in `eval/results.json`).** Five questions made before the run: a road with a longitudinal crack, a transverse crack, an alligator crack, a pothole, and no damage. A photo counts as right when the dataset's own boxes say so. Among the top 5 results, random order finds 0.32 of the right photos, searching with the photo's numbers alone finds 0.36 (90% range 0.24 to 0.48), searching with the written description alone finds 0.76 (0.64 to 0.88), and the two fused find 0.52 (0.36 to 0.68). The fused search beat random by the margin fixed in advance, but barely. Photo search alone is no better than random here, because damage is a small part of a 600 px photo, and the written description does most of the work. With only 5 questions and one photo set, treat this as a direction, not a guarantee.
+
 The pattern: **large damage close to the camera is found, and small, far damage mostly is not.** A pothole 30 meters away is only a few pixels wide. We report this as a limit, not a detail we can easily fix. The "effective range" row above says how large a defect must look to be found.
 
 ## What did not work
@@ -169,15 +184,15 @@ The pattern: **large damage close to the camera is found, and small, far damage 
 - **No ground truth for fusion.** No dataset has both objects and road damage labeled. The paste test is the substitute, and it is easier than real damage.
 - **Severity is a guess from the damage type** (single cracks low, alligator crack medium, pothole high). It ignores the size and depth of the damage, and the weights were chosen by judgment, not measured.
 - **Photos, not video.** One photo at a time. There is no tracking over time and no live camera input.
-- **Licenses.** nuScenes images and any model trained on them stay on this machine and are non-commercial. RDD2022 names no license in one source and CC BY-SA 4.0 in another, so we use the strictest reading, never use its US subset, and publish none of its images. See [docs/DATA_AND_LICENSES.md](docs/DATA_AND_LICENSES.md).
+- **Licenses.** nuScenes images and any model fine-tuned on them stay on this machine and are non-commercial; the hosted demo uses none of them. The demo shows 40 non-US RDD2022 photos and 20 Stellenbosch photos, credited, as a non-commercial demo. RDD2022 names no license in one source and CC BY-SA 4.0 in another, so we use the strictest reading and never use its US subset. The photo licenses, and a few model licenses (the COCO weights, the road model's pre-training), rest on the owner's assumption that non-commercial use is fine. They are not verified and no lawyer has reviewed them. A photo is removed if its author asks. See [docs/DATA_AND_LICENSES.md](docs/DATA_AND_LICENSES.md).
 - **Evaluation is mostly, not fully, automatic** ([ADR 0007](docs/adr/0007-no-hand-labeling-eval.md)). The two hand steps are the road outlines drawn on 30 photos for the paste test and one person's review of flagged tiles.
 
-## Not built yet
+## Not done yet
 
-- **Web UI, the rest.** A Search page and a Settings page. The Analyze page (photo, boxes, a 0 to 100 gauge, plain-language explanations and an animated walkthrough) exists.
-- **Docker for real.** The Docker files have never been run with the real models, so treat them as a sketch.
-- **Hardening for the public.** Request size limits and a security review of the exact bundle that will go online.
-- **Hosted demo.** Hugging Face Spaces plus the free tier of Qdrant Cloud, about $20 a month at most. A set of 40 non-US RDD2022 photos and 20 CC0 pothole photos from Stellenbosch is ready for it. The RDD2022 photos stay on this machine until their license is verified.
+- **The release review.** A person who has not seen the build checks the exact bundle that will go online ([docs/RELEASE_REVIEW.md](docs/RELEASE_REVIEW.md)). Until that is done, the Space stays private.
+- **The public link and the walkthrough video.**
+- **Claude as the hosted answer writer.** Not tried in Docker or on the Space (it needs a key and a live test of the monthly spend cap).
+- **A second machine.** The Docker images have been run on one PC only. The hosted Space has had a first manual check, not a full smoke test.
 
 ## Try it
 
@@ -197,7 +212,15 @@ cd web && npm ci && npm run dev      # then open http://localhost:3000, with the
 
 It shows the hazard score on a 0 to 100 gauge, explains each result in plain language, and can replay what the pipeline did to your photo (see [web/README.md](web/README.md)).
 
-To run the real models on a photo, set `USE_STUBS=0` and the `DEFECT_CHECKPOINT` environment variable (the app reads real environment variables, not `.env`), then run `python -m tools.smoke_analyze`. All commands are in [AGENTS.md](AGENTS.md) section 4.
+To run the real models in Docker (the weights must be on disk first; the commands and the mounts are described in `docker/compose.real.yml`):
+
+```
+docker compose -f docker/docker-compose.yml -f docker/compose.real.yml up -d --build api
+# add: --profile llm            for a local language model (Ollama)
+# add: -f docker/compose.gpu.yml   for an NVIDIA graphics card (CUDA 12.8)
+```
+
+To run the real models on a photo without Docker, set `USE_STUBS=0` and the `DEFECT_CHECKPOINT` environment variable (the app reads real environment variables, not `.env`), then run `python -m tools.smoke_analyze`. All commands are in [AGENTS.md](AGENTS.md) section 4.
 
 ## Where to read more
 
