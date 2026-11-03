@@ -27,7 +27,7 @@ services:
       - qdrant_storage:/qdrant/storage
 
   ollama:
-    image: ollama/ollama:latest    # pin an exact tag in workstream E
+    image: ollama/ollama:0.40.13   # pinned 2026-11-03 (same image as latest that day)
     profiles: ["llm"]
     ports:
       - "11434:11434"
