@@ -1,0 +1,14 @@
+# Real models instead of stubs (CPU image). Mounts the weights read-only; none are baked into the image.
+# Usage: docker compose -f docker/docker-compose.yml -f docker/compose.real.yml up -d --build api
+# Needs: checkpoints/ (detector and road model) and the chosen classifier in runs/tile-fold0-hn2/fold0/.
+services:
+  api:
+    build:
+      args:
+        WITH_ML: "1"
+    environment:
+      USE_STUBS: "0"
+      DEFECT_CHECKPOINT: /app/classifier/best.pt
+    volumes:
+      - ../checkpoints:/app/checkpoints:ro
+      - ../runs/tile-fold0-hn2/fold0:/app/classifier:ro
