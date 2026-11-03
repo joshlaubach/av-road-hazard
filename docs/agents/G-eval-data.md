@@ -54,7 +54,7 @@ Layers from ENGINEERING.md section 3:
 - `eval/results.json` plus README table generated
 
 ## Known pitfalls
-- RDD2022 license unverified: do not publish pasted images or samples.
+- RDD2022 license rests on the owner's assumption (see docs/DATA_AND_LICENSES.md): keep pasted images and samples out of git; only the decided demo corpus may be shown, with credits.
 - Pasted patches are easier than real defects: never present synthetic results as real-world accuracy.
 - v1.0-mini confounds (night and location perfectly correlated; no rain).
 - Split by scene, never by frame; touch the test split once per release.

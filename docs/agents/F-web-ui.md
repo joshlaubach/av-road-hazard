@@ -52,7 +52,7 @@ Layers from ENGINEERING.md section 3:
 ## Known pitfalls
 - React/Next.js was chosen over Streamlit; the timeline tradeoff is accepted and mitigated by the OpenAPI-generated client.
 - OpenAPI is the single contract; do not hand-write API types.
-- No nuScenes images; RDD2022 images only after license verification.
+- No nuScenes images; RDD2022 and Stellenbosch images only as the decided demo corpus, with credits and a non-commercial notice.
 - Charts and styling: avoid templated defaults.
 
 ## Debugging hints
