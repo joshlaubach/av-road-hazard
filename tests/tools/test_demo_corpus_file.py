@@ -1,15 +1,17 @@
-"""The hosted-corpus data file (web/src/lib/demo_corpus.json): the decided sources, each credited."""
+"""The hosted-corpus data file (web/src/lib/demo_corpus.json): decided sources, each credited."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 CORPUS_FILE = Path("web/src/lib/demo_corpus.json")
 
 
-def _corpus() -> dict:
-    return json.loads(CORPUS_FILE.read_text(encoding="utf-8"))
+def _corpus() -> dict[str, Any]:
+    data: dict[str, Any] = json.loads(CORPUS_FILE.read_text(encoding="utf-8"))
+    return data
 
 
 def test_the_decided_corpus_is_40_rdd2022_and_20_stellenbosch_images() -> None:
