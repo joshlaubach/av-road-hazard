@@ -63,7 +63,7 @@ Layers from ENGINEERING.md section 3:
 - Over-firing: the source flagged 31 of 64 patches at threshold 0.5.
 - Overfit gap 0.92 train vs 0.73 val.
 - Domain gap: RDD2022 close-ups vs wide frames; scale mismatch, no negatives, perspective.
-- RDD2022 license unverified: no RDD2022 images in committed fixtures or docs.
+- RDD2022 license rests on the owner's assumption (see docs/DATA_AND_LICENSES.md): still no RDD2022 images in committed fixtures or docs.
 - Name collision: do not create a top-level `src/` package; source has `src/utils/`.
 - Coordinate bugs: tile to frame, width/height order, resize scale.
 
