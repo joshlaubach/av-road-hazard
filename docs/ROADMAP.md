@@ -2,7 +2,7 @@ Purpose: where av-road-hazard stands today, what is being worked on now, what to
 
 # Roadmap
 
-Last updated: 2026-11-02 (Settings view added to Done). Whoever finishes or changes a row should update this file in the same PR. If a row here disagrees with the code, the code is right and this file is out of date.
+Last updated: 2026-11-02 (stub answer backend added to Done). Whoever finishes or changes a row should update this file in the same PR. If a row here disagrees with the code, the code is right and this file is out of date.
 
 The order follows the core-first gate ([ADR 0011](adr/0011-core-first-gate.md)). The core (detector, defect classifier, fusion and the synthetic fusion evaluation) has to give reportable numbers before RAG, the web UI or deployment go beyond stubs.
 
@@ -10,6 +10,7 @@ The order follows the core-first gate ([ADR 0011](adr/0011-core-first-gate.md)).
 
 | Piece | State | Evidence |
 |---|---|---|
+| Stub answers for Search | Done 2026-11-02 | `rag/llm.py` and `rag/service.py`: default stub searches for llama and claude cite the first two retrieved frame ids without constructing a model client or spending budget; injected models still obey the cap, and the non-stub path still uses `make_tiers`. Six new parameterized test cases: five failed before the implementation and passed after; the non-stub case passed both times. `.venv/Scripts/python.exe -m pytest`: 1115 passed, 4 skipped, 1 deselected; `-m mypy`: no issues in 191 files. Repository-wide Ruff checks found only pre-existing untracked notebook issues; both passed excluding those two notebooks, and changed-file Ruff checks passed. |
 | Contracts, stub API, CI, Docker skeleton | Done | `fusion/schema.py`, `openapi.json`, `.github/workflows/ci.yml`. The Docker build and compose file have never been run (see [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)). |
 | Object detector | Done, used zero-shot | Pretrained COCO Faster R-CNN with pinned weights ([ADR 0014](adr/0014-object-detector.md)). On nuScenes mini at score 0.5, the default MobileNet model finds 38% of pedestrians (90% range 35-42%) and 21% of cyclists (14-31%, from only 57 objects). Its CPU speed meets the p95 limit of 2 s at 24, 4 and 2 threads. |
 | Road mask | Done | comma10k model, pinned and hash-checked, with `min_road` set to 0.4 ([ADR 0013](adr/0013-road-mask-model.md)). It is wired into `api/pipeline.py`. |

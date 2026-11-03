@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import httpx
 import numpy as np
 import pytest
 
@@ -10,7 +11,7 @@ from fusion.schema import DefectRecord, HazardRecord, Meta, Object
 from rag.embed import HashEmbedder
 from rag.guards import Busy
 from rag.index import CORPUS, Filters, new_session_id
-from rag.llm import LLMUnavailable
+from rag.llm import LLMUnavailable, check_citations
 from rag.service import (
     BUDGET_NOTICE,
     IMAGE_ONLY_ANSWER,
@@ -66,6 +67,81 @@ class Scripted:
 def service(reply: object = "A pothole [p1].", **rag: Any) -> tuple[RagService, Scripted]:
     llm = Scripted(reply)
     return RagService(config(**rag), HashEmbedder(), tiers_for=lambda kind: [llm]), llm
+
+
+@pytest.mark.parametrize("kind", ["llama", "claude"])
+def test_default_stub_answers_cite_retrieved_photos(kind: str) -> None:
+    svc = RagService(config(), HashEmbedder())
+    sid = new_session_id()
+    svc.add_photos(
+        sid, [record("p1"), record("p2"), record("p3")], [frame(9), frame(20), frame(30)]
+    )
+
+    got = svc.query(sid, "road", None, None, 3, kind)
+
+    ids = [r.frame_id for r in got.records]
+    cited, unknown = check_citations(got.answer, ids)
+    assert len(ids) == 3 and not unknown and list(cited) == got.cited == ids[:2]
+    assert got.llm == kind and got.model is None and got.notice is None
+
+
+@pytest.mark.parametrize("kind", ["llama", "claude"])
+def test_default_stubs_never_construct_real_models(
+    kind: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def forbidden(*args: Any, **kwargs: Any) -> None:
+        raise AssertionError("real model construction under stubs")
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-api03-" + "FAKE" * 12)
+    monkeypatch.setattr("rag.service.make_tiers", forbidden)
+    monkeypatch.setattr("rag.llm.ClaudeLLM", forbidden)
+    monkeypatch.setattr("rag.llm.OllamaLLM", forbidden)
+    monkeypatch.setattr("rag.llm.anthropic.Anthropic", forbidden)
+    monkeypatch.setattr(httpx.Client, "request", forbidden)
+    svc = RagService(config(), HashEmbedder())
+    sid = new_session_id()
+    svc.add_photos(sid, [record("p1")], [frame(9)])
+
+    got = svc.query(sid, "road", None, None, 1, kind)
+
+    assert got.cited == ["p1"] and got.notice is None
+
+
+def test_default_stub_answer_ignores_zero_spend_cap_but_injected_model_does_not() -> None:
+    cfg = config(daily_usd=0.0, monthly_usd=0.0)
+    sid = new_session_id()
+    stub = RagService(cfg, HashEmbedder())
+    scripted = Scripted("Road [p1].")
+    injected = RagService(cfg, HashEmbedder(), tiers_for=lambda kind: [scripted])
+    for svc in (stub, injected):
+        svc.add_photos(sid, [record("p1")], [frame(9)])
+
+    got = stub.query(sid, "road", None, None, 1, "claude")
+    capped = injected.query(sid, "road", None, None, 1, "claude")
+
+    assert got.cited == ["p1"] and got.notice is None
+    assert capped.answer == BUDGET_NOTICE and capped.notice == BUDGET_NOTICE
+    assert scripted.calls == 0
+
+
+def test_non_stub_service_still_uses_make_tiers(monkeypatch: pytest.MonkeyPatch) -> None:
+    cfg = config()
+    cfg["pipeline"]["use_stubs"] = False
+    scripted = Scripted("Road [p1].")
+    kinds: list[str] = []
+
+    def fake_tiers(kind: str, *args: Any, **kwargs: Any) -> list[Scripted]:
+        kinds.append(kind)
+        return [scripted]
+
+    monkeypatch.setattr("rag.service.make_tiers", fake_tiers)
+    svc = RagService(cfg, HashEmbedder())
+    sid = new_session_id()
+    svc.add_photos(sid, [record("p1")], [frame(9)])
+
+    got = svc.query(sid, "road", None, None, 1, "llama")
+
+    assert kinds == ["llama"] and got.answer == "Road [p1]."
 
 
 def test_a_visitor_finds_their_own_photos_and_cannot_find_anyone_elses() -> None:

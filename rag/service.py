@@ -25,6 +25,7 @@ from rag.llm import (
     LLM,
     Answer,
     LLMUnavailable,
+    StubLLM,
     answer_with_escalation,
     clean_question,
     make_tiers,
@@ -74,8 +75,11 @@ class RagService:
         self.index_limiter = RateLimiter(int(rag["uploads_per_minute"]))
         self.slots = Slots(int(rag["parallel_jobs"]))
         llm_cfg = cfg["llm"]
+        self._default_stub = self._stubs and tiers_for is None
         self._tiers_for = tiers_for or (
-            lambda kind: make_tiers(kind, llm_cfg, on_usage=self.spend.record)
+            (lambda kind: [StubLLM(kind)])
+            if self._default_stub
+            else (lambda kind: make_tiers(kind, llm_cfg, on_usage=self.spend.record))
         )
         self._recent: OrderedDict[tuple[str, str], HazardRecord] = OrderedDict()
         self._seen: OrderedDict[str, float] = OrderedDict()
@@ -203,7 +207,7 @@ class RagService:
 
     def _answer(self, llm: str, question: str, hits: Sequence[Hit]) -> Answer:
         tiers = self._tiers_for(llm)
-        if llm == "claude" and hits:
+        if llm == "claude" and hits and not self._default_stub:
             self.spend.check()
         with self.slots:
             return answer_with_escalation(tiers, question, hits)
