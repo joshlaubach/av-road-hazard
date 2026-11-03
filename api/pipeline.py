@@ -16,7 +16,7 @@ from api.models import TracedAnalysis
 from api.trace import build_trace
 from common.config import get_config
 from common.debug import dump
-from defects.infer import find_defects, trace_defects
+from defects.infer import DefectsUnavailable, find_defects, trace_defects
 from defects.road_crop import (
     MODEL_SUBDIR,
     REQUIRED_FILES,
@@ -26,10 +26,12 @@ from defects.road_crop import (
 from fusion.config import load_fusion_config
 from fusion.fuse import RoadMask, fuse
 from fusion.schema import HazardRecord, Source
-from perception.detector import DETECTOR_SUBDIR
+from perception.detector import DETECTOR_SUBDIR, DetectorUnavailable
 from perception.infer import detect
 
 log = logging.getLogger("api")
+
+WARM_UP_SIZE = 224  # pixels per side of the blank frame used to load every model once
 
 
 class InvalidImage(ValueError):
@@ -131,6 +133,42 @@ class Pipeline:
         except (ModelIntegrityError, OSError, ImportError, RuntimeError) as exc:
             log.error("road mask unavailable, in_road stays unknown: %s", exc)
             return None
+
+    def warm_up(self) -> dict[str, str]:
+        """Load every model now by running a blank frame through it, and say which ones loaded.
+
+        "ready" means the model loaded and ran; "unavailable" means it did not (the reason is
+        logged). A failure never stops the server: /health reports it. Nothing is loaded with
+        stubs on, so the result is empty.
+        """
+        if get_config()["pipeline"]["use_stubs"]:
+            return {}
+        frame = np.full((WARM_UP_SIZE, WARM_UP_SIZE, 3), 128, dtype=np.uint8)
+
+        def load_road_model() -> None:
+            if self.road_mask(frame) is None:  # road_mask has already logged why
+                raise RuntimeError("road model unavailable")
+
+        checks: dict[str, Callable[[], object]] = {
+            "perception": lambda: detect(frame),
+            "defects": lambda: find_defects(frame),
+            "road_mask": load_road_model,
+        }
+        states: dict[str, str] = {}
+        for name, check in checks.items():
+            try:
+                check()
+                states[name] = "ready"
+            except (
+                DetectorUnavailable,
+                DefectsUnavailable,
+                OSError,
+                ImportError,
+                RuntimeError,
+            ) as exc:
+                log.error("%s did not load: %s", name, exc)
+                states[name] = "unavailable"
+        return states
 
     def analyze(self, data: bytes, source: Source = "upload") -> HazardRecord:
         """Run one image through detection, defect finding and fusion; return a HazardRecord."""
