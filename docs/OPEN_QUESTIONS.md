@@ -69,7 +69,7 @@ Status of every item is open. No due date has been set by the owner, so the Due 
 | R4 | Set `min_road` from more human-annotated tiles (the current 0.4 is provisional, from 148 tiles) | Owner | Not set | Open | Annotate more tiles and re-measure drop and crack-loss rates before changing the default |
 | R5 | Nordic snow robustness check (model trained mostly on US and highway frames) | Owner | Not set | Open | Test on Nordic snow frames before relying on the mask there |
 | R6 | Wire the road mask into `api/pipeline.py` and `defects.infer.find_defects` | Owner | Not set | Done | Wired (PRs #31-#33) and the detector now exists (ADR 0014). Re-measuring the classifier effect on annotated data is still open |
-| R7 | CI audits only `requirements.lock` (`pip-audit`), so the `ml` extra, now including `segmentation-models-pytorch`, `safetensors` and `huggingface_hub` with their transitive packages, is not audited for known vulnerabilities | Owner | Not set | Open | Run `pip-audit` on an environment installed with `.[ml]`, or lock and audit the extra; the weights are hash-pinned and loaded from safetensors, so the runtime risk is low |
+| R7 | CI audits only `requirements.lock` (`pip-audit`), so the `ml` extra, now including `segmentation-models-pytorch`, `safetensors` and `huggingface_hub` with their transitive packages, is not audited for known vulnerabilities | Owner | Not set | Done | Run `pip-audit` on an environment installed with `.[ml]`, or lock and audit the extra; the weights are hash-pinned and loaded from safetensors, so the runtime risk is low. Done 2026-11-03: `uv pip compile pyproject.toml --extra ml --python-platform linux` then `pip-audit -r` found nothing. CI still audits only `requirements.lock` |
 
 ## From ADR 0014 (object detector)
 
@@ -93,7 +93,7 @@ Status of every item is open. No due date has been set by the owner, so the Due 
 | `min_road` from more annotated tiles (R4) | Open |
 | Nordic snow robustness check (R5) | Open |
 | Mask wiring into pipeline and `find_defects` (R6) | Open |
-| Audit of the `ml` extra dependencies (R7) | Open |
+| Audit of the `ml` extra dependencies (R7) | Done 2026-11-03: no known vulnerabilities in the compiled `ml` extra |
 
 ## Assumptions made while writing the docs
 
