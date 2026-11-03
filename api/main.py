@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import base64
 import binascii
+import contextlib
 import logging
 import re
 import threading
 import time
 import uuid
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from importlib import metadata
 
 import numpy as np
@@ -58,8 +59,15 @@ def create_app() -> FastAPI:
     """
     cfg = get_config()
     configure_logging(cfg["logging"]["level"])
-    app = FastAPI(title="av-road-hazard", version="0.1.0")
     pipeline = Pipeline()
+    loaded: dict[str, str] = {}  # what the startup check found, per model; empty with stubs on
+
+    @contextlib.asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        loaded.update(pipeline.warm_up())  # models load now, before the first request
+        yield
+
+    app = FastAPI(title="av-road-hazard", version="0.1.0", lifespan=lifespan)
     api_cfg = cfg["api"]
     rag_holder: list[RagService] = []
     rag_lock = threading.Lock()
@@ -254,7 +262,7 @@ def create_app() -> FastAPI:
     # there), or "unavailable"; the status is "degraded" if any model is unavailable.
     @app.get("/health", response_model=HealthResponse)
     def health() -> HealthResponse:
-        models = model_status(cfg)
+        models = {**model_status(cfg), **loaded}  # loaded beats "files are there"
         return HealthResponse(
             status="degraded" if "unavailable" in models.values() else "ok",
             stubs=bool(cfg["pipeline"]["use_stubs"]),
