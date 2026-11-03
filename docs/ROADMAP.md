@@ -2,7 +2,7 @@ Purpose: where av-road-hazard stands today, what is being worked on now, what to
 
 # Roadmap
 
-Last updated: 2026-11-03 (Docker row closed and moved to Done). Whoever finishes or changes a row should update this file in the same PR. If a row here disagrees with the code, the code is right and this file is out of date.
+Last updated: 2026-11-03 (Docker checkbox ticked). Whoever finishes or changes a row should update this file in the same PR. If a row here disagrees with the code, the code is right and this file is out of date.
 
 The order follows the core-first gate ([ADR 0011](adr/0011-core-first-gate.md)). The core (detector, defect classifier, fusion and the synthetic fusion evaluation) has to give reportable numbers before RAG, the web UI or deployment go beyond stubs.
 
@@ -73,7 +73,7 @@ Do these in order. A row should not start until the one above it has met its exi
 - [ ] The stubs are off by default, and `USE_STUBS` is used only in tests.
 - [ ] Everything the hosted demo shows has a cleared license (RDD2022, COCO weights, road model), and nothing derived from nuScenes is shown.
 - [ ] Uploaded photos are analyzed at full size; any shrinking is for display only.
-- [ ] The Docker build and compose file have been run with real models, and CI is green on `main`.
+- [x] The Docker build and compose file have been run with real models, and CI is green on `main`. Done 2026-11-03 (PRs 101 to 105; CPU image on this PC only, GPU image too; `main` CI green after PRs 105, 106 and 107).
 - [ ] The hosted demo meets the CPU latency target, and the rate limit, request and upload limits and Claude spend cap are tested.
 - [ ] The provisional values (classifier thresholds, `min_road`, detector score 0.5) are either re-measured on more data or marked provisional in the README.
 
