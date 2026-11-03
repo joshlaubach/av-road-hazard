@@ -205,12 +205,18 @@ export function SearchView() {
           {result.answer && (
             <div className="answer">
               <h2>Answer</h2>
-              <p>{numberCitations(result.answer, result.records)}</p>
-              {result.notice && <p className="caution">{result.notice}</p>}
-              <p className="hint">
-                Written by {result.model ?? result.llm}, only from what the analysis found. Check the numbered photos
-                before you rely on it. You can change the writer on the <Link href="/settings">Settings page</Link>.
-              </p>
+              {result.notice ? (
+                // The server sends the same sentence as the answer and as the notice when no model wrote one.
+                <p className="caution">{result.notice}</p>
+              ) : (
+                <>
+                  <p>{numberCitations(result.answer, result.records)}</p>
+                  <p className="hint">
+                    Written by {result.model ?? result.llm}, only from what the analysis found. Check the numbered
+                    photos before you rely on it. You can change the writer on the <Link href="/settings">Settings page</Link>.
+                  </p>
+                </>
+              )}
             </div>
           )}
           {result.records.length === 0 ? (
