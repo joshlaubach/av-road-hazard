@@ -32,3 +32,13 @@ test.describe("Phone layout", () => {
     expect(await hasNoSideScroll(page)).toBe(true);
   });
 });
+
+test("/credits: names both photo sources and says the demo is non-commercial", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Credits and licenses" }).click();
+  await expect(page.getByRole("heading", { name: "Credits and licenses" })).toBeVisible();
+  await expect(page.getByText("RDD2022: Road Damage Detection 2022.")).toBeVisible();
+  await expect(page.getByText(/Stellenbosch University, 2015\./)).toBeVisible();
+  await expect(page.getByText(/This demo is non-commercial/)).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

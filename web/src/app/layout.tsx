@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/arimo"; // shipped with the site: the build never asks Google for a font
 import "katex/dist/katex.min.css";
 import "./globals.css";
+import Link from "next/link";
 import { Nav } from "@/components/Nav";
 
 export const metadata: Metadata = {
@@ -18,6 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Nav />
         {children}
+        <p className="site-links">
+          <Link href="/credits">Credits and licenses</Link>
+        </p>
       </body>
     </html>
   );
