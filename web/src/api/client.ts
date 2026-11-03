@@ -1,6 +1,6 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./schema";
-import type { Analysis } from "./types";
+import type { Analysis, QueryRequest, QueryResponse } from "./types";
 
 /** The API's upload cap (api.max_upload_bytes in configs/default.yaml), checked here first. */
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -30,6 +30,8 @@ export function friendlyError(status: number): string {
       return "I can only read JPEG and PNG photos.";
     case 422:
       return "I could not read that file as a photo. Try a different one.";
+    case 429:
+      return "That is a lot of requests, or this session already holds as many photos as it may. Wait a moment, then try again.";
     case 503:
       return "The models are not ready on the server yet. Try again in a minute.";
     default:
@@ -63,6 +65,36 @@ export async function analyzeImage(file: File, withTrace: boolean): Promise<Anal
     const { data, response } = await client.POST("/analyze", options);
     if (!data) throw new AnalyzeError(response.status, friendlyError(response.status));
     return { record: data, trace: null };
+  } catch (error: unknown) {
+    if (error instanceof AnalyzeError) throw error;
+    throw new AnalyzeError(0, friendlyError(0));
+  }
+}
+
+/** Send photos to the API so they can be searched. Returns the ids of the photos it stored. */
+export async function indexPhotos(files: File[]): Promise<string[]> {
+  for (const file of files) {
+    const problem = checkFile(file);
+    if (problem) throw new AnalyzeError(problem === friendlyError(413) ? 413 : 415, problem);
+  }
+  const form = new FormData();
+  for (const file of files) form.append("files", file);
+  try {
+    const { data, response } = await client.POST("/index", { body: { files: [] }, bodySerializer: () => form });
+    if (!data) throw new AnalyzeError(response.status, friendlyError(response.status));
+    return data.indexed;
+  } catch (error: unknown) {
+    if (error instanceof AnalyzeError) throw error;
+    throw new AnalyzeError(0, friendlyError(0));
+  }
+}
+
+/** Ask a question or search by photo. The answer is written only from the photos it finds. */
+export async function searchPhotos(request: QueryRequest): Promise<QueryResponse> {
+  try {
+    const { data, response } = await client.POST("/query", { body: request });
+    if (!data) throw new AnalyzeError(response.status, friendlyError(response.status));
+    return data;
   } catch (error: unknown) {
     if (error instanceof AnalyzeError) throw error;
     throw new AnalyzeError(0, friendlyError(0));

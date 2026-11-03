@@ -16,3 +16,7 @@ export interface Analysis {
   record: HazardRecord;
   trace: Trace | null;
 }
+
+export type QueryRequest = components["schemas"]["QueryRequest"];
+export type QueryFilters = components["schemas"]["QueryFilters"];
+export type QueryResponse = components["schemas"]["QueryResponse"];

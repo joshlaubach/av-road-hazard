@@ -2,7 +2,7 @@ Purpose: how to run, test and change the av-road-hazard web UI (Next.js and Type
 
 # Web UI
 
-The Analyze view: choose a road photo (or one of two bundled examples) and see what the pipeline found, in plain language, with the hazard score on a 0 to 100 gauge. The math is behind an expandable section and typeset with KaTeX.
+Two pages, a tab bar apart. The Search page (`/search`): add photos, ask a question or search with a photo, and read an answer whose citations are the numbered result cards; thumbnails show only for photos you added in this visit. The Analyze view: choose a road photo (or one of two bundled examples) and see what the pipeline found, in plain language, with the hazard score on a 0 to 100 gauge. The math is behind an expandable section and typeset with KaTeX.
 
 ## Run it
 
