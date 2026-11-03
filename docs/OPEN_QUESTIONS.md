@@ -16,7 +16,7 @@ Every recommended default is a recommendation, not a decision. Owner is the repo
 | 7 | Experiment tracker: MLflow vs W&B <!-- F:R-13 --> | Owner | Sprint 1 | MLflow (self-hostable, free; UNVERIFIED preference) |
 | 8 | License for `LICENSE` | Owner | Before push | MIT (applied as the default; revisit if the owner prefers another) |
 | 9 | Accept core-first gating (ADR 0011)? <!-- F:Q-03 --> | Owner | Before Sprint 2 | Closed 2026-10-26: accepted (ADR 0011). D, F and I stay at stub level until A, B, C and the synthetic fusion evaluation produce numbers |
-| 10 | Hosted corpus source: RDD2022 samples (after license verification), the owner's own photos, or both | Owner | Before deploy | Open. Decide before the hosted deploy. The licence no longer blocks RDD2022 samples: on 2026-11-03 the owner decided not to wait for the author replies and to assume they approve all non-commercial use unless told otherwise (an assumption, not a verified licence). Choose the corpus: non-US RDD2022 samples, the owner's own photos, or both |
+| 10 | Hosted corpus source: RDD2022 samples, the owner's own photos, or both | Owner | Before deploy | Done 2026-11-03. Decided: both: the 40 non-US RDD2022 demo images (Czech Republic, India, Japan, Norway) plus the 20 Stellenbosch photos, with each author credited on the page, the demo stated as non-commercial, and the corpus kept as a data file so one source can be removed without a code change; the owner's own photos are optional. The licence rests on the owner's assumption recorded in DATA_AND_LICENSES.md, not on a verified licence |
 
 ## Verification needed (UNVERIFIED facts)
 

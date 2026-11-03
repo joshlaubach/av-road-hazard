@@ -2,7 +2,7 @@ Purpose: where av-road-hazard stands today, what is being worked on now, what to
 
 # Roadmap
 
-Last updated: 2026-11-03 (licence decision: proceed without author replies). Whoever finishes or changes a row should update this file in the same PR. If a row here disagrees with the code, the code is right and this file is out of date.
+Last updated: 2026-11-03 (hosted corpus decided). Whoever finishes or changes a row should update this file in the same PR. If a row here disagrees with the code, the code is right and this file is out of date.
 
 The order follows the core-first gate ([ADR 0011](adr/0011-core-first-gate.md)). The core (detector, defect classifier, fusion and the synthetic fusion evaluation) has to give reportable numbers before RAG, the web UI or deployment go beyond stubs.
 
@@ -62,7 +62,7 @@ Do these in order. A row should not start until the one above it has met its exi
 
 | # | What to build | Finished when | Suggested branch |
 |---|---|---|---|
-| 1 | Clear the licenses | D1, R1, R2 and the RDD2022 license question (working rule recorded 2026-10-26; on 2026-11-03 the owner decided not to wait for the author replies and to assume the RDD2022 and Stellenbosch authors approve all non-commercial use unless they say otherwise, an assumption and not a verified licence, recorded in `docs/DATA_AND_LICENSES.md`) are closed or accepted, and the hosted corpus is chosen (open question 10: non-US RDD2022 samples, the owner's own photos, or both; the demo corpus is picked, see Done 2026-11-01; fetching the Stellenbosch README with the licence text is now optional) | none, this is a decision |
+| 1 | Clear the licenses | D1, R1, R2 and the RDD2022 license question (working rule recorded 2026-10-26; on 2026-11-03 the owner decided not to wait for the author replies and to assume the RDD2022 and Stellenbosch authors approve all non-commercial use unless they say otherwise, an assumption and not a verified licence, recorded in `docs/DATA_AND_LICENSES.md`) are closed or accepted, and the hosted corpus is chosen (open question 10, decided 2026-11-03: the 40 non-US RDD2022 demo images plus the 20 Stellenbosch photos, with credits; the owner's own photos are optional; fetching the Stellenbosch README with the licence text is now optional). The licence-side work is therefore done apart from D1, R1 and R2 | none, this is a decision |
 | 2 | Release review, before anything goes online | Someone who has not seen the build checks contracts, secrets, hardcoded paths and license boundaries in the exact code and bundle that will be deployed. Any change after the review, including fixes for its findings, needs a fresh look at that change. | none |
 | 3 | Deploy | That reviewed bundle is running on an HF Space with Qdrant Cloud, outputs for the sample set are cached, a smoke check passes on the live demo, and the walkthrough video is recorded | `agent/deploy` |
 

@@ -30,7 +30,7 @@ Third-party datasets (nuScenes, RDD2022, MVTec AD) have their own terms and are 
 
 ## Hosted corpus
 
-Alternative datasets for the hosted corpus were searched and none had a verifiable license. Options left: the maintainer's own photos (no license risk), plus non-US RDD2022 samples (non-commercial, with attribution; approved per the owner 2026-10-27). Decision on the licence side, 2026-11-03: the owner proceeds without waiting for replies, on the assumption stated under RDD2022 above, so non-US RDD2022 samples may be used in the non-commercial demo with attribution. Which corpus the demo uses (RDD2022 samples, the owner's own photos, or both) is still open; see [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). <!-- F:L-06 -->
+Alternative datasets for the hosted corpus were searched and none had a verifiable license. Options left: the maintainer's own photos (no license risk), plus non-US RDD2022 samples (non-commercial, with attribution; approved per the owner 2026-10-27). Decision on the licence side, 2026-11-03: the owner proceeds without waiting for replies, on the assumption stated under RDD2022 above, so non-US RDD2022 samples may be used in the non-commercial demo with attribution. Corpus decided 2026-11-03 (open question 10): both: the 40 non-US RDD2022 demo images (Czech Republic, India, Japan, Norway) plus the 20 Stellenbosch photos, with each author credited on the page, the demo stated as non-commercial, and the corpus kept as a data file so one source can be removed without a code change; the owner's own photos are optional. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). <!-- F:L-06 -->
 
 ## Hosted demo data model
 
