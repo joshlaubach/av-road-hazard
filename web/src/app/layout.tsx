@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "katex/dist/katex.min.css";
 import "./globals.css";
+import { Nav } from "@/components/Nav";
 
 const display = Fraunces({ subsets: ["latin"], variable: "--f-display", display: "swap" });
 const body = IBM_Plex_Sans({
@@ -28,7 +29,10 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Nav />
+        {children}
+      </body>
     </html>
   );
 }
