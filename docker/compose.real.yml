@@ -1,6 +1,8 @@
 # Real models instead of stubs (CPU image). Mounts the weights read-only; none are baked into the image.
 # Usage: docker compose -f docker/docker-compose.yml -f docker/compose.real.yml up -d --build api
-# Needs: checkpoints/ (detector and road model) and the chosen classifier in runs/tile-fold0-hn2/fold0/.
+# Needs: checkpoints/ (detector and road model), the chosen classifier in runs/tile-fold0-hn2/fold0/, and
+# the OpenCLIP photo-search weights in your Hugging Face cache (HF_CACHE_DIR, default ~/.cache/huggingface/hub;
+# fetched once by running Search on the host). The container is offline: it never downloads anything.
 services:
   api:
     build:
@@ -9,6 +11,9 @@ services:
     environment:
       USE_STUBS: "0"
       DEFECT_CHECKPOINT: /app/classifier/best.pt
+      HF_HOME: /hf
+      HF_HUB_OFFLINE: "1"
     volumes:
       - ../checkpoints:/app/checkpoints:ro
       - ../runs/tile-fold0-hn2/fold0:/app/classifier:ro
+      - ${HF_CACHE_DIR:-${USERPROFILE:-${HOME}}/.cache/huggingface/hub}/models--laion--CLIP-ViT-B-32-laion2B-s34B-b79K:/hf/hub/models--laion--CLIP-ViT-B-32-laion2B-s34B-b79K:ro

@@ -14,7 +14,7 @@ RUN if [ "$WITH_ML" = "1" ]; then \
       pip install --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
         torch==2.11.0 torchvision==0.26.0 timm==1.0.30 safetensors==0.8.0 \
-        segmentation-models-pytorch==0.5.0; \
+        segmentation-models-pytorch==0.5.0 open_clip_torch==3.3.0; \
     fi
 
 COPY pyproject.toml README.md LICENSE ./
