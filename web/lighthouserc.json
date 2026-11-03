@@ -1,0 +1,12 @@
+{
+  "ci": {
+    "collect": {
+      "url": ["http://localhost:3000/", "http://localhost:3000/search", "http://localhost:3000/settings"],
+      "numberOfRuns": 1,
+      "settings": { "onlyCategories": ["accessibility"], "formFactor": "mobile" }
+    },
+    "assert": {
+      "assertions": { "categories:accessibility": ["error", { "minScore": 0.9 }] }
+    }
+  }
+}

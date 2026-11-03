@@ -19,6 +19,13 @@ The browser calls `/api/*` on the web server, which forwards to the API (`API_UR
 
 `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`. CI runs all four, and regenerates the client to check that it matches `openapi.json`.
 
+Browser checks (Chromium; once: `npx playwright install chromium`):
+
+- `npm run e2e` builds and serves the site, starts the stub API itself (`USE_STUBS=1`, nothing leaves this machine), and runs the Playwright tests at 390 and 1100 pixels wide. It refuses to start if port 3000 or 8000 is already in use, and it stops unless the API reports stubs and an in-memory vector store. Python comes from `E2E_PYTHON`, else the repo `.venv`, else `python` on PATH. The test photos are the Stellenbosch fixtures in `tests/fixtures/stellenbosch/`.
+- `npm run lighthouse` runs the same stack, audits `/`, `/search` and `/settings` for accessibility (mobile settings), prints the three scores, writes the reports to `.lighthouseci/`, and fails if any score is below 0.90.
+
+The separate CI job `web-e2e` runs both.
+
 ## The typed client
 
 `src/api/schema.d.ts` is generated from `../openapi.json` (`npm run generate-client`); never edit it by hand. After an API change: `python -m tools.export_openapi`, then `npm run generate-client`.
