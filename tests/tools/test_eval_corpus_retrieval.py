@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from tools.eval_corpus_retrieval import MIN_MARGIN, corpus_queries, verdict
 
 
@@ -28,7 +30,9 @@ def test_clean_query_is_labelled_clean() -> None:
     assert kinds["a road with a transverse crack"] == "damage"
 
 
-def scores(fused_mean: float, fused_low: float, random_mean: float) -> tuple[dict, dict]:
+def scores(
+    fused_mean: float, fused_low: float, random_mean: float
+) -> tuple[dict[str, Any], dict[str, Any]]:
     fused = {"all": {"recall@5": {"mean": fused_mean, "low": fused_low, "high": 1.0}}}
     random = {"all": {"recall@5": {"mean": random_mean, "low": random_mean, "high": random_mean}}}
     return fused, random
