@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/", label: "Analyze a photo" },
   { href: "/search", label: "Search" },
+  { href: "/settings", label: "Settings" },
 ];
 
 /** The tab bar. The current page is marked with aria-current so a screen reader announces it. */
