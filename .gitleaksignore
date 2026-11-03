@@ -2,3 +2,8 @@
 # file "review_key", which gitleaks' generic-api-key rule read as a key. It is a public file hash,
 # not a secret, and the field was renamed in the next commit (a test now blocks such names).
 b2a4186d1bb74b399d22c70524e7c6a5fd073523:eval/results.json:generic-api-key:837
+
+# Reviewed false positive. In this commit tests/tools/test_build_bundle.py held a made-up key
+# ("abcdefghijklmnop1234") to prove that tools/build_bundle.py refuses key-looking text. It is not a
+# secret. The next commit builds the fake keys at run time so no later commit trips the rule.
+30e0c7f4d4347d0448e9e4af6c6220e946b7cb27:tests/tools/test_build_bundle.py:generic-api-key:33

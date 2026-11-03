@@ -25,13 +25,17 @@ def test_a_nuscenes_file_is_called_out() -> None:
     assert any("nuScenes" in p for p in problems)
 
 
+# The fake keys are put together at run time so the secret scanner does not read them as leaks.
+FAKE_BODY = "abcdefghijklmnop1234"
+
+
 @pytest.mark.parametrize(
     "line",
     [
-        "key = 'sk-ant-api03-abcdefghijklmnop'",
-        "HF = 'hf_abcdefghijklmnopqrstuvwxyz'",
-        'api_key = "abcdefghijklmnop1234"',
-        "-----BEGIN RSA PRIVATE KEY-----",
+        "key = '" + "sk-ant-" + "api03-" + FAKE_BODY + "'",
+        "HF = '" + "hf_" + FAKE_BODY + "'",
+        "api_key = " + '"' + FAKE_BODY + '"',
+        "-----BEGIN " + "RSA PRIVATE KEY-----",
     ],
 )
 def test_secret_looking_text_is_refused(line: str) -> None:
