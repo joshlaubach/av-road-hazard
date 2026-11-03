@@ -85,6 +85,17 @@ describe("SearchView", () => {
     expect(screen.getByRole("heading", { name: /Result 1: 51 out of 100/ })).toBeTruthy();
   });
 
+  it("shows the unavailable notice once and does not claim a model wrote it", async () => {
+    const notice = "The answer service is unavailable right now; here are the matching photos.";
+    search.mockResolvedValue({ answer: notice, cited: [], llm: "llama", model: null, notice, records: [RECORD] });
+    render(<SearchView />);
+    fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "a pothole" } });
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    await waitFor(() => expect(screen.getAllByText(notice)).toHaveLength(1));
+    expect(screen.queryByText(/Written by/)).toBeNull();
+    expect(screen.getByRole("heading", { name: /Result 1: 51 out of 100/ })).toBeTruthy();
+  });
+
   it("says plainly when nothing matched", async () => {
     search.mockResolvedValue({ answer: "", cited: [], llm: "llama", model: null, notice: null, records: [] });
     render(<SearchView />);
