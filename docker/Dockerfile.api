@@ -7,6 +7,16 @@ WORKDIR /app
 COPY requirements.lock ./
 RUN pip install --no-cache-dir -r requirements.lock
 
+# Real models: build with --build-arg WITH_ML=1 (docker/compose.real.yml does). CPU wheels of exactly the
+# versions the weights were checked with; only what the API imports at run time, not the training extras.
+ARG WITH_ML=0
+RUN if [ "$WITH_ML" = "1" ]; then \
+      pip install --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
+        torch==2.11.0 torchvision==0.26.0 timm==1.0.30 safetensors==0.8.0 \
+        segmentation-models-pytorch==0.5.0; \
+    fi
+
 COPY pyproject.toml README.md LICENSE ./
 COPY common ./common
 COPY perception ./perception
