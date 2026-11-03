@@ -45,3 +45,28 @@ An image, weight or data file that is not on the allow list (only the two shrunk
 ## Writing it up
 
 For each item: pass, fail or not checked, and why. A "not checked" is not a pass. Report findings with the file and line. The owner fixes them, and you look at the fix before the release.
+
+## Cover note to send with the checklist (copy, fill in the three blanks)
+
+Hi, I am about to put a small demo online and want a second pair of eyes first. You have not seen the code, and that is the point.
+
+**What it is.** A web demo that takes a dashcam photo, finds cars, people and road damage with neural networks, and gives a 0 to 100 hazard score with a plain-language explanation. It also searches 60 demo photos. It is a non-commercial portfolio project, not a safety system. The README has a one-page overview.
+
+**What I need.** Check the one commit below against `docs/RELEASE_REVIEW.md`, and tell me pass, fail or not checked for each item, with the file and line for any problem. About 1 to 2 hours. You do not need any keys, tokens or Space access, and you should not be given any.
+
+- Repo (read access only): `joshlaubach/av-road-hazard`
+- Commit: `__________`
+- Bundle hash (`bundle_sha256` from `python -m tools.build_bundle`): `__________`
+- Reply by: `__________`
+
+**How to start.** Check out the commit, then run `python -m tools.build_bundle --out bundle_manifest.json`. It stops if anything differs from the commit, and it lists the files that are deployed and flags images, weights, key-looking text and machine paths. Its checks are pattern matches; please look for what a pattern cannot see.
+
+**Things I already know are weak** (so you do not need to rediscover them, but do tell me if you disagree):
+- The photo licenses (RDD2022 and Stellenbosch) and some model licenses (COCO weights, the road model's pre-training) rest on my assumption that non-commercial use is fine. They are not verified. See `docs/DATA_AND_LICENSES.md`.
+- Whether the nuScenes dataset owner approved hosting a model fine-tuned on their data is unrecorded, so the demo does not use that model. Please confirm nothing nuScenes-derived is in the bundle.
+- The Claude spend cap has been tested in unit tests only, not live. The demo runs without a Claude key by default.
+- The server logs visitors' IP addresses (the host shows them). I have not decided how long to keep them.
+- The tile classifier is fetched at start from a private Hugging Face repo with a read-only token, and its SHA-256 is pinned in `configs/hosted_classifier.json`.
+- The Qdrant Cloud key can read and write the whole database. The code refuses uploads into the shared `corpus` session; please try to break that.
+
+**What is out of scope.** Model accuracy (it is measured in `eval/results.json` and described honestly in the README), and the visual design.
