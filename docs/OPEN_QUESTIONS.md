@@ -25,7 +25,7 @@ Sprint 0 additions (the scaffold author had no Docker daemon, so none of these r
 | Fact | Where | Blocks | Recommendation |
 |---|---|---|---|
 | `docker build` and `docker compose up` of the API image never ran; only the same install and `uvicorn` start were checked in a clean virtualenv. CI job `docker-and-e2e` is the first real test | Sprint 0 | Merge of the scaffold PR | Watch the first CI run; fix the Dockerfile if it fails |
-| Compose image tags: `qdrant/qdrant:v1.12.0` unverified on a live pull; `ollama/ollama:latest` unpinned | E | Sprint 2 | Pin exact tags after a pull |
+| Compose image tags: `qdrant/qdrant:v1.12.0` pulled and started 2026-11-03; `ollama/ollama` pinned to `0.40.13` 2026-11-03 (resolved) | E | Sprint 2 | Pin exact tags after a pull |
 | GitHub rulesets are not enforced on a private repo without a paid plan; `main` protection relies on convention, the pre-commit hook, and CI | Owner | Before more agents start | Go public (after the history scrub) or upgrade |
 | `hazard_score` upper bound and the pinned `box`/`image_size` conventions are the scaffold's reading of SPEC | C | Sprint 1 | Confirm in the scaffold review; record changes in CONTRACT_CHANGELOG.md |
 
