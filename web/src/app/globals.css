@@ -12,9 +12,9 @@
   --error: #a3261d;
   --error-bg: #fbe6e3;
   --radius: 10px;
-  --font-display: var(--f-display), Georgia, "Times New Roman", serif;
-  --font-body: var(--f-body), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--f-mono), ui-monospace, Consolas, monospace;
+  --font-display: var(--font-body);
+  --font-body: "Arimo Variable", Arimo, Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -62,7 +62,7 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
   margin: 0;
   text-wrap: balance;
