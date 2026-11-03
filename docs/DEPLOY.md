@@ -26,12 +26,12 @@ The monthly budget is about $20 (Claude is billed separately from any subscripti
 2. Create a Space (SDK: Docker, hardware: CPU basic, visibility: private until the release review is done).
 3. Add the secrets and variables above.
 4. Push the reviewed bundle plus `docker/space/README.md` as the Space's `README.md` to the Space remote.
-5. Index the demo corpus into Qdrant Cloud from a machine that has the images (they never go into the image or the Space repo).
+5. Index the demo corpus into Qdrant Cloud from a machine that has the images (they never go into the image or the Space repo): set `USE_STUBS=0`, `DEFECT_CHECKPOINT`, `QDRANT_URL` and `QDRANT_API_KEY`, then run `python -m tools.index_corpus --images rdd2022=data/demo_corpus --images stellenbosch=FOLDER --records-out cache/records`. It stops if the photo counts differ from `web/src/lib/demo_corpus.json` (40 and 20). Add `--dry-run` to try it in memory first. The cached records in `cache/records` hold no pixels.
 6. Smoke check: `/api/health` says `ok` with `qdrant: configured`, one analysis, one search.
 
 ## Open before this can go live
 
 - **Where the weights live.** The image has none, by design. The Space needs the detector, road model, classifier and OpenCLIP weights at run time. They are not in git. Options: a private Hugging Face model repo downloaded at start (needs a token secret and a download step in `start.sh`), or baked into the image at build. Not decided; whichever is chosen, check that the detector and road weights, which were fine-tuned on nuScenes, may be hosted (open item in `docs/DATA_AND_LICENSES.md`).
-- **The corpus index.** A script that runs the pipeline on the 60 corpus images and writes them to Qdrant Cloud does not exist yet (`tools/eval_corpus_retrieval.py` indexes in memory for an eval only).
-- **Cached outputs** for the sample set, so the demo is fast on CPU.
+- **The 20 Stellenbosch photos are not picked yet.** The indexing script needs a folder with exactly 20; today only the two example photos and the raw download exist locally.
+- **Cached records are made but not served.** `--records-out` writes them; nothing in the Space reads them yet, so the demo still computes on CPU.
 - **Release review** of the exact bundle (ROADMAP Next row 2).
