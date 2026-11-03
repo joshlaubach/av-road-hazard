@@ -1,7 +1,20 @@
-# Overlay for NVIDIA hosts (Windows 11 + WSL2 with Docker Desktop, or Linux with the NVIDIA
-# container toolkit). Not usable on macOS. Placeholder: workstream E adds the CUDA 12.8 api image.
-# Usage: docker compose -f docker/docker-compose.yml -f docker/compose.gpu.yml --profile llm up
+# NVIDIA overlay (Windows 11 + WSL2 with Docker Desktop, or Linux with the NVIDIA container toolkit). Not usable
+# on macOS. It gives the API (CUDA 12.8 wheels) and Ollama the GPU. Search embeddings stay on the CPU
+# (rag.device in configs/default.yaml), which is fast enough for the one photo or sentence per request.
+# Usage: docker compose -f docker/docker-compose.yml -f docker/compose.real.yml -f docker/compose.gpu.yml \
+#          --profile llm up -d --build api ollama
 services:
+  api:
+    build:
+      args:
+        TORCH_INDEX_URL: https://download.pytorch.org/whl/cu128
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
   ollama:
     deploy:
       resources:
