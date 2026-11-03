@@ -1,0 +1,54 @@
+# One container for a Hugging Face Space: the website on port 7860, the API behind it on 127.0.0.1:8000.
+# The site already forwards /api/* to the API (web/next.config.mjs), so a Space's single public port is enough.
+# Build from the repo root:  docker build -f docker/Dockerfile.space -t road-hazard-space .
+# Stubs by default (WITH_ML=0). Real models: --build-arg WITH_ML=1 and the weights in place (docs/DEPLOY.md).
+
+FROM node:22-slim AS web
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY web/ ./
+# The address is read at build time (routes are fixed then); 127.0.0.1, not localhost, as in web/e2e.
+ENV API_URL=http://127.0.0.1:8000 NEXT_TELEMETRY_DISABLED=1
+RUN npm run build && npm prune --omit=dev
+
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 NEXT_TELEMETRY_DISABLED=1
+WORKDIR /app
+COPY --from=web /usr/local/bin/node /usr/local/bin/node
+
+COPY requirements.lock ./
+RUN pip install --no-cache-dir -r requirements.lock
+
+ARG WITH_ML=0
+ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu
+RUN if [ "$WITH_ML" = "1" ]; then \
+      pip install --no-cache-dir \
+        --index-url $TORCH_INDEX_URL --extra-index-url https://pypi.org/simple \
+        torch==2.11.0 torchvision==0.26.0 timm==1.0.30 safetensors==0.8.0 \
+        segmentation-models-pytorch==0.5.0 open_clip_torch==3.3.0; \
+    fi
+
+COPY pyproject.toml README.md LICENSE ./
+COPY common ./common
+COPY perception ./perception
+COPY defects ./defects
+COPY fusion ./fusion
+COPY rag ./rag
+COPY api ./api
+COPY eval ./eval
+COPY tools ./tools
+COPY configs ./configs
+RUN pip install --no-cache-dir --no-deps -e .
+
+COPY --from=web /web /app/web
+COPY docker/space/start.sh /app/start.sh
+
+# Spaces run the container as user 1000. Nothing but the web cache and the weights folder is written.
+RUN useradd -m -u 1000 user && mkdir -p /app/checkpoints && chown -R user /app/web/.next /app/checkpoints
+USER user
+ENV USE_STUBS=1 PORT=7860
+EXPOSE 7860
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=5 \
+  CMD python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:7860/api/health', timeout=4)"
+CMD ["sh", "/app/start.sh"]
