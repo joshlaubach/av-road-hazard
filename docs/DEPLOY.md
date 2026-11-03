@@ -33,6 +33,6 @@ The monthly budget is about $20 (Claude is billed separately from any subscripti
 
 ## Open before this can go live
 
-- **Weights, decided 2026-11-03:** with `USE_STUBS=0`, `docker/space/start.sh` fetches the public COCO detector and the comma10k road model from their original sources and the classifier from your private repo, each checked against a pinned SHA-256, and stops the container on any failure. OpenCLIP downloads itself from the Hub. No nuScenes-derived weights are used (`docs/DATA_AND_LICENSES.md`, Hosted model weights). Not tried: the real-model image (`WITH_ML=1`) running on a Space.
+- **Weights, decided 2026-11-03:** with `USE_STUBS=0`, `docker/space/start.sh` fetches the public COCO detector and the comma10k road model from their original sources and the classifier from your private repo, each checked against a pinned SHA-256, and stops the container on any failure. OpenCLIP downloads itself from the Hub. No nuScenes-derived weights are used (`docs/DATA_AND_LICENSES.md`, Hosted model weights). The classifier repo is `joshlaubach/road-hazard-classifier` (private); a real fetch from it passed the pinned hashes on 2026-11-03. Not tried: the real-model image (`WITH_ML=1`) running on a Space.
 - **Cached records are made but not served.** `--records-out` writes them; nothing in the Space reads them yet, so the demo still computes on CPU.
 - **Release review** of the exact bundle (ROADMAP Next row 2).
