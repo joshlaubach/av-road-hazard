@@ -1,0 +1,11 @@
+export const WEB_DIR: string;
+export const REPO_DIR: string;
+export const API_ORIGIN: string;
+export const WEB_ORIGIN: string;
+export function stubApiEnv(base?: NodeJS.ProcessEnv): NodeJS.ProcessEnv;
+export function pythonPath(env?: NodeJS.ProcessEnv): string;
+export function assertUvicorn(python: string): void;
+export function run(command: string, args: string[], options?: object): Promise<void>;
+export function serve(command: string, args: string[], options?: object): unknown;
+export function isPortBusy(port: number): Promise<boolean>;
+export function assertStubStack(env?: NodeJS.ProcessEnv): Promise<void>;
