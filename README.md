@@ -2,6 +2,10 @@ Purpose: entry point for av-road-hazard, a system that fuses road-object detecti
 
 # av-road-hazard
 
+![AV Road Hazard banner: a dashcam photo from Stellenbosch, South Africa, with a gold box around a pothole labeled 99.9% sure, and a half-circle hazard score gauge reading 50 out of 100 (pothole on the road, nobody nearby). Below, four steps for the search feature: photo, numbers, similar cases, answer.](docs/images/hero.png)
+
+*Photo: Nienaber, Kroon and Booysen, Stellenbosch University (CC0).*
+
 > **Status (2026-11-02): the core pipeline works and has been measured. The search feature is built but not shown to the public yet.**
 >
 > - **Built and measured:** the object finder, the road finder, the crack-and-pothole finder, the step that combines them, and the tools that grade them. They run on real models, and every number below comes from `eval/results.json`.
@@ -33,15 +37,9 @@ It joins two earlier projects, `nuscenes-stability` (finds objects) and `defect-
 
 Four steps. Steps 1 to 3 each use a neural network (a program that learned from many labeled examples). Step 4 is a short list of fixed rules.
 
-```
-photo ─► 1. objects      (detector)   ─► boxes: "pedestrian here, car there"
-     ├─► 2. road         (road finder) ─► which pixels are road
-     └─► 3. damage       (tile classifier, on road tiles only) ─► boxes: "crack here"
-                              │
-                     4. fusion (rules, no learning)
-                              │
-                       hazard record (JSON) ─► score 0-100
-```
+![A two-lane diagram. Lane A: a photo goes to an object detector, a road finder and a damage classifier, fixed fusion rules combine them into a hazard record with a 0 to 100 hazard score. Lane B: saved records are embedded, found in a database, turned into an answer by a language model, and checked so the answer only cites photos that were found.](docs/images/pipeline.svg)
+
+The picture shows the whole project: lane A is the four steps below, and lane B is the Search section further down.
 
 ### 1. Objects: a **detector** draws boxes
 

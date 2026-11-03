@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 860" width="1400" height="860" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">AV Road Hazard pipeline</title><desc id="d">Two lanes. Lane A: a photo goes to an object detector, a road finder and a damage classifier; fixed fusion rules combine them into a hazard record with a 0 to 100 hazard score. Lane B: saved records are embedded, found in a database, turned into an answer by a language model, and checked so it only cites photos that were found.</desc>
+<defs><linearGradient id="scale" gradientUnits="userSpaceOnUse" x1="1147" y1="0" x2="1303" y2="0"><stop offset="0" stop-color="#2ECC71"/><stop offset="0.5" stop-color="#FFC400"/><stop offset="1" stop-color="#E53935"/></linearGradient></defs>
+<rect width="1400" height="860" fill="#061426"/>
+<text x="40" y="54" font-size="40" font-weight="bold" fill="#F6F6F6" text-anchor="start">AV Road Hazard: how it works</text>
+<text x="40" y="92" font-size="22" font-weight="normal" fill="#C9D6EA" text-anchor="start">Blue outline: a neural network that learned from examples. White outline: fixed rules. Dashed: a database.</text>
+<text x="40" y="140" font-size="30" font-weight="bold" fill="#8FA8CC" text-anchor="start">A.  Analyze one photo</text>
+<rect x="40" y="275" width="170" height="140" rx="16" fill="#12243F" stroke="#8FA8CC" stroke-width="3"/>
+<text x="62" y="319" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">Photo</text>
+<text x="62" y="353" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">from a car's</text>
+<text x="62" y="381" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">front camera</text>
+<rect x="290" y="156" width="370" height="118" rx="16" fill="#12243F" stroke="#4F7DBA" stroke-width="3"/>
+<text x="312" y="196" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">1  Objects</text>
+<text x="638" y="196" font-size="22" font-weight="normal" fill="#8FA8CC" text-anchor="end" font-style="italic">learned</text>
+<text x="312" y="232" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">A detector draws boxes</text>
+<text x="312" y="260" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">around people, cars, trucks</text>
+<path d="M210 345 C 245 345, 245 215, 269 215" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="268,205 286,215 268,225" fill="#8FA8CC"/>
+<path d="M660 215 L719 215" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="718,205 736,215 718,225" fill="#8FA8CC"/>
+<rect x="290" y="286" width="370" height="118" rx="16" fill="#12243F" stroke="#4F7DBA" stroke-width="3"/>
+<text x="312" y="326" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">2  Road</text>
+<text x="638" y="326" font-size="22" font-weight="normal" fill="#8FA8CC" text-anchor="end" font-style="italic">learned</text>
+<text x="312" y="362" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">A segmentation model</text>
+<text x="312" y="390" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">marks which pixels are road</text>
+<path d="M210 345 C 245 345, 245 345, 269 345" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="268,335 286,345 268,355" fill="#8FA8CC"/>
+<path d="M660 345 L719 345" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="718,335 736,345 718,355" fill="#8FA8CC"/>
+<rect x="290" y="416" width="370" height="118" rx="16" fill="#12243F" stroke="#4F7DBA" stroke-width="3"/>
+<text x="312" y="456" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">3  Damage</text>
+<text x="638" y="456" font-size="22" font-weight="normal" fill="#8FA8CC" text-anchor="end" font-style="italic">learned</text>
+<text x="312" y="492" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">Cuts the road into tiles,</text>
+<text x="312" y="520" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">flags cracks and potholes</text>
+<path d="M210 345 C 245 345, 245 475, 269 475" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="268,465 286,475 268,485" fill="#8FA8CC"/>
+<path d="M660 475 L719 475" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="718,465 736,475 718,485" fill="#8FA8CC"/>
+<rect x="740" y="156" width="270" height="378" rx="16" fill="#12243F" stroke="#F6F6F6" stroke-width="3"/>
+<text x="762" y="196" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">4  Fusion</text>
+<text x="988" y="196" font-size="22" font-weight="normal" fill="#8FA8CC" text-anchor="end" font-style="italic">fixed rules</text>
+<text x="762" y="250" font-size="26" font-weight="normal" fill="#F6F6F6" text-anchor="start">On the road?</text>
+<text x="762" y="292" font-size="26" font-weight="normal" fill="#F6F6F6" text-anchor="start">Who is close?</text>
+<text x="762" y="334" font-size="26" font-weight="normal" fill="#F6F6F6" text-anchor="start">How urgent?</text>
+<text x="762" y="418" font-size="22" font-weight="normal" fill="#8FA8CC" text-anchor="start">urgency =</text>
+<text x="762" y="450" font-size="26" font-weight="normal" fill="#F6F6F6" text-anchor="start">severity</text>
+<text x="762" y="482" font-size="26" font-weight="normal" fill="#F6F6F6" text-anchor="start">× confidence</text>
+<text x="762" y="514" font-size="26" font-weight="normal" fill="#F6F6F6" text-anchor="start">× closeness</text>
+<path d="M1010 345 L1069 345" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1068,335 1086,345 1068,355" fill="#8FA8CC"/>
+<rect x="1090" y="156" width="270" height="378" rx="16" fill="#12243F" stroke="#F6F6F6" stroke-width="3"/>
+<text x="1112" y="196" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">Record</text>
+<text x="1112" y="230" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">one JSON file</text>
+<path d="M1147 374 A 78 78 0 0 1 1303 374" fill="none" stroke="url(#scale)" stroke-width="30"/>
+<path d="M1216 374 L1225 308 L1234 374 Z" fill="#F6F6F6"/>
+<circle cx="1225" cy="374" r="12" fill="#F6F6F6"/>
+<text x="1147" y="412" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="middle">0</text>
+<text x="1303" y="412" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="middle">100</text>
+<text x="1225" y="460" font-size="28" font-weight="bold" fill="#FFB800" text-anchor="middle">Hazard score</text>
+<text x="1225" y="492" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="middle">ranks urgency,</text>
+<text x="1225" y="520" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="middle">not crash chance</text>
+<path d="M1225 534 L1225 560 L185 560 L185 593" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="175,592 185,610 195,592" fill="#8FA8CC"/>
+<text x="225" y="596" font-size="30" font-weight="bold" fill="#8FA8CC" text-anchor="start">B.  Search saved photos</text>
+<rect x="40" y="614" width="290" height="178" rx="16" fill="#12243F" stroke="#4F7DBA" stroke-width="3"/>
+<text x="62" y="654" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">1  Embed</text>
+<text x="308" y="654" font-size="22" font-weight="normal" fill="#8FA8CC" text-anchor="end" font-style="italic">learned</text>
+<text x="62" y="690" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">OpenCLIP turns each</text>
+<text x="62" y="718" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">saved photo or</text>
+<text x="62" y="746" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">question into</text>
+<text x="62" y="774" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">numbers</text>
+<path d="M330 698 L362 698" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="361,688 379,698 361,708" fill="#8FA8CC"/>
+<rect x="383" y="614" width="290" height="178" rx="16" fill="#12243F" stroke="#8FA8CC" stroke-width="3" stroke-dasharray="10 7"/>
+<text x="405" y="654" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">2  Find</text>
+<text x="651" y="654" font-size="22" font-weight="normal" fill="#8FA8CC" text-anchor="end" font-style="italic">database</text>
+<text x="405" y="690" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">The Qdrant vector</text>
+<text x="405" y="718" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">database finds the</text>
+<text x="405" y="746" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">closest saved photos</text>
+<text x="405" y="774" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">and can filter them</text>
+<path d="M673 698 L706 698" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="705,688 723,698 705,708" fill="#8FA8CC"/>
+<rect x="727" y="614" width="290" height="178" rx="16" fill="#12243F" stroke="#4F7DBA" stroke-width="3"/>
+<text x="749" y="654" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">3  Answer</text>
+<text x="995" y="654" font-size="22" font-weight="normal" fill="#8FA8CC" text-anchor="end" font-style="italic">learned</text>
+<text x="749" y="690" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">Claude or a local</text>
+<text x="749" y="718" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">model reads only the</text>
+<text x="749" y="746" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">question and the</text>
+<text x="749" y="774" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">photos found</text>
+<path d="M1017 698 L1049 698" fill="none" stroke="#8FA8CC" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1048,688 1066,698 1048,708" fill="#8FA8CC"/>
+<rect x="1070" y="614" width="290" height="178" rx="16" fill="#12243F" stroke="#F6F6F6" stroke-width="3"/>
+<text x="1092" y="654" font-size="30" font-weight="bold" fill="#F6F6F6" text-anchor="start">4  Check</text>
+<text x="1338" y="654" font-size="22" font-weight="normal" fill="#8FA8CC" text-anchor="end" font-style="italic">fixed rules</text>
+<text x="1092" y="690" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">Each cited id must</text>
+<text x="1092" y="718" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">be one that was</text>
+<text x="1092" y="746" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">found. None found,</text>
+<text x="1092" y="774" font-size="24" font-weight="normal" fill="#C9D6EA" text-anchor="start">no model call.</text>
+<text x="40" y="834" font-size="22" font-weight="normal" fill="#C9D6EA" text-anchor="start">The answer names the photo ids it used. Each visitor has a private session.</text>
+</svg>
