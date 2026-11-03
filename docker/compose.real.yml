@@ -2,8 +2,12 @@
 # Usage: docker compose -f docker/docker-compose.yml -f docker/compose.real.yml up -d --build api
 # Needs: checkpoints/ (detector and road model), the chosen classifier in runs/tile-fold0-hn2/fold0/, and
 # the OpenCLIP photo-search weights in your Hugging Face cache (HF_CACHE_DIR, default ~/.cache/huggingface/hub;
-# fetched once by running Search on the host). The container is offline: it never downloads anything.
+# fetched once by running Search on the host). The api container is offline: it never downloads anything.
+# With --profile llm the answer writer runs in Ollama inside the stack (not published on the host, which may
+# run its own Ollama on 11434); pull its model once: docker compose ... exec ollama ollama pull llama3.2
 services:
+  ollama:
+    ports: !reset []
   api:
     build:
       args:
