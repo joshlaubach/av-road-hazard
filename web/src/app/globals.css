@@ -807,3 +807,29 @@ button.primary {
   flex-direction: column;
   gap: 6px;
 }
+
+/* Settings */
+.choice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.choice input {
+  margin-top: 5px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.choice span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.choice input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { AnalyzeError, checkFile, indexPhotos, searchPhotos } from "@/api/client";
 import type { QueryResponse } from "@/api/types";
@@ -13,6 +14,7 @@ import {
   stripDataUrl,
   type SearchForm,
 } from "@/lib/search";
+import { useLlmChoice } from "@/lib/useLlmChoice";
 import { ResultCard } from "./ResultCard";
 
 type Status = { kind: "idle" } | { kind: "busy"; label: string } | { kind: "error"; message: string };
@@ -28,6 +30,7 @@ function readAsDataUrl(file: File): Promise<string> {
 
 /** The Search view: add photos, ask a question or search by photo, and read an answer that cites them. */
 export function SearchView() {
+  const [llm] = useLlmChoice();
   const [form, setForm] = useState<SearchForm>(EMPTY_FORM);
   const [queryPhotoName, setQueryPhotoName] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -92,7 +95,7 @@ export function SearchView() {
 
   async function handleSearch(event: FormEvent) {
     event.preventDefault();
-    const request = buildQuery(form);
+    const request = buildQuery(form, llm);
     if (!request) {
       setStatus({ kind: "error", message: "Type a question or choose a photo to search with." });
       return;
@@ -206,7 +209,7 @@ export function SearchView() {
               {result.notice && <p className="caution">{result.notice}</p>}
               <p className="hint">
                 Written by {result.model ?? result.llm}, only from what the analysis found. Check the numbered photos
-                before you rely on it.
+                before you rely on it. You can change the writer on the <Link href="/settings">Settings page</Link>.
               </p>
             </div>
           )}
