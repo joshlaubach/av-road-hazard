@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "decided": "2026-11-03",
+  "notice": "This demo is non-commercial. The photo licenses below rest on the owner's assumption that the authors approve non-commercial use; they are not verified licenses. If you are an author and want a photo removed, say so and it goes.",
+  "sources": [
+    {
+      "id": "rdd2022",
+      "include": true,
+      "title": "RDD2022: Road Damage Detection 2022",
+      "authors": "D. Arya, H. Maeda, S. K. Ghosh, D. Toshniwal, Y. Sekimoto",
+      "url": "https://github.com/sekilab/RoadDamageDetector",
+      "license_note": "Non-commercial use, attribution, share-alike (the most restrictive reading of conflicting sources). Non-US countries only.",
+      "images": 40,
+      "countries": ["Czech Republic", "India", "Japan", "Norway"]
+    },
+    {
+      "id": "stellenbosch",
+      "include": true,
+      "title": "Road Pothole Images for Pothole Detection, Stellenbosch University, 2015",
+      "authors": "S. Nienaber, R. S. Kroon, M. J. Booysen",
+      "url": null,
+      "license_note": "CC0 1.0 per the Kaggle and Dataset Ninja listings; the authors have not confirmed it.",
+      "images": 20,
+      "countries": ["South Africa"]
+    }
+  ]
+}
