@@ -35,9 +35,9 @@ No other exploration of the source repos is allowed.
 - Hosted behavior of `/analyze`, `/query`, `/health`
 
 ## Ordered task list
-1. Verify the RDD2022 license (owner) before including any RDD2022 sample image in the hosted corpus.
+1. Licence: the owner decided on 2026-11-03 to assume non-commercial use is approved (docs/DATA_AND_LICENSES.md); nothing to verify. Show credits and a non-commercial notice.
 2. Build the HF Space (CPU Docker); Claude key as a Space secret; Qdrant Cloud free tier.
-3. Hosted corpus = RDD2022 samples (after license verification), optionally the owner's own photos; precompute and cache outputs for the sample set so the demo stays fast on CPU.
+3. Hosted corpus = 40 non-US RDD2022 samples plus 20 Stellenbosch photos, optionally the owner's own photos (open question 10); precompute and cache outputs for the sample set so the demo stays fast on CPU.
 4. Per-IP rate limit, upload limits, EXIF GPS stripping, Claude monthly spend cap with hard cutoff and fallback message.
 5. README: architecture diagram, metrics table from `eval/results.json`, limitations (effective detection range, v1.0-mini confounds, domain gap), run instructions.
 6. Record a 2-3 minute walkthrough video; on tag, deploy and smoke-test the deployed `/health`; keep the previous image tag for rollback.
@@ -54,7 +54,7 @@ Layers from ENGINEERING.md section 3:
 
 ## Known pitfalls
 - Hosted compute is CPU only; EfficientNet-B4 over many tiles plus Faster R-CNN is slow.
-- RDD2022 license unverified: do not publish its images until confirmed.
+- RDD2022 and Stellenbosch licenses are an owner assumption, not verified: keep the demo non-commercial, credit the authors, remove a source on request.
 - nuScenes-derived records hosted only as text/metadata/charts if the owner confirms (default: do not show).
 - Claude API is billed separately from the subscription; budget up to about $20/month.
 - Rejected hosts: Fly.io/Render (use most of the budget), GPU instances ($50+/month).

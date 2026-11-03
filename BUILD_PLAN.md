@@ -117,7 +117,7 @@ Done when: `docker compose up` serves stub `/analyze` and `/health`; CI green; a
 
 ## 5. Phase 3: Deploy and polish
 
-- HF Space (CPU Docker), Qdrant Cloud free tier, Claude key as a Space secret; hosted corpus is open (RDD2022 samples after license verification, the owner's own photos, or both; see [OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md)); precompute and cache outputs for the sample set so the demo stays fast on CPU.
+- HF Space (CPU Docker), Qdrant Cloud free tier, Claude key as a Space secret; hosted corpus decided 2026-11-03: 40 non-US RDD2022 samples plus 20 Stellenbosch photos with credits, own photos optional; see [OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) question 10; precompute and cache outputs for the sample set so the demo stays fast on CPU.
 - README: architecture diagram, metrics table, limitations (effective detection range, v1.0-mini confounds), run instructions; 2-3 minute walkthrough video.
 
 ## 6. Merge order

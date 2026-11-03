@@ -107,7 +107,7 @@ Fetched web pages, dataset files, model outputs, and third-party READMEs (includ
 ## 9. Licensing boundaries
 
 - nuScenes images never leave the local machine and never enter any bundle, Docker image, hosted corpus, screenshot, demo video frame, or doc.
-- RDD2022 images are published only after its license is verified (currently unverified).
+- RDD2022 and Stellenbosch images may be shown in the hosted non-commercial demo, with credits, on the owner's assumption recorded in `docs/DATA_AND_LICENSES.md` (decided 2026-11-03; not a verified license). Images still stay out of git.
 - See [docs/DATA_AND_LICENSES.md](docs/DATA_AND_LICENSES.md).
 
 ## 10. Secrets and cost safety

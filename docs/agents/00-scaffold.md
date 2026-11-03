@@ -64,7 +64,7 @@ Layers from ENGINEERING.md section 3:
 
 ## Known pitfalls
 - Contracts freeze after this phase: get them right (field names, `image_size` ordering, severity enum).
-- No data, weights, or secrets in git; fixtures must be license-clean (no nuScenes images; no RDD2022 images until its license is verified).
+- No data, weights, or secrets in git; fixtures must be license-clean (no nuScenes images; no RDD2022 or Stellenbosch images in git).
 - Docker on macOS is CPU-only; GPU compose file is for NVIDIA hosts.
 - Line endings: Windows development, Linux Docker (`.gitattributes`).
 
