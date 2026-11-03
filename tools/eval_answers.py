@@ -57,7 +57,14 @@ def run_model(
             answer = answer_question(llm, question.text, found)
             cost = sum(cost_usd(m, i, o) for m, i, o in usage)
             graded.append(grade(expected, answer.cited, answer.unknown, cost_usd=cost))
-            detail.append({"cited": list(answer.cited), "unknown": list(answer.unknown)})
+            detail.append(
+                {
+                    "question": question.text,
+                    "text": answer.text,
+                    "cited": list(answer.cited),
+                    "unknown": list(answer.unknown),
+                }
+            )
         except LLMUnavailable as exc:
             cost = sum(cost_usd(m, i, o) for m, i, o in usage)
             graded.append(grade(expected, [], [], failed=True, cost_usd=cost))
