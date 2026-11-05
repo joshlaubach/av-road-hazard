@@ -210,12 +210,16 @@ class ClaudeLLM:
         client: anthropic.Anthropic | None = None,
         timeout_s: float = 60.0,
         on_usage: Callable[[str, int, int], None] | None = None,
+        before_call: Callable[[], None] | None = None,
     ) -> None:
         self.model = model
         self._on_usage = on_usage
+        self._before_call = before_call  # raises BudgetExceeded when no paid call may start
         self._client = client or anthropic.Anthropic(timeout=timeout_s)
 
     def generate(self, system: str, prompt: str) -> str:
+        if self._before_call is not None:
+            self._before_call()  # every paid call passes here, including the escalation tier
         try:
             response = self._client.messages.create(
                 model=self.model,
@@ -256,6 +260,7 @@ def make_tiers(
     kind: str,
     llm_config: Mapping[str, Any],
     on_usage: Callable[[str, int, int], None] | None = None,
+    before_call: Callable[[], None] | None = None,
 ) -> list[LLM]:
     """The models to try, cheapest first, for a request's `llm` value ("llama" or "claude").
 
@@ -269,5 +274,5 @@ def make_tiers(
         bigger = llm_config.get("claude_escalation_model")
         if bigger and bigger != names[0]:
             names.append(bigger)
-        return [ClaudeLLM(name, on_usage=on_usage) for name in names]
+        return [ClaudeLLM(name, on_usage=on_usage, before_call=before_call) for name in names]
     raise ValueError(f"unknown llm {kind!r}; choose 'llama' or 'claude'")

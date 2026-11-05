@@ -18,7 +18,7 @@ Checked 2026-11-03 on this PC: the stub image builds (about 90 seconds), runs as
 | `CLASSIFIER_REPO` | variable | the private Hugging Face model repo holding the classifier, `OWNER/NAME` |
 | `HF_TOKEN` | secret | a read-only token for that repo |
 | `ANTHROPIC_API_KEY` | secret | a key made for this demo only |
-| `ANTHROPIC_DAILY_SPEND_CAP_USD`, `ANTHROPIC_MONTHLY_SPEND_CAP_USD` | variable | caps; the app stops calling Claude at the cap and shows its fallback message |
+| `ANTHROPIC_DAILY_SPEND_CAP_USD`, `ANTHROPIC_MONTHLY_SPEND_CAP_USD` | variable | caps; the app checks before every Claude call (including the second, larger model) and stops at the cap with its fallback message. The count lives in memory and restarts at $0 when the app restarts, and calls already running can finish, so the Anthropic Console limit is the real cap. Leave the server Claude key unset until that limit is set and checked |
 
 The monthly budget is about $20 (Claude is billed separately from any subscription).
 

@@ -9,6 +9,7 @@ import httpx2
 import pytest
 
 from fusion.schema import DefectRecord, HazardRecord, Meta, Object
+from rag.guards import BudgetExceeded, SpendGuard
 from rag.index import Hit
 from rag.llm import (
     NO_MATCH,
@@ -329,6 +330,24 @@ def test_claude_reports_its_token_use_and_a_cut_off_answer_is_an_error() -> None
     llm = ClaudeLLM(model="m", client=type("C", (), {"messages": FakeMessages(cut)})())
     with pytest.raises(LLMUnavailable, match="cut off"):
         llm.generate("s", "p")
+
+
+def test_the_second_paid_model_is_not_called_once_the_first_used_up_the_budget() -> None:
+    guard = SpendGuard(daily_usd=0.001, monthly_usd=1.0)
+    usage = type("Usage", (), {"input_tokens": 0, "output_tokens": 1_000_000})()
+    ghost = type("Msg", (), {"content": [text("See [ghost].")], "stop_reason": "end_turn"})()
+    ghost.usage = usage
+    small_messages, big_messages = FakeMessages(ghost), FakeMessages(ghost)
+
+    def tier(model: str, messages: FakeMessages) -> ClaudeLLM:
+        client = type("FakeClient", (), {"messages": messages})()
+        return ClaudeLLM(model, client, on_usage=guard.record, before_call=guard.check)
+
+    with pytest.raises(BudgetExceeded):
+        answer_with_escalation(
+            [tier("small", small_messages), tier("big", big_messages)], "q", [hit("f1")]
+        )
+    assert len(small_messages.calls) == 1 and big_messages.calls == []
 
 
 def test_a_missing_api_key_is_a_plain_error_not_a_crash() -> None:
