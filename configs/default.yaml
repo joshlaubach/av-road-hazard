@@ -61,7 +61,7 @@ rag:
   device: cpu                  # where OpenCLIP runs when not using stubs
   max_records_per_session: 100 # photos one visitor may keep indexed
   max_sessions: 500            # visitors kept at once; the least recently used are dropped
-  session_ttl_s: 7200          # a session idle this long is deleted
+  session_ttl_s: 7200          # an uploaded photo is hidden this long after it is stored, then deleted
   queries_per_minute: 20       # per visitor and per address
   uploads_per_minute: 6        # per visitor and per address (/analyze, /analyze/trace, /index)
   parallel_jobs: 3             # model calls and photo analyses running at once; more get a 503

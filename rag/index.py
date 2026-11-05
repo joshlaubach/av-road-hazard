@@ -10,8 +10,9 @@ from __future__ import annotations
 import json
 import re
 import secrets
+import time
 import uuid
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -71,15 +72,37 @@ def point_id(session: str, frame_id: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, json.dumps([session, frame_id])))
 
 
-def build_filter(sessions: Collection[str], filters: Filters | None) -> models.Filter:
-    """Always restricts to `sessions`; an empty list is an error, never "everything"."""
+def build_filter(
+    sessions: Collection[str], filters: Filters | None, live_at: float | None = None
+) -> models.Filter:
+    """Always restricts to `sessions`; an empty list is an error, never "everything".
+
+    With `live_at` (a time), a visitor's photo only counts if it has an `expires_at` after that
+    time: expired photos, and photos stored without an expiry, are invisible. The shared corpus
+    never expires. Deleting and listing the corpus leave `live_at` out and see everything.
+    """
     if not sessions:
         raise ValueError("a search must name at least one session")
     for session in sessions:
         check_session(session)
-    must: list[models.Condition] = [
-        models.FieldCondition(key="session", match=models.MatchAny(any=sorted(sessions)))
-    ]
+    visitors = sorted(s for s in sessions if s != CORPUS)
+    session_match: models.Condition = models.FieldCondition(
+        key="session", match=models.MatchAny(any=sorted(sessions))
+    )
+    if live_at is not None and visitors:
+        alive = models.Filter(
+            must=[
+                models.FieldCondition(key="session", match=models.MatchAny(any=visitors)),
+                models.FieldCondition(key="expires_at", range=models.Range(gt=live_at)),
+            ]
+        )
+        options: list[models.Condition] = [alive]
+        if CORPUS in sessions:
+            options.append(
+                models.FieldCondition(key="session", match=models.MatchValue(value=CORPUS))
+            )
+        session_match = models.Filter(should=options)
+    must: list[models.Condition] = [session_match]
     f = filters or Filters()
     for key, value in (
         ("source", f.source),
@@ -101,9 +124,13 @@ def build_filter(sessions: Collection[str], filters: Filters | None) -> models.F
     return models.Filter(must=must)
 
 
-def payload_for(record: HazardRecord, session: str) -> dict[str, object]:
+def payload_for(
+    record: HazardRecord, session: str, expires_at: float | None = None
+) -> dict[str, object]:
     rank = max((SEVERITY_RANK[d.severity] for d in record.defects), default=0)
+    expiry: dict[str, object] = {} if expires_at is None else {"expires_at": expires_at}
     return {
+        **expiry,
         "frame_id": record.frame_id,
         "session": session,
         "source": record.source,
@@ -119,8 +146,15 @@ def payload_for(record: HazardRecord, session: str) -> dict[str, object]:
 class Index:
     """`url` None keeps everything in memory; an http URL uses that server; else a folder path."""
 
-    def __init__(self, dim: int, url: str | None = None, api_key: str | None = None) -> None:
+    def __init__(
+        self,
+        dim: int,
+        url: str | None = None,
+        api_key: str | None = None,
+        clock: Callable[[], float] = time.time,
+    ) -> None:
         self.dim = dim
+        self._clock = clock  # wall-clock seconds: stored expiry times must survive a restart
         if url is None:
             self.client = QdrantClient(":memory:")
         elif url.startswith("http"):
@@ -141,6 +175,7 @@ class Index:
         image_vectors: np.ndarray,
         text_vectors: np.ndarray,
         session: str = CORPUS,
+        expires_at: float | None = None,
     ) -> None:
         check_session(session)
         if not (len(records) == len(image_vectors) == len(text_vectors)):
@@ -149,7 +184,7 @@ class Index:
             models.PointStruct(
                 id=point_id(session, r.frame_id),
                 vector={IMAGE_VECTOR: iv.tolist(), TEXT_VECTOR: tv.tolist()},
-                payload=payload_for(r, session),
+                payload=payload_for(r, session, expires_at),
             )
             for r, iv, tv in zip(records, image_vectors, text_vectors, strict=True)
         ]
@@ -161,11 +196,12 @@ class Index:
         image_vectors: np.ndarray,
         text_vectors: np.ndarray,
         session: str,
+        ttl_s: float,
     ) -> None:
-        """Store a visitor's photos. Unlike add(), this refuses the shared corpus, so a request that
-        names the session "corpus" cannot write into the demo photos."""
+        """Store a visitor's photos for `ttl_s` seconds. Unlike add(), this refuses the shared
+        corpus, so a request that names the session "corpus" cannot write into the demo photos."""
         check_session(session, allow_corpus=False)
-        self.add(records, image_vectors, text_vectors, session)
+        self.add(records, image_vectors, text_vectors, session, self._clock() + ttl_s)
 
     def delete_session(self, session: str) -> None:
         """Remove everything a visitor stored. The shared corpus cannot be deleted this way."""
@@ -198,6 +234,19 @@ class Index:
             if offset is None:
                 return found
 
+    def delete_expired(self) -> None:
+        """Physically remove visitor photos that have expired or have no expiry (housekeeping:
+        searches already ignore them). The shared corpus is never touched."""
+        corpus = models.FieldCondition(key="session", match=models.MatchValue(value=CORPUS))
+        expired = models.FieldCondition(key="expires_at", range=models.Range(lte=self._clock()))
+        no_expiry = models.IsEmptyCondition(is_empty=models.PayloadField(key="expires_at"))
+        self.client.delete(
+            COLLECTION,
+            points_selector=models.FilterSelector(
+                filter=models.Filter(must_not=[corpus], should=[expired, no_expiry])
+            ),
+        )
+
     def delete_visitor_points(self) -> None:
         """Remove every visitor's photos and keep the shared corpus (used when the app starts)."""
         corpus = models.FieldCondition(key="session", match=models.MatchValue(value=CORPUS))
@@ -208,7 +257,7 @@ class Index:
 
     def count(self, sessions: Collection[str]) -> int:
         """How many photos the given sessions hold; naming at least one session is required."""
-        flt = build_filter(sessions, None)
+        flt = build_filter(sessions, None, self._clock())
         return int(self.client.count(COLLECTION, count_filter=flt, exact=True).count)
 
     def get(self, frame_id: str, sessions: Collection[str]) -> HazardRecord | None:
@@ -218,11 +267,15 @@ class Index:
         ids are made could never hand back another session's record.
         """
         build_filter(sessions, None)  # an empty session list is an error here too
+        now = self._clock()
         for session in sorted(sessions):
             found = self.client.retrieve(COLLECTION, [point_id(session, frame_id)])
             payload = found[0].payload if found else None
-            if payload and payload["session"] == session and payload["frame_id"] == frame_id:
-                return HazardRecord.model_validate(payload["record"])
+            if not payload or payload["session"] != session or payload["frame_id"] != frame_id:
+                continue
+            if session != CORPUS and float(payload.get("expires_at", 0)) <= now:
+                continue  # expired, or stored without an expiry
+            return HazardRecord.model_validate(payload["record"])
         return None
 
     def search(
@@ -240,7 +293,7 @@ class Index:
         lists. `weights` maps a vector name to its weight; a name left out counts 1.0, so no
         weights means every list votes equally.
         """
-        flt = build_filter(sessions, filters)
+        flt = build_filter(sessions, filters, self._clock())
         fused: dict[str, float] = {}
         ranks: dict[str, dict[str, int]] = {}
         payloads: dict[str, dict[str, object]] = {}

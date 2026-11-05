@@ -34,7 +34,7 @@ describe("SearchView retention text", () => {
   it("does not promise 'this visit only' and states the real limit", () => {
     render(<SearchView />);
     expect(screen.queryByText(/this visit only/)).toBeNull();
-    expect(screen.getByText(/about two hours/)).toBeTruthy();
+    expect(screen.getByText(/two hours after you add them/)).toBeTruthy();
   });
 });
 
