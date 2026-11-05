@@ -231,6 +231,15 @@ def test_an_upload_can_never_be_stored_in_the_shared_corpus() -> None:
     assert index.count([CORPUS]) == 0 and index.count([S1]) == 1
 
 
+def test_clearing_visitor_photos_leaves_the_shared_corpus_alone() -> None:
+    index = Index(DIM)
+    index.add([record("demo")], unit(1)[None, :], unit(1)[None, :])
+    index.add([record("a")], unit(2)[None, :], unit(2)[None, :], session=S1)
+    index.add([record("b")], unit(3)[None, :], unit(3)[None, :], session=S2)
+    index.delete_visitor_points()
+    assert index.count([CORPUS]) == 1 and index.count([S1, S2]) == 0
+
+
 def test_an_unknown_severity_is_a_clear_error_not_a_crash() -> None:
     with pytest.raises(ValueError, match="min_severity"):
         build_filter([CORPUS], Filters(min_severity="catastrophic"))

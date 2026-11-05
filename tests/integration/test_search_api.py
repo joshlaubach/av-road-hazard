@@ -52,6 +52,7 @@ def test_the_server_issues_a_private_session_cookie(frame_bytes: bytes, svc: Rag
     first = TestClient(app).post("/index", files=[("files", ("f.png", frame_bytes, PHOTO))])
     cookie = first.headers["set-cookie"].lower()
     assert "rh_session=s_" in cookie and "httponly" in cookie and "samesite=lax" in cookie
+    assert "max-age=7200" in cookie  # as long as the server keeps an idle session
 
 
 def test_one_visitor_cannot_see_or_fetch_another_visitors_photo(
@@ -128,6 +129,25 @@ def test_the_address_limit_stops_a_visitor_who_keeps_dropping_the_cookie(
     monkeypatch.setattr(svc.query_limiter, "limit", 2)
     codes = [TestClient(app).post("/query", json={"text": "road"}).status_code for _ in range(3)]
     assert codes == [200, 200, 429]
+
+
+def test_a_restart_clears_visitor_photos_but_not_the_corpus(
+    frame_bytes: bytes, svc: RagService
+) -> None:
+    visitor = TestClient(app)
+    upload(visitor, frame_bytes)
+    session = visitor.cookies["rh_session"]
+    assert svc.index.count([session]) == 1
+    with TestClient(app):  # entering the context runs the app's startup
+        pass
+    assert svc.index.count([session]) == 0
+
+
+def test_the_cookie_lasts_as_long_as_an_idle_session_is_kept() -> None:
+    from api.session import MAX_AGE_S
+    from common.config import get_config
+
+    assert get_config()["rag"]["session_ttl_s"] == MAX_AGE_S
 
 
 def test_a_refused_request_does_not_evict_another_visitors_photos(

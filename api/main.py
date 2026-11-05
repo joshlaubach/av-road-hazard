@@ -78,6 +78,12 @@ def create_app() -> FastAPI:
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         loaded.update(pipeline.warm_up())  # models load now, before the first request
         loaded.update(warm_search())
+        try:
+            # ponytail: assumes one app instance per index; two instances would wipe each
+            # other's visitors on restart. Store an expiry time with each photo if that changes.
+            rag().index.delete_visitor_points()
+        except Exception:
+            log.exception("could not clear visitor photos at startup")
         yield
 
     app = FastAPI(title="av-road-hazard", version="0.1.0", lifespan=lifespan)
