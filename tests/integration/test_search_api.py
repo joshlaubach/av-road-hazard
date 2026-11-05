@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 from collections.abc import Iterator
 
@@ -9,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.main import app
+from rag.guards import Slots
 from rag.llm import LLMUnavailable
 from rag.service import RagService
 
@@ -148,6 +150,41 @@ def test_the_cookie_lasts_as_long_as_an_idle_session_is_kept() -> None:
     from common.config import get_config
 
     assert get_config()["rag"]["session_ttl_s"] == MAX_AGE_S
+
+
+def test_when_every_job_slot_is_taken_uploads_and_searches_get_a_503(
+    frame_bytes: bytes, svc: RagService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(svc, "slots", Slots(1))
+    client = TestClient(app)
+    photo = ("f.png", frame_bytes, PHOTO)
+    with svc.slots:  # one job is running, so the next one must be refused, not queued
+        assert client.post("/analyze", files={"file": photo}).status_code == 503
+        assert client.post("/analyze/trace", files={"file": photo}).status_code == 503
+        assert client.post("/index", files=[("files", photo)]).status_code == 503
+        assert client.post("/query", json={"text": "road"}).status_code == 503
+    assert client.post("/analyze", files={"file": photo}).status_code == 200  # slot is free again
+
+
+def test_photo_analysis_does_not_run_on_the_event_loop(
+    frame_bytes: bytes, svc: RagService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from api.pipeline import Pipeline
+
+    real, on_loop = Pipeline.analyze, []
+
+    def watched(self: Pipeline, *args: object, **kwargs: object) -> object:
+        try:
+            asyncio.get_running_loop()
+            on_loop.append(True)
+        except RuntimeError:
+            on_loop.append(False)
+        return real(self, *args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(Pipeline, "analyze", watched)
+    client = TestClient(app)
+    assert client.post("/analyze", files={"file": ("f.png", frame_bytes, PHOTO)}).status_code == 200
+    assert on_loop == [False]
 
 
 def test_a_refused_request_does_not_evict_another_visitors_photos(
