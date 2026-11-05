@@ -99,15 +99,15 @@ def create_app() -> FastAPI:
         limits for the session and for the address. Over the limit is a 429 with Retry-After."""
         svc = rag()
         session = session_for(request, response)
-        svc.touch(session)
         gate = svc.query_limiter if limiter == "query" else svc.index_limiter
         try:
-            gate.check(f"s:{session}")
             gate.check(f"a:{client_address(request)}")
+            gate.check(f"s:{session}")
         except RateLimited as exc:
             raise HTTPException(
                 429, "too many requests", headers={"Retry-After": str(exc.retry_after)}
             ) from exc
+        svc.touch(session)  # after the limits: a refused request must not evict anyone
         return svc, session
 
     @app.middleware("http")
