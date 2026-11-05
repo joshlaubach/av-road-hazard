@@ -8,6 +8,8 @@ Purpose: how the hosted demo is put together and what the owner must do by hand;
 
 Checked 2026-11-03 on this PC: the stub image builds (about 90 seconds), runs as user 1000 as Spaces require, `/api/health` and `/credits` answer through port 7860, and killing the API stops the container. Not checked: a real Space, the real-model image (`--build-arg WITH_ML=1`), Qdrant Cloud.
 
+Rate limits count by client address, and uvicorn takes that address from `X-Forwarded-For` when the website server in the same container forwards a request. Checked on the private Space on 2026-11-04: a forged value did not reset the count (25 requests, 429 from the 21st). Not checked: whether visitors on different networks get separate counts or all share the proxy's address; a local `next start` plus uvicorn is dodgeable with a forged header, so do not expose that setup directly.
+
 ## Secrets and settings (Space settings, not the repo)
 
 | Name | Kind | Value |
