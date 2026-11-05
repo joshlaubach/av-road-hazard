@@ -27,7 +27,7 @@ An image, weight or data file that is not on the allow list (only the two shrunk
 - [ ] No nuScenes image, nuScenes-derived image or frame in the bundle, the image layers, the example data or the corpus. nuScenes-derived text, numbers and charts only if the owner has said so in writing.
 - [ ] The photos shown are only the decided corpus: 40 non-US RDD2022 images and 20 Stellenbosch photos. `web/src/lib/demo_corpus.json` counts match what was indexed.
 - [ ] `/credits` names every source, the demo says it is non-commercial, and the license status is stated as an assumption (`docs/DATA_AND_LICENSES.md`).
-- [ ] Model weights: the owner has confirmed in writing that hosting each one is allowed (detector and road model were fine-tuned on nuScenes; open item). Nothing in git.
+- [ ] Model weights: the hosted demo uses the public COCO detector, the public comma10k road model and public OpenCLIP, fetched from their sources, plus the owner's tile classifier from a private Hugging Face repo (SHA-256 pinned in `configs/hosted_classifier.json`). No nuScenes-fine-tuned weights are shipped: the 8-class detector stays off unless `DETECTOR_CHECKPOINT` is set. The license for each public model is an owner assumption (see `docs/DATA_AND_LICENSES.md`). No weight file in git.
 
 **Abuse and privacy**
 - [ ] Request size limits, upload limits, pixel limit and rate limits are on in the hosted configuration (`api/limits.py`, `configs/default.yaml`).
