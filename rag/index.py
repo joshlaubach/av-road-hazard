@@ -174,6 +174,14 @@ class Index:
             COLLECTION, points_selector=models.FilterSelector(filter=build_filter([session], None))
         )
 
+    def delete_visitor_points(self) -> None:
+        """Remove every visitor's photos and keep the shared corpus (used when the app starts)."""
+        corpus = models.FieldCondition(key="session", match=models.MatchValue(value=CORPUS))
+        self.client.delete(
+            COLLECTION,
+            points_selector=models.FilterSelector(filter=models.Filter(must_not=[corpus])),
+        )
+
     def count(self, sessions: Collection[str]) -> int:
         """How many photos the given sessions hold; naming at least one session is required."""
         flt = build_filter(sessions, None)

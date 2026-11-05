@@ -30,6 +30,14 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+describe("SearchView retention text", () => {
+  it("does not promise 'this visit only' and states the real limit", () => {
+    render(<SearchView />);
+    expect(screen.queryByText(/this visit only/)).toBeNull();
+    expect(screen.getByText(/about two hours/)).toBeTruthy();
+  });
+});
+
 describe("ResultCard", () => {
   it("shows the number, score, damage and objects, and says so when there is no preview", () => {
     render(
