@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import time
 from collections.abc import Iterator
 
 import pytest
@@ -185,6 +186,40 @@ def test_photo_analysis_does_not_run_on_the_event_loop(
     client = TestClient(app)
     assert client.post("/analyze", files={"file": ("f.png", frame_bytes, PHOTO)}).status_code == 200
     assert on_loop == [False]
+
+
+def a_day_later(svc: RagService, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Move both of the service's clocks forward a day (the stored times and the in-memory ones)."""
+    wall, mono = time.time(), svc._clock()
+    monkeypatch.setattr(svc.index, "_clock", lambda: wall + 86_400)
+    monkeypatch.setattr(svc, "_clock", lambda: mono + 86_400)
+
+
+def test_an_expired_photo_cannot_be_reached_by_replaying_the_cookie(
+    frame_bytes: bytes, svc: RagService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client = TestClient(app)
+    frame_id = upload(client, frame_bytes)
+    a_day_later(svc, monkeypatch)
+    assert client.get(f"/records/{frame_id}").status_code == 404
+    assert client.post("/query", json={"text": "road"}).json()["records"] == []
+
+
+def test_old_photos_stay_hidden_when_the_startup_purge_fails(
+    frame_bytes: bytes, svc: RagService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client = TestClient(app)
+    frame_id = upload(client, frame_bytes)
+
+    def storage_down() -> None:
+        raise RuntimeError("the database is down")
+
+    monkeypatch.setattr(svc.index, "delete_visitor_points", storage_down)
+    with TestClient(app):  # startup logs the failure and carries on
+        pass
+    a_day_later(svc, monkeypatch)
+    assert client.get(f"/records/{frame_id}").status_code == 404
+    assert client.post("/query", json={"text": "road"}).json()["records"] == []
 
 
 def test_a_refused_request_does_not_evict_another_visitors_photos(

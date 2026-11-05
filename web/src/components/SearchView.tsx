@@ -125,7 +125,7 @@ export function SearchView() {
       <section className="intake" aria-label="Add your photos">
         <h2>1. Add your photos</h2>
         <p className="hint">
-          Photos you add are kept for about two hours, or less if the demo restarts, and only you can search them. Each one takes a few seconds to
+          Photos you add are deleted two hours after you add them, or sooner if the demo restarts, and only you can search them. Each one takes a few seconds to
           analyze.{added > 0 ? ` You have added ${added} so far.` : ""}
         </p>
         <label className="button">

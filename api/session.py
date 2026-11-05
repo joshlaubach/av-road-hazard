@@ -13,7 +13,7 @@ from fastapi import Request, Response
 from rag.index import SESSION_ID, new_session_id
 
 COOKIE = "rh_session"
-MAX_AGE_S = 2 * 3600  # the same as `rag.session_ttl_s`: the server drops an idle session then
+MAX_AGE_S = 2 * 3600  # the same as `rag.session_ttl_s`: a photo is hidden then
 
 
 def session_for(request: Request, response: Response) -> str:

@@ -34,6 +34,7 @@ from rag.text import describe
 
 log = logging.getLogger("rag")
 
+SWEEP_EVERY_S = 60  # how often expired photos are physically deleted (they are hidden at once)
 IMAGE_ONLY_ANSWER = "These are the photos most similar to yours."
 BUDGET_NOTICE = "Written answers are paused for now; here are the matching photos."
 UNAVAILABLE_NOTICE = "The answer service is unavailable right now; here are the matching photos."
@@ -85,8 +86,10 @@ class RagService:
                 )
             )
         )
-        self._recent: OrderedDict[tuple[str, str], HazardRecord] = OrderedDict()
+        # (session, frame id) -> (record, the time it stops being served)
+        self._recent: OrderedDict[tuple[str, str], tuple[HazardRecord, float]] = OrderedDict()
         self._seen: OrderedDict[str, float] = OrderedDict()
+        self._last_sweep = float("-inf")
 
     @property
     def index(self) -> Index:
@@ -122,6 +125,12 @@ class RagService:
             if now - seen_at <= ttl and len(self._seen) <= limit:
                 break
             self._forget(oldest)
+        if self._index is not None and now - self._last_sweep >= SWEEP_EVERY_S:
+            self._last_sweep = now
+            try:
+                self._index.delete_expired()
+            except Exception:  # housekeeping only: searches already ignore expired photos
+                log.exception("could not delete expired photos")
 
     def _forget(self, session: str) -> None:
         self._seen.pop(session, None)
@@ -132,7 +141,8 @@ class RagService:
 
     def remember(self, session: str, record: HazardRecord) -> None:
         """Keep a record from /analyze so GET /records can return it (bounded per session)."""
-        self._recent[(session, record.frame_id)] = record
+        ttl = float(self._rag["session_ttl_s"])
+        self._recent[(session, record.frame_id)] = (record, self._clock() + ttl)
         self._recent.move_to_end((session, record.frame_id))
         mine = [k for k in self._recent if k[0] == session]
         for key in mine[: max(0, len(mine) - int(self._rag["max_records_per_session"]))]:
@@ -149,7 +159,7 @@ class RagService:
             raise QuotaExceeded("this session already holds as many photos as it may")
         images = self.embedder.embed_images(frames)
         texts = self.embedder.embed_texts([describe(r) for r in records])
-        self.index.add_upload(records, images, texts, session)
+        self.index.add_upload(records, images, texts, session, float(self._rag["session_ttl_s"]))
         for record in records:
             self.remember(session, record)
 
@@ -158,8 +168,8 @@ class RagService:
 
     def get_record(self, frame_id: str, session: str) -> HazardRecord | None:
         recent = self._recent.get((session, frame_id))
-        if recent is not None:
-            return recent
+        if recent is not None and recent[1] > self._clock():
+            return recent[0]
         return self.index.get(frame_id, [CORPUS, session])
 
     # ------------------------------------------------------------------ search and answer

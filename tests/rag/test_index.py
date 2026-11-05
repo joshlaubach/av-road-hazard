@@ -5,6 +5,7 @@ import pytest
 
 from fusion.schema import DefectRecord, HazardRecord, Meta, Object
 from rag.index import (
+    COLLECTION,
     CORPUS,
     Filters,
     Index,
@@ -16,6 +17,7 @@ from rag.index import (
 from rag.text import describe
 
 DIM = 8
+FAR = 2e10  # an expiry far in the future, for tests that are not about expiry
 S1 = new_session_id()
 S2 = new_session_id()
 
@@ -136,8 +138,8 @@ def test_a_zero_weight_removes_a_vectors_vote() -> None:
 
 def test_a_session_cannot_see_another_sessions_photos() -> None:
     index = filled()
-    index.add([record("mine")], unit(3)[None, :], unit(3)[None, :], session=S1)
-    index.add([record("theirs")], unit(3)[None, :], unit(3)[None, :], session=S2)
+    index.add([record("mine")], unit(3)[None, :], unit(3)[None, :], session=S1, expires_at=FAR)
+    index.add([record("theirs")], unit(3)[None, :], unit(3)[None, :], session=S2, expires_at=FAR)
     seen = ids(index.search({"image": unit(3)}, [CORPUS, S1], top_k=10))
     assert "mine" in seen and "theirs" not in seen
     assert index.get("theirs", [CORPUS, S1]) is None
@@ -147,8 +149,8 @@ def test_a_session_cannot_see_another_sessions_photos() -> None:
 
 def test_the_same_frame_id_in_two_sessions_is_two_points() -> None:
     index = Index(DIM)
-    index.add([record("x")], unit(0)[None, :], unit(0)[None, :], session=S1)
-    index.add([record("x")], unit(0)[None, :], unit(0)[None, :], session=S2)
+    index.add([record("x")], unit(0)[None, :], unit(0)[None, :], session=S1, expires_at=FAR)
+    index.add([record("x")], unit(0)[None, :], unit(0)[None, :], session=S2, expires_at=FAR)
     assert index.count([S1, S2]) == 2 and index.count([S1]) == 1
 
 
@@ -177,8 +179,8 @@ def test_get_and_count_must_name_a_session_too() -> None:
 def test_session_and_frame_names_containing_slashes_do_not_collide() -> None:
     assert point_id("a/b", "c") != point_id("a", "b/c")
     index = Index(DIM)
-    index.add([record("c")], unit(0)[None, :], unit(0)[None, :], session=S1)
-    index.add([record("b/c")], unit(1)[None, :], unit(1)[None, :], session=S2)
+    index.add([record("c")], unit(0)[None, :], unit(0)[None, :], session=S1, expires_at=FAR)
+    index.add([record("b/c")], unit(1)[None, :], unit(1)[None, :], session=S2, expires_at=FAR)
     assert index.count([S1, S2]) == 2
     assert index.get("c", [S1]) is not None
     assert index.get("c", [S2]) is None
@@ -226,18 +228,34 @@ def test_a_made_up_session_name_cannot_be_used_to_search_or_store() -> None:
 def test_an_upload_can_never_be_stored_in_the_shared_corpus() -> None:
     index = Index(DIM)
     with pytest.raises(ValueError):
-        index.add_upload([record("x")], unit(0)[None, :], unit(0)[None, :], CORPUS)
-    index.add_upload([record("x")], unit(0)[None, :], unit(0)[None, :], S1)
+        index.add_upload([record("x")], unit(0)[None, :], unit(0)[None, :], CORPUS, ttl_s=FAR)
+    index.add_upload([record("x")], unit(0)[None, :], unit(0)[None, :], S1, ttl_s=FAR)
     assert index.count([CORPUS]) == 0 and index.count([S1]) == 1
 
 
 def test_clearing_visitor_photos_leaves_the_shared_corpus_alone() -> None:
     index = Index(DIM)
     index.add([record("demo")], unit(1)[None, :], unit(1)[None, :])
-    index.add([record("a")], unit(2)[None, :], unit(2)[None, :], session=S1)
-    index.add([record("b")], unit(3)[None, :], unit(3)[None, :], session=S2)
+    index.add([record("a")], unit(2)[None, :], unit(2)[None, :], session=S1, expires_at=FAR)
+    index.add([record("b")], unit(3)[None, :], unit(3)[None, :], session=S2, expires_at=FAR)
     index.delete_visitor_points()
     assert index.count([CORPUS]) == 1 and index.count([S1, S2]) == 0
+
+
+def test_a_visitors_photo_is_invisible_once_expired_and_one_without_an_expiry_always_is() -> None:
+    now = [1000.0]
+    index = Index(DIM, clock=lambda: now[0])
+    index.add([record("demo")], unit(1)[None, :], unit(1)[None, :])
+    index.add_upload([record("fresh")], unit(2)[None, :], unit(2)[None, :], S1, ttl_s=100)
+    index.add([record("legacy")], unit(3)[None, :], unit(3)[None, :], session=S1)  # no expiry
+    both = [CORPUS, S1]
+    assert index.count(both) == 2  # the demo photo and the fresh one
+    assert index.get("fresh", both) is not None and index.get("legacy", both) is None
+    now[0] = 1101.0  # past the fresh photo's expiry
+    assert index.count(both) == 1 and index.get("fresh", both) is None
+    assert ids(index.search({"image": unit(2)}, both, top_k=10)) == ["demo"]
+    index.delete_expired()
+    assert index.client.count(COLLECTION, exact=True).count == 1  # only the demo photo is left
 
 
 def test_an_unknown_severity_is_a_clear_error_not_a_crash() -> None:
