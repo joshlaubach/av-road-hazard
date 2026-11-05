@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from typing import Any
 
 import httpx
@@ -203,6 +204,46 @@ def test_a_session_cannot_hold_more_photos_than_the_limit() -> None:
     svc.add_photos(sid, [record("a")], [frame(1)])  # the same photo again is not a new one
     with pytest.raises(QuotaExceeded):
         svc.add_photos(sid, [record("c")], [frame(3)])
+
+
+class PausingEmbedder(HashEmbedder):
+    """Once armed, holds the next photo embedding until released, so two uploads overlap."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.paused, self.release, self._first = threading.Event(), threading.Event(), False
+
+    def embed_images(self, frames: Any) -> Any:
+        if self._first:
+            self._first = False
+            self.paused.set()
+            assert self.release.wait(timeout=10)
+        return super().embed_images(frames)
+
+
+def test_two_uploads_at_once_cannot_both_take_the_last_free_place() -> None:
+    embedder = PausingEmbedder()
+    svc = RagService(config(max_records_per_session=2), embedder, tiers_for=lambda k: [])
+    sid = new_session_id()
+    svc.add_photos(sid, [record("a")], [frame(1)])  # one place left
+    embedder._first = True  # arm it: the next upload pauses while embedding
+    first = threading.Thread(target=svc.add_photos, args=(sid, [record("b")], [frame(2)]))
+    first.start()
+    assert embedder.paused.wait(timeout=10)  # "b" has passed the quota check and is not stored yet
+    with pytest.raises(QuotaExceeded):
+        svc.add_photos(sid, [record("c")], [frame(3)])
+    embedder.release.set()
+    first.join(timeout=10)
+    assert svc.index.count([sid]) == 2
+
+
+def test_a_failed_upload_gives_its_reserved_places_back() -> None:
+    svc, _ = service(max_records_per_session=1)
+    sid = new_session_id()
+    with pytest.raises(ValueError):
+        svc.add_photos(sid, [record("a")], [])  # records and vectors differ in length
+    svc.add_photos(sid, [record("a")], [frame(1)])  # the place was released, so this fits
+    assert svc.index.count([sid]) == 1
 
 
 def test_idle_sessions_are_deleted_and_the_oldest_go_first_when_there_are_too_many() -> None:
