@@ -16,6 +16,7 @@ from rag.index import CORPUS, Index
 from tools import index_corpus
 from tools.index_corpus import (
     check_counts,
+    check_manifest,
     expected_counts,
     index_images,
     parse_images,
@@ -112,19 +113,58 @@ def test_a_dry_run_on_stubs_writes_the_cached_records_and_touches_no_server(
     folder = tmp_path / "a"
     make_images(folder, ["x", "y"])
     out = tmp_path / "out"
-    code = index_corpus.main(
-        ["--images", f"rdd2022={folder}", "--records-out", str(out), "--dry-run"]
-    )
+    manifest = tmp_path / "manifest.json"
+    args = ["--images", f"rdd2022={folder}", "--manifest", str(manifest), "--dry-run"]
+    code = index_corpus.main([*args, "--records-out", str(out)])
     assert code == 0 and sorted(p.name for p in out.iterdir()) == [
         "rdd2022_x.json",
         "rdd2022_y.json",
     ]
+    assert sorted(json.loads(manifest.read_text("utf-8"))) == ["rdd2022_x", "rdd2022_y"]
+    Image.new("RGB", (32, 32), (255, 0, 0)).save(folder / "x.png")  # a photo changes afterwards
+    with pytest.raises(SystemExit, match="rdd2022_x: file changed"):
+        index_corpus.main(args)
 
 
 def test_a_real_run_refuses_stub_records(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     credits = tmp_path / "credits.json"
     credits.write_text(json.dumps({"sources": [{"id": "rdd2022", "include": True, "images": 1}]}))
     monkeypatch.setattr(index_corpus, "CORPUS_FILE", credits)
+    monkeypatch.setattr(index_corpus, "MANIFEST_FILE", tmp_path / "manifest.json")
     make_images(tmp_path / "a", ["x"])
     with pytest.raises(SystemExit, match="stub"):
         index_corpus.main(["--images", f"rdd2022={tmp_path / 'a'}"])
+
+
+def test_a_stray_record_in_the_corpus_is_removed_by_the_import(tmp_path: Path) -> None:
+    index = Index(DIM)
+    stray = Pipeline().analyze(Path(make_images(tmp_path / "s", ["old"])[0]).read_bytes(), "upload")
+    index.add([stray.model_copy(update={"frame_id": "old"})], np.ones((1, DIM)), np.ones((1, DIM)))
+    run(two_sources(tmp_path), index)
+    assert index.count([CORPUS]) == 3 and index.get("old", [CORPUS]) is None
+
+
+def test_the_import_fails_if_the_corpus_does_not_end_up_as_exactly_the_photos(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    index = Index(DIM)
+    stray = Pipeline().analyze(Path(make_images(tmp_path / "s", ["old"])[0]).read_bytes(), "upload")
+    index.add([stray.model_copy(update={"frame_id": "old"})], np.ones((1, DIM)), np.ones((1, DIM)))
+    monkeypatch.setattr(index, "clear_corpus", lambda: None)
+    with pytest.raises(RuntimeError, match="old"):
+        run(two_sources(tmp_path), index)
+
+
+def test_two_photos_with_the_same_name_in_one_source_are_refused(tmp_path: Path) -> None:
+    both = [*make_images(tmp_path / "a", ["x"]), *make_images(tmp_path / "b", ["x"])]
+    index = Index(DIM)
+    with pytest.raises(ValueError, match="rdd2022_x"):
+        run({"rdd2022": both}, index)
+    assert index.count([CORPUS]) == 0
+
+
+def test_the_manifest_must_match_the_photos_exactly() -> None:
+    manifest = {"rdd2022_x": "aa", "rdd2022_y": "bb"}
+    assert check_manifest(manifest, manifest) == []
+    problems = check_manifest({"rdd2022_x": "ZZ", "rdd2022_z": "cc"}, manifest)
+    assert len(problems) == 3  # x changed, z not in the manifest, y missing

@@ -174,6 +174,30 @@ class Index:
             COLLECTION, points_selector=models.FilterSelector(filter=build_filter([session], None))
         )
 
+    def clear_corpus(self) -> None:
+        """Remove the shared demo photos. Only the corpus import should call this."""
+        self.client.delete(
+            COLLECTION,
+            points_selector=models.FilterSelector(filter=build_filter([CORPUS], None)),
+        )
+
+    def corpus_frame_ids(self) -> set[str]:
+        """The frame id of every shared demo photo, read back from the store."""
+        found: set[str] = set()
+        offset = None
+        while True:
+            points, offset = self.client.scroll(
+                COLLECTION,
+                scroll_filter=build_filter([CORPUS], None),
+                limit=256,
+                offset=offset,
+                with_payload=["frame_id"],
+                with_vectors=False,
+            )
+            found.update(str(p.payload["frame_id"]) for p in points if p.payload)
+            if offset is None:
+                return found
+
     def delete_visitor_points(self) -> None:
         """Remove every visitor's photos and keep the shared corpus (used when the app starts)."""
         corpus = models.FieldCondition(key="session", match=models.MatchValue(value=CORPUS))
