@@ -2,10 +2,15 @@
 
 Usage: python -m tools.index_corpus --images rdd2022=data/demo_corpus --images stellenbosch=DIR
            [--records-out cache/records] [--device cpu] [--dry-run]
-Runs the real pipeline and OpenCLIP on every image, writes the points to the Qdrant named by
-QDRANT_URL (and QDRANT_API_KEY) in the "corpus" session, and writes one JSON record per photo to
---records-out. The records hold boxes, scores and text, never pixels, so they may be shipped with
-the Space; the images stay on this machine. Running it again overwrites the same points.
+Runs the real pipeline and OpenCLIP on every image, then REPLACES the whole "corpus" session in the
+Qdrant named by QDRANT_URL (and QDRANT_API_KEY) with those photos: old points are deleted first
+(after every photo was analyzed), and the store is read back and must hold exactly these frame ids.
+It also writes one JSON record per photo to --records-out. The records hold boxes, scores and text,
+never pixels; the images stay on this machine.
+
+configs/corpus_manifest.json (frame id -> SHA-256 of each approved photo) is written the first time
+and must then be reviewed and committed; on later runs any new, changed or missing photo stops the
+run before anything is written.
 
 The photo counts must match web/src/lib/demo_corpus.json (the file behind the credits page), or the
 run stops before writing anything: the page must not credit photos that are not in the demo.
@@ -22,12 +27,14 @@ from pathlib import Path
 from typing import Any
 
 from common.config import get_config
+from common.hashing import file_sha256
 from fusion.schema import HazardRecord, Source
 from rag.embed import Embedder, HashEmbedder
 from rag.index import CORPUS, Index
 from rag.text import describe
 
 CORPUS_FILE = Path("web/src/lib/demo_corpus.json")
+MANIFEST_FILE = Path("configs/corpus_manifest.json")  # frame id -> SHA-256 of the approved photo
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png"}
 BATCH = 16  # images embedded at a time, to bound memory on a small machine
 # The frozen contract (fusion/schema.py) has no "stellenbosch" source; those photos are filed as
@@ -61,6 +68,18 @@ def frame_id(source: str, path: Path) -> str:
     return f"{source}_{path.stem}"
 
 
+def check_manifest(hashes: Mapping[str, str], manifest: Mapping[str, str]) -> list[str]:
+    """One message per photo that is new, changed or missing against the approved manifest."""
+    problems = [f"{fid}: not in the manifest" for fid in sorted(set(hashes) - set(manifest))]
+    problems += [f"{fid}: missing from the photos" for fid in sorted(set(manifest) - set(hashes))]
+    problems += [
+        f"{fid}: file changed since it was approved"
+        for fid in sorted(set(hashes) & set(manifest))
+        if hashes[fid] != manifest[fid]
+    ]
+    return problems
+
+
 def index_images(
     sources: Mapping[str, Sequence[Path]],
     analyze: Callable[[bytes, Source], HazardRecord],
@@ -68,9 +87,18 @@ def index_images(
     load_pixels: Callable[[Path], Any],
     index: Index,
 ) -> list[HazardRecord]:
-    """Analyze, embed and store every photo; return the records in order."""
+    """Analyze and embed every photo, then replace the whole corpus with them; return the records.
+
+    Nothing is deleted until every photo has been analyzed, and afterwards the store is read back:
+    it must hold exactly these frame ids, or this raises. Two photos with one frame id are refused.
+    """
     jobs = [(name, path) for name, paths in sources.items() for path in paths]
+    ids = [frame_id(name, path) for name, path in jobs]
+    repeated = sorted({i for i in ids if ids.count(i) > 1})
+    if repeated:
+        raise ValueError(f"more than one photo has the frame id {', '.join(repeated)}")
     records: list[HazardRecord] = []
+    stored: list[tuple[list[HazardRecord], Any, Any]] = []
     for start in range(0, len(jobs), BATCH):
         batch = jobs[start : start + BATCH]
         made = [
@@ -81,8 +109,17 @@ def index_images(
         ]
         pictures = embedder.embed_images([load_pixels(path) for _, path in batch])
         texts = embedder.embed_texts([describe(r) for r in made])
-        index.add(made, pictures, texts, CORPUS)
+        stored.append((made, pictures, texts))
         records.extend(made)
+    index.clear_corpus()
+    for made, pictures, texts in stored:
+        index.add(made, pictures, texts, CORPUS)
+    held = index.corpus_frame_ids()
+    if held != set(ids):
+        extra, missing = sorted(held - set(ids)), sorted(set(ids) - held)
+        raise RuntimeError(
+            f"the corpus is not the imported photos: extra {extra}, missing {missing}"
+        )
     return records
 
 
@@ -108,6 +145,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--records-out", type=Path, default=None)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--manifest", type=Path, default=None, help="default: " + str(MANIFEST_FILE)
+    )
     args = parser.parse_args(argv)
 
     folders = parse_images(args.images)
@@ -116,6 +156,18 @@ def main(argv: list[str] | None = None) -> int:
     if problems:
         raise SystemExit(
             "photo counts do not match web/src/lib/demo_corpus.json:\n" + "\n".join(problems)
+        )
+
+    hashes = {frame_id(n, p): file_sha256(p) for n, paths in sources.items() for p in paths}
+    manifest_path = args.manifest or MANIFEST_FILE
+    if manifest_path.exists():
+        changed = check_manifest(hashes, json.loads(manifest_path.read_text("utf-8")))
+        if changed:
+            raise SystemExit("the photos differ from the approved manifest:\n" + "\n".join(changed))
+    else:
+        manifest_path.write_text(json.dumps(hashes, indent=2, sort_keys=True) + "\n", "utf-8")
+        print(
+            f"wrote {manifest_path}: check the list is exactly the photos you approved, commit it"
         )
 
     cfg = get_config()
