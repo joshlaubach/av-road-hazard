@@ -90,6 +90,8 @@ class RagService:
         self._recent: OrderedDict[tuple[str, str], tuple[HazardRecord, float]] = OrderedDict()
         self._seen: OrderedDict[str, float] = OrderedDict()
         self._last_sweep = float("-inf")
+        self._quota_lock = threading.Lock()
+        self._reserved: dict[str, int] = {}  # places promised to uploads that are still running
 
     @property
     def index(self) -> Index:
@@ -153,15 +155,26 @@ class RagService:
     def add_photos(
         self, session: str, records: Sequence[HazardRecord], frames: Sequence[np.ndarray]
     ) -> None:
-        held = self.index.count([session])
-        new = {r.frame_id for r in records} - self._ids_in(session, records)
-        if held + len(new) > int(self._rag["max_records_per_session"]):
-            raise QuotaExceeded("this session already holds as many photos as it may")
-        images = self.embedder.embed_images(frames)
-        texts = self.embedder.embed_texts([describe(r) for r in records])
-        self.index.add_upload(records, images, texts, session, float(self._rag["session_ttl_s"]))
-        for record in records:
-            self.remember(session, record)
+        new = len({r.frame_id for r in records} - self._ids_in(session, records))
+        with self._quota_lock:  # check and reserve as one step, so two uploads cannot both fit
+            held = self.index.count([session]) + self._reserved.get(session, 0)
+            if held + new > int(self._rag["max_records_per_session"]):
+                raise QuotaExceeded("this session already holds as many photos as it may")
+            self._reserved[session] = self._reserved.get(session, 0) + new
+        try:
+            images = self.embedder.embed_images(frames)
+            texts = self.embedder.embed_texts([describe(r) for r in records])
+            ttl = float(self._rag["session_ttl_s"])
+            self.index.add_upload(records, images, texts, session, ttl)
+            for record in records:
+                self.remember(session, record)
+        finally:
+            with self._quota_lock:
+                left = self._reserved.get(session, 0) - new
+                if left > 0:
+                    self._reserved[session] = left
+                else:
+                    self._reserved.pop(session, None)
 
     def _ids_in(self, session: str, records: Sequence[HazardRecord]) -> set[str]:
         return {r.frame_id for r in records if self.index.get(r.frame_id, [session]) is not None}
