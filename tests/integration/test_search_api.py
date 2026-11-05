@@ -130,6 +130,20 @@ def test_the_address_limit_stops_a_visitor_who_keeps_dropping_the_cookie(
     assert codes == [200, 200, 429]
 
 
+def test_a_refused_request_does_not_evict_another_visitors_photos(
+    frame_bytes: bytes, svc: RagService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setitem(svc._rag, "max_sessions", 1)
+    monkeypatch.setattr(svc.query_limiter, "limit", 1)
+    victim = TestClient(app)
+    upload(victim, frame_bytes)
+    assert victim.post("/query", json={"text": "road"}).status_code == 200  # uses the address's one
+    session = victim.cookies["rh_session"]
+    attacker = TestClient(app)  # no cookie: a fresh session id on every request
+    assert attacker.post("/query", json={"text": "road"}).status_code == 429
+    assert svc.index.count([session]) == 1
+
+
 @pytest.mark.parametrize(
     "body",
     [
