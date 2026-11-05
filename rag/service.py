@@ -79,7 +79,11 @@ class RagService:
         self._tiers_for = tiers_for or (
             (lambda kind: [StubLLM(kind)])
             if self._default_stub
-            else (lambda kind: make_tiers(kind, llm_cfg, on_usage=self.spend.record))
+            else (
+                lambda kind: make_tiers(
+                    kind, llm_cfg, on_usage=self.spend.record, before_call=self.spend.check
+                )
+            )
         )
         self._recent: OrderedDict[tuple[str, str], HazardRecord] = OrderedDict()
         self._seen: OrderedDict[str, float] = OrderedDict()
