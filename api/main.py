@@ -149,7 +149,11 @@ def create_app() -> FastAPI:
 
     app.add_middleware(BodyLimitMiddleware, api_cfg=api_cfg)  # added last, so it runs first
 
-    async def _read_image(file: UploadFile) -> bytes:
+    # ponytail: one analysis at a time. Before this the event loop did that by accident; the lock
+    # keeps it, with the loop free. Raise it only after checking the models are thread-safe.
+    analysis_lock = threading.Lock()
+
+    def _read_image(file: UploadFile) -> bytes:
         """Validate an upload and return its bytes: allowed content type, and not over the size cap.
 
         The content type is only what the client claims; the real check that the bytes are an image
@@ -158,10 +162,15 @@ def create_app() -> FastAPI:
         """
         if file.content_type not in api_cfg["allowed_content_types"]:
             raise HTTPException(415, f"unsupported content type: {file.content_type}")
-        data = await file.read(api_cfg["max_upload_bytes"] + 1)
+        data = file.file.read(api_cfg["max_upload_bytes"] + 1)
         if len(data) > api_cfg["max_upload_bytes"]:
             raise HTTPException(413, "file too large")
         return data
+
+    @app.exception_handler(Busy)
+    async def busy(_: Request, exc: Busy) -> JSONResponse:
+        """Every job slot is taken: refuse at once rather than queue behind a slow model."""
+        return JSONResponse({"detail": "the server is busy; try again shortly"}, status_code=503)
 
     @app.exception_handler(InvalidImage)
     async def invalid_image(_: Request, exc: InvalidImage) -> JSONResponse:
@@ -188,13 +197,15 @@ def create_app() -> FastAPI:
     # can be fetched later with GET /records/{id}. (Comments, not docstrings, on the routes below:
     # FastAPI copies docstrings into openapi.json, which is a frozen contract.)
     @app.post("/analyze", response_model=HazardRecord)
-    async def analyze(
+    def analyze(
         request: Request,
         response: Response,
         file: UploadFile = File(...),  # noqa: B008
     ) -> HazardRecord:
         svc, session = caller(request, response, "upload")
-        record = pipeline.analyze(await _read_image(file))
+        data = _read_image(file)
+        with svc.slots, analysis_lock:
+            record = pipeline.analyze(data)
         svc.remember(session, record)
         return record
 
@@ -202,13 +213,15 @@ def create_app() -> FastAPI:
     # (tile grid, skipped tiles, class probabilities, road mask preview, fusion factors). The record
     # is stored like /analyze's. Meant for the UI's walkthrough, not for bulk use.
     @app.post("/analyze/trace", response_model=TracedAnalysis)
-    async def analyze_trace(
+    def analyze_trace(
         request: Request,
         response: Response,
         file: UploadFile = File(...),  # noqa: B008
     ) -> TracedAnalysis:
         svc, session = caller(request, response, "upload")
-        result = pipeline.analyze_traced(await _read_image(file))
+        data = _read_image(file)
+        with svc.slots, analysis_lock:
+            result = pipeline.analyze_traced(data)
         svc.remember(session, result.record)
         return result
 
@@ -216,7 +229,7 @@ def create_app() -> FastAPI:
     # searchable. Capped by max_batch_files and by the photos one session may hold. Returns the
     # frame ids that were stored.
     @app.post("/index", response_model=IndexResponse)
-    async def index(
+    def index(
         request: Request,
         response: Response,
         files: list[UploadFile] = File(...),  # noqa: B008
@@ -226,14 +239,18 @@ def create_app() -> FastAPI:
             raise HTTPException(413, "too many files")
         records: list[HazardRecord] = []
         frames: list[np.ndarray] = []
-        for f in files:
-            data = await _read_image(f)
-            records.append(pipeline.analyze(data))
-            frames.append(decode_image(data))
-        try:
-            svc.add_photos(session, records, frames)
-        except QuotaExceeded as exc:
-            raise HTTPException(429, "this session already holds as many photos as it may") from exc
+        with svc.slots:
+            for f in files:
+                data = _read_image(f)
+                with analysis_lock:
+                    records.append(pipeline.analyze(data))
+                frames.append(decode_image(data))
+            try:
+                svc.add_photos(session, records, frames)
+            except QuotaExceeded as exc:
+                raise HTTPException(
+                    429, "this session already holds as many photos as it may"
+                ) from exc
         return IndexResponse(indexed=[r.frame_id for r in records])
 
     def _query_image(image_b64: str) -> np.ndarray:
@@ -259,8 +276,6 @@ def create_app() -> FastAPI:
             found = svc.query(session, req.text, frame, filters, req.top_k, req.llm)
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
-        except Busy as exc:
-            raise HTTPException(503, "the server is busy; try again shortly") from exc
         return QueryResponse(
             answer=found.answer,
             llm=req.llm,

@@ -195,23 +195,23 @@ class RagService:
         question = clean_question(text) if text else None
         if text is not None and not question:
             raise ValueError("the question is empty")
-        hits = self.search(session, question, frame, filters, top_k)
-        records = [h.record for h in hits]
-        if not question:
-            return QueryResult(IMAGE_ONLY_ANSWER, llm, None, records, [])
-        try:
-            answer = self._answer(llm, question, hits)
-        except BudgetExceeded as exc:
-            log.warning("answer skipped: %s", exc)
-            return QueryResult(BUDGET_NOTICE, llm, None, records, [], BUDGET_NOTICE)
-        except LLMUnavailable as exc:
-            log.error("language model unavailable: %s", exc)
-            return QueryResult(UNAVAILABLE_NOTICE, llm, None, records, [], UNAVAILABLE_NOTICE)
-        return QueryResult(answer.text, llm, answer.model or None, records, list(answer.cited))
+        with self.slots:  # embedding the question and writing the answer are both model work
+            hits = self.search(session, question, frame, filters, top_k)
+            records = [h.record for h in hits]
+            if not question:
+                return QueryResult(IMAGE_ONLY_ANSWER, llm, None, records, [])
+            try:
+                answer = self._answer(llm, question, hits)
+            except BudgetExceeded as exc:
+                log.warning("answer skipped: %s", exc)
+                return QueryResult(BUDGET_NOTICE, llm, None, records, [], BUDGET_NOTICE)
+            except LLMUnavailable as exc:
+                log.error("language model unavailable: %s", exc)
+                return QueryResult(UNAVAILABLE_NOTICE, llm, None, records, [], UNAVAILABLE_NOTICE)
+            return QueryResult(answer.text, llm, answer.model or None, records, list(answer.cited))
 
     def _answer(self, llm: str, question: str, hits: Sequence[Hit]) -> Answer:
         tiers = self._tiers_for(llm)
         if llm == "claude" and hits and not self._default_stub:
             self.spend.check()
-        with self.slots:
-            return answer_with_escalation(tiers, question, hits)
+        return answer_with_escalation(tiers, question, hits)
