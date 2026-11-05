@@ -168,3 +168,10 @@ def test_the_manifest_must_match_the_photos_exactly() -> None:
     assert check_manifest(manifest, manifest) == []
     problems = check_manifest({"rdd2022_x": "ZZ", "rdd2022_z": "cc"}, manifest)
     assert len(problems) == 3  # x changed, z not in the manifest, y missing
+
+
+def test_the_committed_manifest_matches_the_counts_the_credits_page_promises() -> None:
+    manifest = json.loads(index_corpus.MANIFEST_FILE.read_text("utf-8"))
+    per_source = {s: sum(k.startswith(s + "_") for k in manifest) for s in expected_counts()}
+    assert per_source == expected_counts() and len(manifest) == sum(expected_counts().values())
+    assert len(set(manifest.values())) == len(manifest)  # no photo twice under two names
