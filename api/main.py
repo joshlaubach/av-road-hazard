@@ -79,8 +79,11 @@ def create_app() -> FastAPI:
         loaded.update(pipeline.warm_up())  # models load now, before the first request
         loaded.update(warm_search())
         try:
-            # ponytail: assumes one app instance per index; two instances would wipe each
-            # other's visitors on restart. Store an expiry time with each photo if that changes.
+            # Best-effort cleanup: expiry itself is enforced by each photo's expires_at, which
+            # searches check, so a failure here is only logged. This still removes every
+            # visitor photo, expired or not, so it assumes one app instance per index: a second
+            # instance restarting would wipe the first one's live visitors. delete_expired()
+            # would not, if more than one instance ever shares an index.
             rag().index.delete_visitor_points()
         except Exception:
             log.exception("could not clear visitor photos at startup")
