@@ -20,7 +20,6 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: python -m mypy
-      - run: pip install pytest-cov   # not in requirements-dev.lock yet; regenerate the lock to drop this
       - run: python -m pytest --cov --cov-report=term   # includes the openapi.json contract test
 
   web:
