@@ -27,6 +27,7 @@ def _protocol_raw(**overrides: Any) -> dict[str, Any]:
         "checkpoint_sha256": "a" * 64,
         "splits_sha256": "b" * 64,
         "tile_index_sha256": "c" * 64,
+        "sample_index_sha256": "d" * 64,
         "thresholds": dict(zip(CODES, THRESHOLDS, strict=True)),
         "pooled_sampling": {"seed": 42, "clean_per_positive": 1.0, "min_clean_per_image": 1},
         "measurements": ["pooled", "all_tiles"],
@@ -63,6 +64,7 @@ def test_a_protocol_parses_thresholds_in_class_order() -> None:
         checkpoint_sha256="a" * 64,
         splits_sha256="b" * 64,
         tile_index_sha256="c" * 64,
+        sample_index_sha256="d" * 64,
         thresholds=(0.9, 0.1, 0.2, 0.5),
         seed=42,
         clean_per_positive=1.0,
@@ -72,9 +74,15 @@ def test_a_protocol_parses_thresholds_in_class_order() -> None:
 
 def test_hash_mismatches_name_each_file_that_differs() -> None:
     protocol = parse_protocol(_protocol_raw())
-    actual = {"checkpoint": "a" * 64, "splits": "x" * 64, "tile_index": "c" * 64}
+    actual = {
+        "checkpoint": "a" * 64,
+        "splits": "x" * 64,
+        "tile_index": "c" * 64,
+        "sample_index": "d" * 64,
+    }
     assert hash_mismatches(protocol, actual) == ["splits"]
-    assert hash_mismatches(protocol, {"checkpoint": "a" * 64, "splits": "b" * 64}) == ["tile_index"]
+    partial = {"checkpoint": "a" * 64, "splits": "b" * 64, "tile_index": "c" * 64}
+    assert hash_mismatches(protocol, partial) == ["sample_index"]
 
 
 def _index() -> TileIndex:

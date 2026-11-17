@@ -5,6 +5,7 @@
   "checkpoint_sha256": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8",
   "splits_sha256": "ac18b6b881c9c9a187066243ac609be2c376c1168bea3dc845eec9d5a5b6e4b6",
   "tile_index_sha256": "8a8f7d1b2ed03564f8974a7d8750e7a1912e39796ee1a4ac2a42260087524ab0",
+  "sample_index_sha256": "23931705c59a680b947363913902acd99ac06e73f2f916630615bbf8f2a1cb65",
   "thresholds": {
     "D00": 0.90,
     "D10": 0.75,

@@ -23,6 +23,7 @@ REQUIRED_FIELDS = (
     "checkpoint_sha256",
     "splits_sha256",
     "tile_index_sha256",
+    "sample_index_sha256",
     "thresholds",
     "pooled_sampling",
     "measurements",
@@ -43,6 +44,7 @@ class Protocol:
     checkpoint_sha256: str
     splits_sha256: str
     tile_index_sha256: str
+    sample_index_sha256: str
     thresholds: tuple[float, ...]
     seed: int
     clean_per_positive: float
@@ -64,6 +66,7 @@ def parse_protocol(raw: Mapping[str, Any]) -> Protocol:
         checkpoint_sha256=str(raw["checkpoint_sha256"]),
         splits_sha256=str(raw["splits_sha256"]),
         tile_index_sha256=str(raw["tile_index_sha256"]),
+        sample_index_sha256=str(raw["sample_index_sha256"]),
         thresholds=tuple(float(thresholds[code]) for code in CODES),
         seed=int(sampling["seed"]),
         clean_per_positive=float(sampling["clean_per_positive"]),
@@ -77,6 +80,7 @@ def hash_mismatches(protocol: Protocol, actual: Mapping[str, str]) -> list[str]:
         "checkpoint": protocol.checkpoint_sha256,
         "splits": protocol.splits_sha256,
         "tile_index": protocol.tile_index_sha256,
+        "sample_index": protocol.sample_index_sha256,
     }
     return [name for name, digest in expected.items() if actual.get(name) != digest]
 

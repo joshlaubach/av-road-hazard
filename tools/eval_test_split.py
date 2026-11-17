@@ -6,10 +6,10 @@ Usage: python -m tools.eval_test_split --protocol eval/test_split_protocol.json 
            --splits PATH --tile-index PATH --sample-index PATH --out eval/test_split_result.json
 Refuses, before any image or model is loaded, when: the output file already exists (sealed; there
 is no --force); the protocol is not tracked by git or has uncommitted changes, or any tracked file
-in its repository does; or the SHA-256 of the checkpoint, splits or tile index is not the one the
-protocol records. Then it scores only the test images, in two measurements: "pooled" (the training
-pool, comparable to the validation row) and "all_tiles" (every non-ignored tile). Thresholds come
-from the protocol. The result holds numbers, hashes and git provenance only.
+in its repository does; or the SHA-256 of the checkpoint, splits, tile index or sample index is not
+the one the protocol records. Then it scores only the test images, in two measurements: "pooled"
+(the training pool, comparable to the validation row) and "all_tiles" (every non-ignored tile).
+Thresholds come from the protocol. The result holds numbers, hashes and git provenance only.
 """
 
 from __future__ import annotations
@@ -135,6 +135,7 @@ def run(
         "checkpoint": file_sha256(checkpoint),
         "splits": file_sha256(splits),
         "tile_index": file_sha256(tile_index),
+        "sample_index": file_sha256(sample_index),
     }
     mismatched = hash_mismatches(protocol, actual)
     if mismatched:
@@ -170,6 +171,7 @@ def run(
                 "checkpoint": checkpoint,
                 "splits": splits,
                 "tile_index": tile_index,
+                "sample_index": sample_index,
             },
             thresholds=dict(zip(CODES, protocol.thresholds, strict=True)),
             repo=repo,

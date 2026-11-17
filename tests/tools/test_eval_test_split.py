@@ -111,6 +111,7 @@ def _protocol(ws: Workspace) -> dict[str, Any]:
         "checkpoint_sha256": file_sha256(ws.checkpoint),
         "splits_sha256": file_sha256(ws.splits),
         "tile_index_sha256": file_sha256(ws.index),
+        "sample_index_sha256": file_sha256(ws.sample_index),
         "thresholds": THRESHOLDS,
         "pooled_sampling": {"seed": 42, "clean_per_positive": 1.0, "min_clean_per_image": 1},
         "measurements": ["pooled", "all_tiles"],
@@ -166,6 +167,13 @@ def test_a_splits_or_tile_index_with_a_different_hash_is_refused(ws: Workspace) 
     ws.index.write_text(ws.index.read_text() + " ")
     with pytest.raises(tool.Refusal, match="tile_index"):
         ws.run()
+
+
+def test_a_sample_index_with_a_different_hash_is_refused(ws: Workspace) -> None:
+    ws.sample_index.write_text(ws.sample_index.read_text() + " ")
+    with pytest.raises(tool.Refusal, match="sample_index"):
+        ws.run()
+    assert ws.factory_calls == [] and ws.opened == []
 
 
 def test_an_untracked_protocol_is_refused(ws: Workspace) -> None:
@@ -224,7 +232,13 @@ def test_output_holds_numbers_and_hashes_only(ws: Workspace) -> None:
         assert forbidden not in text, forbidden
     payload = json.loads(text)
     assert payload["images"] == 2
-    assert set(payload["provenance"]["files"]) == {"protocol", "checkpoint", "splits", "tile_index"}
+    assert set(payload["provenance"]["files"]) == {
+        "protocol",
+        "checkpoint",
+        "splits",
+        "tile_index",
+        "sample_index",
+    }
 
 
 def test_the_output_has_every_metric_and_wilson_intervals_that_bracket_the_rates(

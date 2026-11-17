@@ -52,7 +52,7 @@ Priorities: recall first for defect detection with the false-positive guardrail 
 
 ### Test split (sealed)
 
-The RDD2022 test split is scored once. `eval/test_split_protocol.json` is committed before any run and fixes the checkpoint hash (`tile-fold0-hn2`), the hashes of `splits.json` and `tile_index.json`, the shipped thresholds and the pooled sampling (seed 42, one clean tile per positive, at least one per image). Thresholds are read from the protocol, not from a config.
+The RDD2022 test split is scored once. `eval/test_split_protocol.json` is committed before any run and fixes the checkpoint hash (`tile-fold0-hn2`), the hashes of `splits.json`, `tile_index.json` and `sample_index.json`, the shipped thresholds and the pooled sampling (seed 42, one clean tile per positive, at least one per image). Thresholds are read from the protocol, not from a config.
 
 Run once, with the committed protocol and real paths:
 
@@ -64,7 +64,7 @@ Guards, each a refusal with a nonzero exit before any image or model is loaded:
 
 - the output file already exists (there is no `--force`: the result is sealed);
 - the protocol is not tracked by git, has uncommitted changes, or the repository has uncommitted changes to tracked files;
-- the SHA-256 of the checkpoint, `splits.json` or the tile index differs from the protocol.
+- the SHA-256 of the checkpoint, `splits.json`, the tile index or `sample_index.json` differs from the protocol.
 
 It scores only the test images, in two measurements: `pooled` (the training pool, directly comparable to the validation row) and `all_tiles` (every tile not labelled ignore). Each class reports precision, recall, AUROC, flagged and positive counts, tile count, and 90% Wilson intervals for precision and recall. The result file holds numbers and hashes only. `tools/build_results.py --test-split PATH` adds it to `eval/results.json` and the README as one row.
 
