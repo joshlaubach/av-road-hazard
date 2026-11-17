@@ -1,0 +1,2 @@
+# Purpose: keep these ID lists byte-for-byte (CRLF, no final newline) so their SHA-256 matches what training and eval recorded.
+*.json -text

@@ -1,0 +1,342 @@
+[
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_001964",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_005480",
+  "row": 4,
+  "col": 5
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_007561",
+  "row": 4,
+  "col": 5
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_003121",
+  "row": 5,
+  "col": 4
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_000193",
+  "row": 5,
+  "col": 6
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_003507",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_006115",
+  "row": 4,
+  "col": 4
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_006115",
+  "row": 4,
+  "col": 2
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_005152",
+  "row": 4,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_003336",
+  "row": 4,
+  "col": 0
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_005513",
+  "row": 4,
+  "col": 4
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_004271",
+  "row": 6,
+  "col": 4
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_002253",
+  "row": 5,
+  "col": 5
+ },
+ {
+  "image_id": "Japan/train/annotations/xmls/Japan_008076",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_002419",
+  "row": 4,
+  "col": 5
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_005480",
+  "row": 4,
+  "col": 6
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_005513",
+  "row": 5,
+  "col": 5
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001600",
+  "row": 4,
+  "col": 3
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_001538",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001638",
+  "row": 4,
+  "col": 3
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_002647",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001320",
+  "row": 5,
+  "col": 4
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_000286",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001672",
+  "row": 6,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_003043",
+  "row": 4,
+  "col": 2
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_002072",
+  "row": 4,
+  "col": 4
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_000117",
+  "row": 5,
+  "col": 3
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_002000",
+  "row": 5,
+  "col": 3
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_003290",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_001682",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_002166",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_000419",
+  "row": 4,
+  "col": 5
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001900",
+  "row": 4,
+  "col": 2
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_003055",
+  "row": 4,
+  "col": 0
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_006477",
+  "row": 4,
+  "col": 1
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_000339",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001949",
+  "row": 4,
+  "col": 2
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001022",
+  "row": 5,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_005507",
+  "row": 4,
+  "col": 2
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_005672",
+  "row": 5,
+  "col": 2
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_002947",
+  "row": 5,
+  "col": 1
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_002566",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_006143",
+  "row": 4,
+  "col": 2
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_000158",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_004810",
+  "row": 3,
+  "col": 4
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_004268",
+  "row": 5,
+  "col": 4
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_003578",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Japan/train/annotations/xmls/Japan_009059",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_001909",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_002271",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_000225",
+  "row": 3,
+  "col": 4
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001327",
+  "row": 6,
+  "col": 5
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001022",
+  "row": 5,
+  "col": 0
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_000097",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_000772",
+  "row": 5,
+  "col": 4
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_003454",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_000550",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_002319",
+  "row": 6,
+  "col": 2
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_000356",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_004268",
+  "row": 4,
+  "col": 4
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_001348",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_001597",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_001109",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_000084",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_007350",
+  "row": 6,
+  "col": 3
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_001320",
+  "row": 4,
+  "col": 2
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_007063",
+  "row": 6,
+  "col": 5
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_002253",
+  "row": 4,
+  "col": 5
+ }
+]
