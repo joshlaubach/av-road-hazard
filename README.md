@@ -6,7 +6,7 @@ Purpose: entry point for av-road-hazard, a system that fuses road-object detecti
 
 *Photo: Nienaber, Kroon and Booysen, Stellenbosch University (CC0).*
 
-> **Status (2026-11-03): the pipeline, the three web pages, the hardened API and the Docker setup are built and tested. The hosted demo runs on a private Hugging Face Space and is not public yet.**
+> **Status (2026-11-05): the pipeline, the three web pages, the hardened API and the Docker setup are built and tested. The hosted demo runs on a private Hugging Face Space and is not public yet.**
 >
 > - **Built and measured:** the object finder, the road finder, the crack-and-pothole finder, the step that combines them, and the tools that grade them. They run on real models, and every number in the table below comes from `eval/results.json`.
 > - **Built, with web pages:** "Analyze" (upload a photo, see boxes and a 0 to 100 gauge, replay how it was found), "Search" (ask questions about saved photos) and "Settings" (choose who writes the answers).
@@ -16,6 +16,12 @@ Purpose: entry point for av-road-hazard, a system that fuses road-object detecti
 > - **The honest limit:** the pipeline finds large, close damage and mostly misses small, far-away damage.
 >
 > [docs/ROADMAP.md](docs/ROADMAP.md) is the live list of what is done and what comes next.
+
+> **Read this before trusting any number on this page.**
+>
+> - **It misses most people walking and cycling.** The object finder is used as it came (trained on everyday photos, not on driving data). On the nuScenes mini scenes, all six cameras, counting a box when the model is at least 50% sure, it finds about 39% of pedestrians and 13% of cyclists (recall in the results table below). So most of the vulnerable road users in a photo are never seen, and a pothole next to someone it missed can score as if nobody were there. Other checks give somewhat different numbers (the object-detector row in [docs/ROADMAP.md](docs/ROADMAP.md) reports 38% of pedestrians and 21% of cyclists for the default model on nuScenes mini, the cyclist figure from only 57 objects), but every one is well under half.
+> - **The road-damage accuracy is not from a sealed test.** The crack-and-pothole numbers in the table are scored on validation photos, the same photos used to pick which saved version of the model to keep. The 15% of RDD2022 set aside as a test set (4,745 images) has not been scored yet, so the real-world numbers may be lower.
+> - **The demo photos include training photos.** Of the 40 road-damage photos used in the search demo, 18 were in the damage model's training set and 2 in its validation set. Only 20 (11 from a held-out fold and 9 from the test set) are photos the model never saw while it was trained or chosen.
 
 **How to read this page.** New words are explained the first time they appear, in **bold**. Every term is also in [docs/GLOSSARY.md](docs/GLOSSARY.md). The math sits in short "The math" boxes. You can skip them and still follow the story.
 
@@ -166,7 +172,7 @@ All numbers below come from our own evaluation code (`eval/`). Where a number co
 
 Rows marked *pasted-patch* come from a test that pastes real damage patches onto driving photos, because no dataset has both objects and road damage labeled. It is easier than real damage, so those numbers are not real-world accuracy.
 
-**Search on 40 road-damage photos (run by hand with `python -m tools.eval_corpus_retrieval`, not in `eval/results.json`).** Five questions made before the run: a road with a longitudinal crack, a transverse crack, an alligator crack, a pothole, and no damage. A photo counts as right when the dataset's own boxes say so. Among the top 5 results, random order finds 0.32 of the right photos, searching with the photo's numbers alone finds 0.36 (90% range 0.24 to 0.48), searching with the written description alone finds 0.76 (0.64 to 0.88), and the two fused find 0.52 (0.36 to 0.68). The fused search beat random by the margin fixed in advance, but barely. Photo search alone is no better than random here, because damage is a small part of a 600 px photo, and the written description does most of the work. With only 5 questions and one photo set, treat this as a direction, not a guarantee.
+**Search on 40 road-damage photos (run by hand with `python -m tools.eval_corpus_retrieval`, not in `eval/results.json`).** Five questions made before the run: a road with a longitudinal crack, a transverse crack, an alligator crack, a pothole, and no damage. A photo counts as right when the dataset's own boxes say so. Among the top 5 results, random order finds 0.32 of the right photos, searching with the photo's numbers alone finds 0.36 (90% range 0.24 to 0.48), searching with the written description alone finds 0.76 (0.64 to 0.88), and the two fused find 0.52 (0.36 to 0.68). The fused search beat random by the margin fixed in advance, but barely. Photo search alone is no better than random here, because damage is a small part of a 600 px photo, and the written description does most of the work. With only 5 questions and one photo set, treat this as a direction, not a guarantee. Also, 20 of the 40 photos were in the damage model's training or validation set, and the written descriptions are built from what that model found, so the description search may do better here than it would on new photos.
 
 The pattern: **large damage close to the camera is found, and small, far damage mostly is not.** A pothole 30 meters away is only a few pixels wide. We report this as a limit, not a detail we can easily fix. The "effective range" row above says how large a defect must look to be found.
 
@@ -240,7 +246,7 @@ To run the real models on a photo without Docker, set `USE_STUBS=0` and the `DEF
 | [docs/SOURCE_REPOS.md](docs/SOURCE_REPOS.md), [CONTRACT_CHANGELOG.md](CONTRACT_CHANGELOG.md) | The two source projects; interface changes |
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md), [docs/TRACEABILITY.md](docs/TRACEABILITY.md), [docs/PROMPT_HISTORY.md](docs/PROMPT_HISTORY.md), [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md), [docs/agents/](docs/agents/00-scaffold.md) | Project-management records |
 
-Repo: `joshlaubach/av-road-hazard` (private). Audience: portfolio and recruiters.
+Repo: `joshlaubach/av-road-hazard` (public). Audience: portfolio and recruiters.
 
 ## License
 
