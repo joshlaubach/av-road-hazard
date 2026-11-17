@@ -15,7 +15,7 @@ Fusion has no ground truth: nuScenes has no road-defect labels and RDD2022 has n
 | Detector | Precision, recall, F1 (micro, IoU-matched), COCO AP via `torchmetrics`, slices by day/night, traffic density, location, rain | Reuse `nuscenes-stability` metrics (`src/metrics.py`, `src/utils_nuscenes.py`) |
 | Defect classifier | Macro-F1 on the RDD2022 validation split; per-class F1; false-positive rate on non-road tiles; macro-AUROC (not reported by the source) | New in `eval/models.py` |
 
-Validation split: the official RDD2022 test split has no annotations, so metrics come from a deterministic 15% hold-out of train (as in the source). The detector split is by scene (deterministic 80/20 by sorted scene token), never by frame; tune only on validation; touch the test split once per release.
+Validation: the headline classifier numbers are measured on the fold-0 validation tiles, the same split that chose the checkpoint, so they are not a hold-out. The RDD2022 test split (the `test` key of `splits.json`, 4,745 images) is never used for training, choosing the checkpoint or choosing thresholds; it is scored once, through `tools/eval_test_split.py` (see Test split (sealed) below). The detector split is by scene (deterministic 80/20 by sorted scene token), never by frame; tune only on validation.
 
 ### Baselines to reproduce
 
@@ -49,6 +49,26 @@ Implemented in `eval/models.py` as pure functions; the detector scene split, gro
 | Fusion | Box overlap with the pasted defect, `in_road` accuracy, `near_objects` correctness, and an ordering test: a pothole next to a pedestrian must score above the same pothole on an empty shoulder. Not yet implemented. |
 
 Priorities: recall first for defect detection with the false-positive guardrail above; equal weight on precision and recall for perception.
+
+### Test split (sealed)
+
+The RDD2022 test split is scored once. `eval/test_split_protocol.json` is committed before any run and fixes the checkpoint hash (`tile-fold0-hn2`), the hashes of `splits.json`, `tile_index.json` and `sample_index.json`, the shipped thresholds and the pooled sampling (seed 42, one clean tile per positive, at least one per image). Thresholds are read from the protocol, not from a config.
+
+Run once, with the committed protocol and real paths:
+
+```bash
+python -m tools.eval_test_split --protocol eval/test_split_protocol.json --checkpoint PATH     --splits PATH --tile-index PATH --sample-index PATH --out eval/test_split_result.json
+```
+
+Guards, each a refusal with a nonzero exit before any image or model is loaded:
+
+- the output file already exists (there is no `--force`: the result is sealed);
+- the protocol is not tracked by git, has uncommitted changes, or the repository has uncommitted changes to tracked files;
+- the SHA-256 of the checkpoint, `splits.json`, the tile index or `sample_index.json` differs from the protocol.
+
+It scores only the test images, in two measurements: `pooled` (the training pool, directly comparable to the validation row) and `all_tiles` (every tile not labelled ignore). Each class reports precision, recall, AUROC, flagged and positive counts, tile count, and 90% Wilson intervals for precision and recall. The result file holds numbers and hashes only. `tools/build_results.py --test-split PATH` adds it to `eval/results.json` and the README as one row.
+
+Rule: run once. No checkpoint, threshold or config may be chosen or changed using these results.
 
 ## Evaluation 2: retrieval
 

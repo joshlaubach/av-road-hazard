@@ -142,7 +142,7 @@ def _class_map(model: Any, frame: np.ndarray, device: str) -> np.ndarray:
     # Raw 0-255 values go straight into the bilinear resize, exactly as the model's shipped eval
     # transform does. Dividing by 255 or applying ImageNet normalisation dropped road-vs-not-road
     # AUC from 0.98 to 0.81, so neither is done here.
-    image = torch.from_numpy(frame).permute(2, 0, 1).unsqueeze(0).float()
+    image = torch.from_numpy(frame.copy()).permute(2, 0, 1).unsqueeze(0).float()
     image = functional.interpolate(
         image,
         size=(INPUT_HEIGHT, INPUT_WIDTH),

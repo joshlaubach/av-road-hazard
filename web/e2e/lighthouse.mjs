@@ -7,7 +7,6 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { API_ORIGIN, WEB_DIR, WEB_ORIGIN, assertStubStack, isPortBusy, run } from "./stack.mjs";
 
-const MIN_SCORE = 0.9;
 const READY_MS = 5 * 60 * 1000;
 const REPORT_DIR = join(WEB_DIR, ".lighthouseci");
 const require = createRequire(import.meta.url);
