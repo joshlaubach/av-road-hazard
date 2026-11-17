@@ -6,7 +6,7 @@ Purpose: entry point for av-road-hazard, a system that fuses road-object detecti
 
 *Photo: Nienaber, Kroon and Booysen, Stellenbosch University (CC0).*
 
-> **Status (2026-11-03): the pipeline, the three web pages, the hardened API and the Docker setup are built and tested. The hosted demo runs on a private Hugging Face Space and is not public yet.**
+> **Status (2026-11-05): the pipeline, the three web pages, the hardened API and the Docker setup are built and tested. The hosted demo runs on a private Hugging Face Space and is not public yet.**
 >
 > - **Built and measured:** the object finder, the road finder, the crack-and-pothole finder, the step that combines them, and the tools that grade them. They run on real models, and every number in the table below comes from `eval/results.json`.
 > - **Built, with web pages:** "Analyze" (upload a photo, see boxes and a 0 to 100 gauge, replay how it was found), "Search" (ask questions about saved photos) and "Settings" (choose who writes the answers).
