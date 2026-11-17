@@ -23,6 +23,7 @@ from eval.results import (
     keep_measured_retrieval,
     render_readme_table,
     retrieval_section,
+    test_split_section,
     update_readme,
     validate_results,
 )
@@ -52,6 +53,12 @@ def main(argv: list[str] | None = None) -> int:
         help="only replace the answers section of an existing results file",
     )
     parser.add_argument("--real-photo-check", type=Path, default=None)
+    parser.add_argument(
+        "--test-split",
+        type=Path,
+        default=None,
+        help="the sealed test-split result (tools/eval_test_split.py); alone, only updates it",
+    )
     parser.add_argument("--chosen", default="hn2-repeat10")
     parser.add_argument("--out", type=Path, default=REPO / "eval" / "results.json")
     parser.add_argument("--readme", type=Path, default=REPO / "README.md")
@@ -70,6 +77,10 @@ def main(argv: list[str] | None = None) -> int:
         results["answers"] = answers_section(_load(args.answers))
         return _write(results, args)
     needed = ("classifier", "non_road", "detector_gap", "fine_tune", "fusion")
+    if args.test_split is not None and any(getattr(args, n) is None for n in needed):
+        results = _load(args.out)
+        results["classifier"]["test_split"] = test_split_section(_load(args.test_split))
+        return _write(results, args)
     if any(getattr(args, n) is None for n in needed):
         parser.error(
             "the full build needs --classifier --non-road --detector-gap --fine-tune --fusion"
@@ -85,12 +96,21 @@ def main(argv: list[str] | None = None) -> int:
         date_utc=here["date_utc"],
         git_commit=here["git_commit"],
         real_photo_check=_load(args.real_photo_check) if args.real_photo_check else None,
+        test_split=_load(args.test_split) if args.test_split else _existing_test_split(args.out),
     )
     if args.retrieval is not None:
         results["retrieval"] = retrieval_section(_load(args.retrieval))
     elif args.out.exists():
         results = keep_measured_retrieval(results, _load(args.out))
     return _write(results, args)
+
+
+def _existing_test_split(out: Path) -> dict[str, Any] | None:
+    """A full rebuild keeps the sealed test-split numbers already in the results file."""
+    if not out.exists():
+        return None
+    section: dict[str, Any] | None = _load(out)["classifier"].get("test_split")
+    return section
 
 
 def _write(results: dict[str, Any], args: argparse.Namespace) -> int:
