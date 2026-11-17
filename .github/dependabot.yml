@@ -9,4 +9,9 @@ updates:
   - package-ecosystem: docker
     directory: /docker
     schedule: { interval: weekly }
+    ignore:
+      # The image must stay on the Python the project targets (3.12) and that torch 2.11.0 has
+      # wheels for. Patch updates of 3.12-slim still come through.
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
   # npm entry is added when web/ exists (workstream F)
