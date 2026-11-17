@@ -239,7 +239,7 @@ To run the real models on a photo without Docker, set `USE_STUBS=0` and the `DEF
 | [docs/SOURCE_REPOS.md](docs/SOURCE_REPOS.md), [CONTRACT_CHANGELOG.md](CONTRACT_CHANGELOG.md) | The two source projects; interface changes |
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md), [docs/TRACEABILITY.md](docs/TRACEABILITY.md), [docs/PROMPT_HISTORY.md](docs/PROMPT_HISTORY.md), [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md), [docs/agents/](docs/agents/00-scaffold.md) | Project-management records |
 
-Repo: `joshlaubach/av-road-hazard` (private). Audience: portfolio and recruiters.
+Repo: `joshlaubach/av-road-hazard` (public). Audience: portfolio and recruiters.
 
 ## License
 
