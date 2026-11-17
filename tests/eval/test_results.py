@@ -278,3 +278,72 @@ def test_a_full_rebuild_keeps_the_search_numbers_already_measured() -> None:
     fresh["retrieval"] = {"status": "measured", "frames": 1}
     assert keep_measured_retrieval(fresh, measured)["retrieval"]["frames"] == 1  # a new report wins
     assert keep_measured_retrieval(_results(), {})["retrieval"]["status"] == "not measured"
+
+
+# --- the sealed test split (tools/eval_test_split.py) ----------------------------------------
+
+
+def _test_split_report() -> dict[str, Any]:
+    def classes(precision: float, recall: float) -> dict[str, Any]:
+        row = {"precision": precision, "recall": recall, "auroc": 0.9, "flagged": 40,
+               "positives": 50, "tiles": 1000, "precision_interval": None,
+               "recall_interval": None}  # fmt: skip
+        return {c: dict(row) for c in ("D00", "D10", "D20", "D40")}
+
+    return {
+        "schema_version": 1,
+        "images": 4745,
+        "measurements": {
+            "pooled": {"tiles": 5000, "classes": classes(0.61, 0.52)},
+            "all_tiles": {"tiles": 20000, "classes": classes(0.12, 0.52)},
+        },
+        "provenance": {
+            "files": {"protocol": "b" * 64, "checkpoint": "a" * 64, "splits": "c" * 64,
+                      "tile_index": "d" * 64},
+            "thresholds": {"D00": 0.9, "D10": 0.75, "D20": 0.65, "D40": 0.75},
+            "git_commit": "abc", "git_dirty": False, "date_utc": "2026-11-17T00:00:00Z",
+        },
+    }  # fmt: skip
+
+
+def test_a_test_split_section_is_stored_under_the_classifier_and_renders_a_row() -> None:
+    results = build_results(
+        classifier=_classifier_report(), non_road=_nonroad_report(),
+        detector_gap=_detector_gap(), fine_tune=_finetune_report(), fusion=_fusion_report(),
+        chosen="hn2-repeat10", date_utc="2026-10-26T00:00:00Z", git_commit="abc",
+        test_split=_test_split_report(),
+    )  # fmt: skip
+    validate_results(results)
+    section = results["classifier"]["test_split"]
+    assert section["images"] == 4745
+    table = render_readme_table(results)
+    assert "RDD2022 test split (4,745 images" in table
+    assert "run once" in table
+    assert "pooled: D00 61% / 52%" in table
+    assert "all tiles: D00 12% / 52%" in table
+    assert "`classifier.test_split`" in table
+
+
+def test_without_a_test_split_there_is_no_section_and_no_row() -> None:
+    results = _results()
+    validate_results(results)
+    assert "test_split" not in results["classifier"]
+    assert "RDD2022 test split" not in render_readme_table(results)
+
+
+def test_a_test_split_section_missing_a_measurement_is_refused() -> None:
+    results = _results()
+    broken = _test_split_report()
+    del broken["measurements"]["all_tiles"]
+    results["classifier"]["test_split"] = broken
+    with pytest.raises(ValueError, match="all_tiles"):
+        validate_results(results)
+
+
+def test_the_test_split_section_keeps_no_paths() -> None:
+    report = _test_split_report()
+    report["provenance"]["note"] = "scored from C:/Users/someone/data"
+    results = _results()
+    results["classifier"]["test_split"] = report
+    with pytest.raises(ValueError, match="path"):
+        validate_results(results)

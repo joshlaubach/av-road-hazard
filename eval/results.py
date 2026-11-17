@@ -19,6 +19,7 @@ from eval.classifier import wilson_interval
 README_START = "<!-- results:start -->"
 README_END = "<!-- results:end -->"
 SCHEMA_VERSION = 1
+TEST_SPLIT_MEASUREMENTS = ("pooled", "all_tiles")
 SECTIONS = (
     "classifier", "detector", "synthetic_fusion", "effective_range", "retrieval", "provenance",
 )  # fmt: skip
@@ -149,6 +150,7 @@ def build_results(
     date_utc: str,
     git_commit: str,
     real_photo_check: Mapping[str, Any] | None = None,
+    test_split: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """The results dictionary (eval/results.json) from the reports and the chosen checkpoint."""
     base = classifier["baseline"]
@@ -194,7 +196,14 @@ def build_results(
     }
     if real_photo_check is not None:
         results["real_photo_check"] = dict(real_photo_check)
+    if test_split is not None:
+        results["classifier"]["test_split"] = test_split_section(test_split)
     return results
+
+
+def test_split_section(report: Mapping[str, Any]) -> dict[str, Any]:
+    """The sealed test-split numbers (tools/eval_test_split.py), provenance made scanner-safe."""
+    return {**report, "provenance": _scanner_safe(report["provenance"])}
 
 
 def _walk_strings(value: Any) -> list[str]:
@@ -214,6 +223,11 @@ def validate_results(results: Mapping[str, Any]) -> None:
     for section in SECTIONS:
         if section not in results:
             raise ValueError(f"results are missing the {section} section")
+    split = results["classifier"].get("test_split")
+    if split is not None:
+        for name in TEST_SPLIT_MEASUREMENTS:
+            if name not in split.get("measurements", {}):
+                raise ValueError(f"the test split section is missing the {name} measurement")
     for text in _walk_strings(results):
         if _PATHLIKE.search(text):
             raise ValueError(f"results must not hold a file path or image name: {text[:60]!r}")
@@ -272,6 +286,19 @@ def _validation_row(results: Mapping[str, Any]) -> str:
     return " · ".join(
         f"{k} {_pct(table[k]['precision'])} / {_pct(table[k]['recall'])}" for k in CLASSES
     )
+
+
+def _test_split_row(results: Mapping[str, Any]) -> str:
+    split = results["classifier"]["test_split"]
+    parts = []
+    for name, label in (("pooled", "pooled"), ("all_tiles", "all tiles")):
+        classes = split["measurements"][name]["classes"]
+        cells = " · ".join(
+            f"{c} {_pct(classes[c]['precision'] or 0)} / {_pct(classes[c]['recall'] or 0)}"
+            for c in CLASSES
+        )
+        parts.append(f"{label}: {cells}")
+    return "; ".join(parts) + " (precision / recall; pooled is comparable to the validation row)"
 
 
 def _tiles_judged(frames: Mapping[str, Any]) -> tuple[int, int]:
@@ -345,6 +372,17 @@ def render_readme_table(results: Mapping[str, Any]) -> str:
     rows = [
         ("Tile classifier on RDD2022 validation tiles, precision / recall per class",
          _validation_row(results), "`classifier.validation`"),
+    ]  # fmt: skip
+    if "test_split" in c:
+        rows.append(
+            (
+                f"Tile classifier on the RDD2022 test split ({c['test_split']['images']:,} images "
+                "never used for training or choosing; run once), precision / recall per class",
+                _test_split_row(results),
+                "`classifier.test_split`",
+            )
+        )
+    rows += [
         ("False alarms on 404 nuScenes driving frames (alerts per frame)",
          f"baseline {nb['per_frame']:.3f} ({nb['alerts']} alerts), chosen {nc['per_frame']:.3f} "
          f"({nc['alerts']} alerts, 90% range {low:.3f} to {high:.3f})", "`classifier.nuscenes`"),

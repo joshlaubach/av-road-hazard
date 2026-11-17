@@ -297,6 +297,168 @@
           }
         }
       }
+    },
+    "test_split": {
+      "schema_version": 1,
+      "images": 4745,
+      "measurements": {
+        "pooled": {
+          "tiles": 18075,
+          "classes": {
+            "D00": {
+              "precision": 0.9494238156209988,
+              "recall": 0.579296875,
+              "auroc": 0.9550621065105172,
+              "flagged": 3124,
+              "positives": 5120,
+              "tiles": 18075,
+              "precision_interval": {
+                "low90": 0.9425766139606017,
+                "high90": 0.9554931046340654
+              },
+              "recall_interval": {
+                "low90": 0.5679085997377002,
+                "high90": 0.5906013744902276
+              }
+            },
+            "D10": {
+              "precision": 0.8291666666666667,
+              "recall": 0.5931445603576752,
+              "auroc": 0.9608275879303516,
+              "flagged": 1440,
+              "positives": 2013,
+              "tiles": 18075,
+              "precision_interval": {
+                "low90": 0.8122377009554419,
+                "high90": 0.8448608233263847
+              },
+              "recall_interval": {
+                "low90": 0.5750199053527122,
+                "high90": 0.6110191277944951
+              }
+            },
+            "D20": {
+              "precision": 0.8923895253682488,
+              "recall": 0.7588726513569938,
+              "auroc": 0.9739889562442715,
+              "flagged": 2444,
+              "positives": 2874,
+              "tiles": 18075,
+              "precision_interval": {
+                "low90": 0.8816406664125344,
+                "high90": 0.9022704289140896
+              },
+              "recall_interval": {
+                "low90": 0.7455071197724314,
+                "high90": 0.7717511565576987
+              }
+            },
+            "D40": {
+              "precision": 0.9098277608915907,
+              "recall": 0.569435637285986,
+              "auroc": 0.9704317265873313,
+              "flagged": 987,
+              "positives": 1577,
+              "tiles": 18075,
+              "precision_interval": {
+                "low90": 0.893688225537625,
+                "high90": 0.923726218312002
+              },
+              "recall_interval": {
+                "low90": 0.548822708236282,
+                "high90": 0.5898106808463481
+              }
+            }
+          }
+        },
+        "all_tiles": {
+          "tiles": 123697,
+          "classes": {
+            "D00": {
+              "precision": 0.7968833960236432,
+              "recall": 0.579296875,
+              "auroc": 0.964623002418787,
+              "flagged": 3722,
+              "positives": 5120,
+              "tiles": 123697,
+              "precision_interval": {
+                "low90": 0.7858215509912604,
+                "high90": 0.8075138653252528
+              },
+              "recall_interval": {
+                "low90": 0.5679085997377002,
+                "high90": 0.5906013744902276
+              }
+            },
+            "D10": {
+              "precision": 0.6607636967349197,
+              "recall": 0.5931445603576752,
+              "auroc": 0.9845059984758026,
+              "flagged": 1807,
+              "positives": 2013,
+              "tiles": 123697,
+              "precision_interval": {
+                "low90": 0.6422139322499297,
+                "high90": 0.6788326863576423
+              },
+              "recall_interval": {
+                "low90": 0.5750199053527122,
+                "high90": 0.6110191277944951
+              }
+            },
+            "D20": {
+              "precision": 0.8420849420849421,
+              "recall": 0.7588726513569938,
+              "auroc": 0.9919508011083186,
+              "flagged": 2590,
+              "positives": 2874,
+              "tiles": 123697,
+              "precision_interval": {
+                "low90": 0.8299415826776306,
+                "high90": 0.853514228707696
+              },
+              "recall_interval": {
+                "low90": 0.7455071197724314,
+                "high90": 0.7717511565576987
+              }
+            },
+            "D40": {
+              "precision": 0.8126696832579186,
+              "recall": 0.569435637285986,
+              "auroc": 0.9859317015333214,
+              "flagged": 1105,
+              "positives": 1577,
+              "tiles": 123697,
+              "precision_interval": {
+                "low90": 0.7926059582248546,
+                "high90": 0.8312057611345305
+              },
+              "recall_interval": {
+                "low90": 0.548822708236282,
+                "high90": 0.5898106808463481
+              }
+            }
+          }
+        }
+      },
+      "provenance": {
+        "files": {
+          "protocol": "764788939249e016c7d1d8f6748d9474fd12840dbe14f79e1c8c77554e77184e",
+          "checkpoint": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8",
+          "splits": "ac18b6b881c9c9a187066243ac609be2c376c1168bea3dc845eec9d5a5b6e4b6",
+          "tile_index": "8a8f7d1b2ed03564f8974a7d8750e7a1912e39796ee1a4ac2a42260087524ab0",
+          "sample_index": "23931705c59a680b947363913902acd99ac06e73f2f916630615bbf8f2a1cb65"
+        },
+        "thresholds": {
+          "D00": 0.9,
+          "D10": 0.75,
+          "D20": 0.65,
+          "D40": 0.75
+        },
+        "git_commit": "0ef128ad33686b145b68c6ddb9ed45d615dea1ba",
+        "git_dirty": false,
+        "date_utc": "2026-11-17T01:30:57Z"
+      }
     }
   },
   "detector": {

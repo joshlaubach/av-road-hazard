@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "purpose": "One scoring of the RDD2022 test split (4,745 images never used for training or for choosing the checkpoint or thresholds) by the tile classifier, with everything frozen.",
+  "registered_date": "2026-11-16",
+  "checkpoint_sha256": "762f4b385a3864ed8b1657bf44ce5fd5ef6ae6958c047c423b3aa57f805922b8",
+  "splits_sha256": "ac18b6b881c9c9a187066243ac609be2c376c1168bea3dc845eec9d5a5b6e4b6",
+  "tile_index_sha256": "8a8f7d1b2ed03564f8974a7d8750e7a1912e39796ee1a4ac2a42260087524ab0",
+  "sample_index_sha256": "23931705c59a680b947363913902acd99ac06e73f2f916630615bbf8f2a1cb65",
+  "thresholds": {
+    "D00": 0.90,
+    "D10": 0.75,
+    "D20": 0.65,
+    "D40": 0.75
+  },
+  "pooled_sampling": {
+    "seed": 42,
+    "clean_per_positive": 1.0,
+    "min_clean_per_image": 1
+  },
+  "measurements": ["pooled", "all_tiles"],
+  "metrics": ["precision", "recall", "auroc", "flagged", "positives", "tiles"],
+  "intervals": "90% Wilson score intervals for precision and recall, per class",
+  "rule": "Run once. No checkpoint, threshold or config may be chosen or changed using these results."
+}
