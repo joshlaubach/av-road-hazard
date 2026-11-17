@@ -1,0 +1,117 @@
+[
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_002012",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_005717",
+  "row": 4,
+  "col": 2
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_000689",
+  "row": 5,
+  "col": 6
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_006761",
+  "row": 5,
+  "col": 5
+ },
+ {
+  "image_id": "Japan/train/annotations/xmls/Japan_004559",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_002995",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_000911",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_003038",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_004522",
+  "row": 6,
+  "col": 4
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_002853",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Japan/train/annotations/xmls/Japan_012290",
+  "row": 0,
+  "col": 3
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_004384",
+  "row": 6,
+  "col": 5
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_004528",
+  "row": 5,
+  "col": 4
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_002059",
+  "row": 1,
+  "col": 0
+ },
+ {
+  "image_id": "Japan/train/annotations/xmls/Japan_012290",
+  "row": 2,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_002981",
+  "row": 6,
+  "col": 2
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_004341",
+  "row": 5,
+  "col": 3
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_006137",
+  "row": 4,
+  "col": 4
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_004522",
+  "row": 6,
+  "col": 2
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_002995",
+  "row": 1,
+  "col": 1
+ },
+ {
+  "image_id": "Norway/train/annotations/xmls/Norway_007917",
+  "row": 4,
+  "col": 5
+ },
+ {
+  "image_id": "Japan/train/annotations/xmls/Japan_003815",
+  "row": 1,
+  "col": 3
+ },
+ {
+  "image_id": "Czech/train/annotations/xmls/Czech_003341",
+  "row": 1,
+  "col": 0
+ }
+]
