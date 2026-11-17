@@ -2,7 +2,7 @@ Purpose: where av-road-hazard stands today, what is being worked on now, what to
 
 # Roadmap
 
-Last updated: 2026-11-05 (second-round review: upload quota race). Whoever finishes or changes a row should update this file in the same PR. If a row here disagrees with the code, the code is right and this file is out of date.
+Last updated: 2026-11-17 (sealed RDD2022 test-split evaluation).
 
 The order follows the core-first gate ([ADR 0011](adr/0011-core-first-gate.md)). The core (detector, defect classifier, fusion and the synthetic fusion evaluation) has to give reportable numbers before RAG, the web UI or deployment go beyond stubs.
 
@@ -74,6 +74,7 @@ The order follows the core-first gate ([ADR 0011](adr/0011-core-first-gate.md)).
 | Second-round review fix B: two uploads cannot both take the last free place (reviewer finding R3) | Done 2026-11-05 | The 100-photo limit was a check followed by a write with nothing in between, so two uploads running at once (now possible with three job slots) could both pass and leave 101. `RagService.add_photos` now checks the stored count plus the places promised to uploads still running, and reserves its own places, as one step under a lock; the places are given back in a `finally` whether the upload succeeds or fails. Tests (the first failed before): one upload held mid-embedding while a second tries for the last place gets `QuotaExceeded` and the final count is the limit; a failed upload gives its places back. pytest on rag, integration, tools, unit and contract passes; ruff, mypy clean. The reservation is in memory, so it assumes one app instance (as the rest of the session code does). |
 | Core-first gate | Met 2026-10-27 | [ADR 0011](adr/0011-core-first-gate.md): RAG, the web UI and deployment stay at stub level until the core produces reportable numbers. It does now (`eval/results.json`, below), so RAG, the web UI and deployment may start when the owner decides; building `web/` against the stub API was always allowed. |
 
+| Sealed RDD2022 test-split evaluation | Done 2026-11-17 | Protocol `eval/test_split_protocol.json` committed first (7c4d846, sample-index hash added in 0ef128a): checkpoint `tile-fold0-hn2`, shipped thresholds, hashes of splits, tile index and sample index. `python -m tools.eval_test_split` refuses if a result exists, the protocol or tracked files are uncommitted, or any hash differs; it scores only the 4,745 test images. Run once at 0ef128a (clean tree), 9.5 min on the RTX 5080; result `eval/test_split_result.json`, in `eval/results.json` as `classifier.test_split` and the README table. Pooled (same sampling as validation, 18,075 tiles), precision / recall: D00 95% / 58%, D10 83% / 59%, D20 89% / 76%, D40 91% / 57%, within a few points of fold-0 validation (D00 95/57, D10 85/61, D20 88/72, D40 92/57). All 123,697 non-ignored tiles: precision falls to D00 80%, D10 66%, D20 84%, D40 81% (more clean tiles), recall unchanged. A dry run on 97 training images checked the real scoring path first. No checkpoint, threshold or config may be changed using these numbers. |
 Not started: the hosted deployment.
 
 ## Now

@@ -146,6 +146,7 @@ All numbers below come from our own evaluation code (`eval/`). Where a number co
 | Measure | Result | In `eval/results.json` |
 |---|---|---|
 | Tile classifier on RDD2022 validation tiles, precision / recall per class | D00 95% / 57% · D10 85% / 61% · D20 88% / 72% · D40 92% / 57% | `classifier.validation` |
+| Tile classifier on the RDD2022 test split (4,745 images never used for training or choosing; run once), precision / recall per class | pooled: D00 95% / 58% · D10 83% / 59% · D20 89% / 76% · D40 91% / 57%; all tiles: D00 80% / 58% · D10 66% / 59% · D20 84% / 76% · D40 81% / 57% (precision / recall; pooled is comparable to the validation row) | `classifier.test_split` |
 | False alarms on 404 nuScenes driving frames (alerts per frame) | baseline 0.198 (80 alerts), chosen 0.131 (53 alerts, 90% range 0.106 to 0.161) | `classifier.nuscenes` |
 | Flagged nuScenes tiles that a reviewer called a real crack | baseline 6 of 79 (8%), chosen 7 of 52 (13%, 90% range 7% to 23%) | `classifier.nuscenes.*.buckets` |
 | Clean road tiles the classifier still flags (23 held-out tiles) | baseline 23 of 23, chosen 13 of 23 | `classifier.probe` |
